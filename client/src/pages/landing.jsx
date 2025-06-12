@@ -182,15 +182,7 @@ export default function Landing() {
                 I'm a Decision Maker ✓
               </Button>
             </Link>
-            <Link href="/admin-dashboard">
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="border-2 border-red-600 text-red-600 px-8 py-4 text-lg font-semibold hover:bg-red-50"
-              >
-                Admin Panel 🔐
-              </Button>
-            </Link>
+
           </div>
         </div>
       </section>
