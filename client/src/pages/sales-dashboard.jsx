@@ -1,8 +1,13 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Phone, 
   Users, 
@@ -10,37 +15,66 @@ import {
   Plus, 
   TrendingUp,
   Lock,
-  CalendarPlus
+  CalendarPlus,
+  Mail,
+  Building
 } from "lucide-react";
 
 export default function SalesDashboard() {
-  const [databaseUnlocked, setDatabaseUnlocked] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteForm, setInviteForm] = useState({
+    decisionMakerName: "",
+    decisionMakerEmail: "",
+    message: ""
+  });
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: invitations = [] } = useQuery({
+  // Fetch invitations from API
+  const { data: invitations = [], isLoading: invitationsLoading } = useQuery({
     queryKey: ['/api/invitations'],
-    enabled: false // Using mock data for now
+    queryFn: () => fetch('/api/invitations?userId=1').then(res => res.json())
   });
 
-  const mockInvitations = [
-    {
-      id: 1,
-      name: "Sarah Chen",
-      email: "sarah@techcorp.com",
-      status: "pending"
+  // Fetch calls from API
+  const { data: calls = [], isLoading: callsLoading } = useQuery({
+    queryKey: ['/api/calls'],
+    queryFn: () => fetch('/api/calls?userId=1').then(res => res.json())
+  });
+
+  // Create invitation mutation
+  const createInvitationMutation = useMutation({
+    mutationFn: (invitationData) => 
+      fetch('/api/invitations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...invitationData,
+          salesRepId: 1
+        })
+      }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['/api/invitations']);
+      setShowInviteModal(false);
+      setInviteForm({ decisionMakerName: "", decisionMakerEmail: "", message: "" });
+      toast({
+        title: "Invitation sent!",
+        description: "Your invitation has been sent successfully.",
+      });
     },
-    {
-      id: 2, 
-      name: "Michael Rodriguez",
-      email: "michael@leadflow.com",
-      status: "accepted"
-    },
-    {
-      id: 3,
-      name: "Jennifer Walsh", 
-      email: "jennifer@cloudscale.com",
-      status: "pending"
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to send invitation. Please try again.",
+        variant: "destructive",
+      });
     }
-  ];
+  });
+
+  const handleInviteSubmit = (e) => {
+    e.preventDefault();
+    createInvitationMutation.mutate(inviteForm);
+  };
 
   const getStatusBadge = (status) => {
     if (status === "accepted") {
