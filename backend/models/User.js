@@ -26,8 +26,8 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
-    default: 'user'
+    enum: ['admin', 'sales_rep', 'decision_maker'],
+    required: [true, 'User role is required']
   },
   avatar: {
     type: String,
@@ -52,6 +52,60 @@ const userSchema = new mongoose.Schema({
   passwordResetExpires: {
     type: Date,
     select: false
+  },
+  // Role-specific fields
+  company: {
+    type: String,
+    trim: true
+  },
+  jobTitle: {
+    type: String,
+    trim: true
+  },
+  industry: {
+    type: String,
+    trim: true
+  },
+  companySize: {
+    type: String
+  },
+  yearsInRole: {
+    type: Number,
+    min: 0
+  },
+  linkedinUrl: {
+    type: String,
+    trim: true
+  },
+  linkedinVerified: {
+    type: Boolean,
+    default: false
+  },
+  // Sales rep specific
+  packageType: {
+    type: String,
+    enum: ['free', 'basic', 'premium', 'pro-team']
+  },
+  callCredits: {
+    type: Number,
+    default: 0
+  },
+  monthlyDMLimit: {
+    type: Number,
+    default: 0
+  },
+  // Decision maker specific
+  availability: {
+    timezone: String,
+    preferredDays: [String],
+    preferredTimes: [String]
+  },
+  interests: [String],
+  expertnessAreas: [String],
+  standing: {
+    type: String,
+    enum: ['excellent', 'good', 'average', 'poor'],
+    default: 'good'
   },
   lastLogin: {
     type: Date,
