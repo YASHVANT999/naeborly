@@ -157,7 +157,15 @@ export class MemStorage implements IStorage {
 
   async createCall(insertCall: InsertCall): Promise<Call> {
     const id = this.currentCallId++;
-    const call: Call = { ...insertCall, id };
+    const call: Call = { 
+      ...insertCall, 
+      id,
+      status: "scheduled",
+      company: null,
+      rating: null,
+      feedback: null,
+      pitch: null
+    };
     this.calls.set(id, call);
     return call;
   }

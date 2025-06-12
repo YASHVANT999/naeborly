@@ -96,42 +96,67 @@ async function testSalesRepRegistration() {
   salesRepId = response.data.data.user.id;
 }
 
-async function testUserLogin() {
-  console.log('\n🔐 Testing user login...');
+async function testSalesRepLogin() {
+  console.log('\n🔐 Testing sales rep login...');
   const response = await axios.post(`${API_BASE}/auth/login`, {
-    email: testUser.email,
-    password: testUser.password
+    email: salesRepUser.email,
+    password: salesRepUser.password
   });
-  console.log('✅ User logged in:', response.data.data.user.name);
-  userToken = response.data.data.token;
+  console.log('✅ Sales rep logged in:', response.data.data.user.name);
+  salesRepToken = response.data.data.token;
 }
 
-async function testProtectedRoutes() {
-  console.log('\n🛡️ Testing protected routes...');
+async function testInvitationFlow() {
+  console.log('\n📩 Testing invitation system...');
   
-  // Test get current user
-  const meResponse = await axios.get(`${API_BASE}/auth/me`, {
-    headers: { Authorization: `Bearer ${userToken}` }
+  // Create invitation
+  const inviteResponse = await axios.post(`${API_BASE}/invitations`, invitationData, {
+    headers: { Authorization: `Bearer ${salesRepToken}` }
   });
-  console.log('✅ Get current user:', meResponse.data.data.user.name);
+  console.log('✅ Invitation created:', inviteResponse.data.data.decisionMakerName);
+  invitationId = inviteResponse.data.data.id;
   
-  // Test update profile
-  const updateResponse = await axios.put(`${API_BASE}/auth/profile`, {
-    name: 'John Smith Updated'
-  }, {
-    headers: { Authorization: `Bearer ${userToken}` }
+  // Get sales rep invitations
+  const invitationsResponse = await axios.get(`${API_BASE}/invitations`, {
+    headers: { Authorization: `Bearer ${salesRepToken}` }
   });
-  console.log('✅ Profile updated:', updateResponse.data.data.user.name);
+  console.log('✅ Retrieved invitations count:', invitationsResponse.data.data.length);
   
-  // Test change password
-  await axios.put(`${API_BASE}/auth/password`, {
-    currentPassword: testUser.password,
-    newPassword: 'NewPassword123',
-    confirmPassword: 'NewPassword123'
-  }, {
-    headers: { Authorization: `Bearer ${userToken}` }
+  // Get invitation statistics
+  const statsResponse = await axios.get(`${API_BASE}/invitations/stats`, {
+    headers: { Authorization: `Bearer ${salesRepToken}` }
   });
-  console.log('✅ Password changed successfully');
+  console.log('✅ Invitation stats - Total:', statsResponse.data.data.totalInvitations);
+}
+
+async function testCallManagement() {
+  console.log('\n📞 Testing call management...');
+  
+  // Schedule a call (would normally require decision maker ID)
+  const callData = {
+    decisionMakerId: 2, // Mock decision maker ID
+    scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    duration: 30,
+    notes: 'Demo of new features'
+  };
+  
+  const callResponse = await axios.post(`${API_BASE}/calls`, callData, {
+    headers: { Authorization: `Bearer ${salesRepToken}` }
+  });
+  console.log('✅ Call scheduled for:', callResponse.data.data.scheduledAt);
+  callId = callResponse.data.data.id;
+  
+  // Get sales rep calls
+  const callsResponse = await axios.get(`${API_BASE}/calls`, {
+    headers: { Authorization: `Bearer ${salesRepToken}` }
+  });
+  console.log('✅ Retrieved calls count:', callsResponse.data.data.length);
+  
+  // Get call statistics
+  const callStatsResponse = await axios.get(`${API_BASE}/calls/stats`, {
+    headers: { Authorization: `Bearer ${salesRepToken}` }
+  });
+  console.log('✅ Call stats - Total:', callStatsResponse.data.data.totalCalls);
 }
 
 async function testAdminOperations() {

@@ -1,355 +1,370 @@
-# Node.js MongoDB Backend API
+# Naeberly Clone Backend
 
-A scalable Node.js backend application with MongoDB, featuring JWT authentication, role-based access control, and comprehensive error handling.
+A comprehensive Node.js backend for a sales enablement platform that connects sales representatives with decision makers through warm introductions and scheduled calls.
 
-## 🚀 Features
+## Platform Overview
 
-- **Authentication System**: Complete signup, login, password reset
-- **JWT Security**: Token-based authentication with role-based access
-- **MongoDB Integration**: Mongoose ODM with optimized schemas
-- **Input Validation**: Express-validator for request validation
-- **Error Handling**: Global error handling with detailed responses
-- **Rate Limiting**: Protection against abuse and DDoS attacks
-- **Security Headers**: Helmet.js for security best practices
-- **CORS Support**: Configurable cross-origin resource sharing
-- **Modular Architecture**: Clean separation of concerns
+Naeberly clone is a B2B sales platform featuring:
+- **Three user roles**: Admins, Sales Representatives, and Decision Makers
+- **Invitation system**: Sales reps invite decision makers via email
+- **Call scheduling**: Integrated call management with post-call evaluations
+- **Package tiers**: Flexible pricing for sales representatives
+- **Analytics**: Comprehensive statistics and performance tracking
 
-## 📁 Project Structure
+## Architecture
 
+- **Backend**: Node.js with Express.js framework
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: JWT-based with role-based access control
+- **Security**: Rate limiting, CORS, helmet, bcrypt password hashing
+- **Validation**: Express-validator with comprehensive input validation
+- **Structure**: Modular architecture with separate layers
+
+## User Roles & Permissions
+
+### Sales Representatives
+- Create invitations to decision makers
+- Schedule and manage calls
+- View invitation and call statistics
+- Package-based limitations (call credits, monthly DM limits)
+- Profile management with professional information
+
+### Decision Makers
+- Accept/reject invitations via email tokens
+- Participate in scheduled calls
+- Submit post-call evaluations
+- Manage availability preferences
+- Professional profile with expertise areas
+
+### Admins
+- Full platform oversight
+- User management across all roles
+- Platform-wide analytics
+- Role assignment and permissions
+
+## Package Tiers (Sales Representatives)
+
+| Package | Call Credits | Monthly DM Limit | Price |
+|---------|-------------|------------------|-------|
+| Free | 1 | 1 | $0 |
+| Basic | 5 | 3 | $29/month |
+| Premium | 15 | 10 | $79/month |
+| Pro Team | 50 | 25 | $199/month |
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - User registration with role-specific setup
+- `POST /api/auth/login` - User authentication
+- `GET /api/auth/me` - Get current user profile
+- `PUT /api/auth/profile` - Update user profile
+- `PUT /api/auth/password` - Change password
+- `POST /api/auth/logout` - User logout
+
+### Invitations (Sales Rep only)
+- `POST /api/invitations` - Create invitation to decision maker
+- `GET /api/invitations` - Get sent invitations with pagination
+- `GET /api/invitations/stats` - Get invitation statistics
+- `DELETE /api/invitations/:id` - Cancel pending invitation
+
+### Invitation Acceptance (Public)
+- `GET /api/invitations/token/:token` - View invitation details
+- `POST /api/invitations/accept/:token` - Accept invitation and create account
+- `POST /api/invitations/reject/:token` - Reject invitation
+
+### Call Management
+- `POST /api/calls` - Schedule new call (Sales Rep only)
+- `GET /api/calls` - Get user's calls with filtering
+- `GET /api/calls/stats` - Get call statistics
+- `GET /api/calls/:id` - Get specific call details
+- `PUT /api/calls/:id/status` - Update call status
+- `POST /api/calls/:id/feedback` - Submit post-call evaluation
+- `DELETE /api/calls/:id` - Cancel call
+
+### Admin Operations
+- `GET /api/users` - Get all users with pagination
+- `GET /api/users/stats` - Get platform statistics
+- `PUT /api/users/:id/role` - Update user role
+- `DELETE /api/users/:id` - Delete user
+
+## Data Models
+
+### User Schema
+```javascript
+{
+  name: String (required),
+  email: String (required, unique),
+  password: String (required, hashed),
+  role: String (required: admin|sales_rep|decision_maker),
+  isActive: Boolean (default: true),
+  emailVerified: Boolean (default: false),
+  
+  // Professional Information
+  company: String,
+  jobTitle: String,
+  industry: String,
+  companySize: String,
+  yearsInRole: Number,
+  linkedinUrl: String,
+  linkedinVerified: Boolean,
+  
+  // Sales Rep Specific
+  packageType: String (free|basic|premium|pro-team),
+  callCredits: Number,
+  monthlyDMLimit: Number,
+  
+  // Decision Maker Specific
+  availability: {
+    timezone: String,
+    preferredDays: [String],
+    preferredTimes: [String]
+  },
+  interests: [String],
+  expertnessAreas: [String],
+  standing: String (excellent|good|average|poor)
+}
 ```
-backend/
-├── config/
-│   └── database.js          # MongoDB connection configuration
-├── controllers/
-│   ├── authController.js    # Authentication route handlers
-│   └── userController.js    # User management route handlers
-├── middleware/
-│   ├── auth.js             # Authentication middleware
-│   ├── errorHandler.js     # Global error handling
-│   ├── security.js         # Security configurations
-│   └── validation.js       # Input validation rules
-├── models/
-│   └── User.js             # User MongoDB schema
-├── routes/
-│   ├── authRoutes.js       # Authentication endpoints
-│   └── userRoutes.js       # User management endpoints
-├── services/
-│   └── userService.js      # Business logic for user operations
-├── utils/
-│   ├── helpers.js          # Utility functions
-│   └── jwt.js              # JWT token utilities
-├── .env.example            # Environment variables template
-├── package.json            # Dependencies and scripts
-└── server.js               # Main application entry point
+
+### Invitation Schema
+```javascript
+{
+  salesRepId: ObjectId (ref: User),
+  decisionMakerEmail: String (required),
+  decisionMakerName: String (required),
+  status: String (pending|accepted|rejected|expired),
+  message: String,
+  token: String (unique),
+  expiresAt: Date,
+  acceptedAt: Date,
+  rejectedAt: Date
+}
 ```
 
-## 🛠️ Installation
+### Call Schema
+```javascript
+{
+  salesRepId: ObjectId (ref: User),
+  decisionMakerId: ObjectId (ref: User),
+  scheduledAt: Date (required),
+  duration: Number (minutes),
+  status: String (scheduled|in_progress|completed|cancelled|no_show),
+  
+  // Post-call Evaluation
+  salesRepRating: Number (1-5),
+  decisionMakerRating: Number (1-5),
+  salesRepFeedback: String,
+  decisionMakerFeedback: String,
+  outcome: String (interested|not_interested|follow_up_needed|closed_deal),
+  
+  // Call Details
+  actualStartTime: Date,
+  actualEndTime: Date,
+  connectionQuality: String (excellent|good|fair|poor),
+  notes: String,
+  meetingLink: String
+}
+```
 
-1. **Clone and setup**:
+## Security Features
+
+- **Rate Limiting**: 100 requests per 15 minutes (general), 5 per 15 minutes (auth)
+- **CORS Protection**: Configurable allowed origins
+- **Helmet**: Security headers
+- **JWT Authentication**: Secure token-based authentication
+- **Password Hashing**: bcrypt with 12 salt rounds
+- **Input Validation**: Comprehensive validation with express-validator
+- **Role-based Access Control**: Granular permissions per endpoint
+
+## Installation & Setup
+
+1. **Clone and Install**
 ```bash
+git clone <repository-url>
 cd backend
 npm install
 ```
 
-2. **Environment Configuration**:
+2. **Environment Configuration**
 ```bash
 cp .env.example .env
 ```
 
-3. **Configure your `.env` file**:
+Edit `.env` with your configuration:
 ```env
-MONGODB_URI=mongodb://localhost:27017/your-app-name
-JWT_SECRET=your-super-secret-jwt-key-here-make-it-long-and-complex
-PORT=5000
+MONGODB_URI=mongodb://localhost:27017/naeberly-clone
+JWT_SECRET=your-super-secret-jwt-key-here
+PORT=3001
 NODE_ENV=development
+BCRYPT_SALT_ROUNDS=12
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
 ```
 
-4. **Start the application**:
+3. **Start MongoDB**
 ```bash
-# Development mode with auto-restart
+# Using Docker
+docker run -d -p 27017:27017 --name mongodb mongo:latest
+
+# Or install MongoDB locally
+```
+
+4. **Run Application**
+```bash
+# Development mode
 npm run dev
 
 # Production mode
 npm start
 ```
 
-## 📚 API Documentation
+## Testing
 
-### Base URL
-```
-http://localhost:5000/api
-```
+### API Testing
+```bash
+# Run comprehensive API tests
+npm run test:api
 
-### Authentication Endpoints
-
-#### Register User
-```http
-POST /api/auth/register
-Content-Type: application/json
-
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "SecurePass123",
-  "role": "user"
-}
+# Run simple health check tests
+npm test
 ```
 
-#### Login User
-```http
-POST /api/auth/login
-Content-Type: application/json
+### Manual Testing with curl
 
-{
-  "email": "john@example.com",
-  "password": "SecurePass123"
-}
+**Register Sales Rep:**
+```bash
+curl -X POST http://localhost:3001/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Smith",
+    "email": "john@salescompany.com",
+    "password": "SecurePass123",
+    "role": "sales_rep",
+    "packageType": "premium",
+    "company": "SalesCorp Inc",
+    "jobTitle": "Senior Sales Manager"
+  }'
 ```
 
-#### Get Current User
-```http
-GET /api/auth/me
-Authorization: Bearer <jwt_token>
+**Create Invitation:**
+```bash
+curl -X POST http://localhost:3001/api/invitations \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "decisionMakerEmail": "sarah@targetcompany.com",
+    "decisionMakerName": "Sarah Johnson",
+    "message": "I would love to discuss our solution with you."
+  }'
 ```
 
-#### Update Profile
-```http
-PUT /api/auth/profile
-Authorization: Bearer <jwt_token>
-Content-Type: application/json
-
-{
-  "name": "John Smith",
-  "email": "johnsmith@example.com"
-}
+**Schedule Call:**
+```bash
+curl -X POST http://localhost:3001/api/calls \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "decisionMakerId": "DECISION_MAKER_ID",
+    "scheduledAt": "2024-01-15T14:00:00Z",
+    "duration": 30,
+    "notes": "Product demo"
+  }'
 ```
 
-#### Change Password
-```http
-PUT /api/auth/password
-Authorization: Bearer <jwt_token>
-Content-Type: application/json
+## Error Handling
 
-{
-  "currentPassword": "oldpassword",
-  "newPassword": "NewSecurePass123",
-  "confirmPassword": "NewSecurePass123"
-}
-```
+The API returns structured error responses:
 
-#### Forgot Password
-```http
-POST /api/auth/forgot-password
-Content-Type: application/json
-
-{
-  "email": "john@example.com"
-}
-```
-
-#### Reset Password
-```http
-POST /api/auth/reset-password
-Content-Type: application/json
-
-{
-  "token": "reset_token_from_email",
-  "password": "NewPassword123",
-  "confirmPassword": "NewPassword123"
-}
-```
-
-### User Management Endpoints (Admin Only)
-
-#### Get All Users
-```http
-GET /api/users?page=1&limit=10&search=john&sort=-createdAt
-Authorization: Bearer <admin_jwt_token>
-```
-
-#### Get User by ID
-```http
-GET /api/users/:userId
-Authorization: Bearer <admin_jwt_token>
-```
-
-#### Update User Role
-```http
-PUT /api/users/:userId/role
-Authorization: Bearer <admin_jwt_token>
-Content-Type: application/json
-
-{
-  "role": "admin"
-}
-```
-
-#### Delete User
-```http
-DELETE /api/users/:userId
-Authorization: Bearer <admin_jwt_token>
-```
-
-#### Get User Statistics
-```http
-GET /api/users/stats
-Authorization: Bearer <admin_jwt_token>
-```
-
-## 🔐 Authentication & Authorization
-
-### JWT Token Usage
-Include the JWT token in the Authorization header:
-```
-Authorization: Bearer <your_jwt_token>
-```
-
-### User Roles
-- **user**: Standard user with basic permissions
-- **admin**: Administrative user with full access
-
-### Protected Routes
-- `/api/auth/me` - Requires authentication
-- `/api/auth/profile` - Requires authentication
-- `/api/auth/password` - Requires authentication
-- `/api/users/*` - Requires admin role
-
-## 🛡️ Security Features
-
-- **Rate Limiting**: Different limits for general, auth, and password reset endpoints
-- **CORS Protection**: Configurable allowed origins
-- **Security Headers**: Helmet.js for XSS, CSRF protection
-- **Input Validation**: Comprehensive validation using express-validator
-- **Password Hashing**: Bcrypt with configurable salt rounds
-- **JWT Security**: Secure token generation and verification
-
-## 📝 Response Format
-
-All API responses follow a consistent format:
-
-### Success Response
-```json
-{
-  "success": true,
-  "message": "Operation completed successfully",
-  "data": { ... },
-  "meta": { ... },
-  "timestamp": "2024-01-01T00:00:00.000Z"
-}
-```
-
-### Error Response
-```json
+```javascript
 {
   "success": false,
   "message": "Error description",
-  "data": null,
-  "meta": {
-    "stack": "..." // Only in development mode
-  },
-  "timestamp": "2024-01-01T00:00:00.000Z"
+  "data": {
+    "errors": [
+      {
+        "field": "email",
+        "message": "Please provide a valid email",
+        "value": "invalid-email"
+      }
+    ]
+  }
 }
 ```
 
-## 🔧 Environment Variables
+## Development Guidelines
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MONGODB_URI` | MongoDB connection string | `mongodb://localhost:27017/your-app-name` |
-| `PORT` | Server port | `5000` |
-| `NODE_ENV` | Environment mode | `development` |
-| `JWT_SECRET` | JWT signing secret | Required |
-| `JWT_EXPIRES_IN` | JWT expiration time | `7d` |
-| `BCRYPT_SALT_ROUNDS` | Password hashing rounds | `12` |
-| `ALLOWED_ORIGINS` | CORS allowed origins | `http://localhost:3000` |
+### Adding New Endpoints
+1. Define route in appropriate route file (`routes/`)
+2. Implement controller logic (`controllers/`)
+3. Add business logic to service layer (`services/`)
+4. Update data models if needed (`models/`)
+5. Add validation rules (`middleware/validation.js`)
+6. Add tests (`test-api.js`)
 
-## 🚦 Health Check
+### Database Operations
+- Use Mongoose models for all database operations
+- Implement proper error handling
+- Use transactions for complex operations
+- Add indexes for performance-critical queries
 
-Check server status:
-```http
-GET /health
+### Security Considerations
+- Always validate input data
+- Use parameterized queries to prevent injection
+- Implement rate limiting on sensitive endpoints
+- Log security events for monitoring
+- Regularly update dependencies
+
+## Performance Optimization
+
+- **Database Indexing**: Indexes on frequently queried fields
+- **Pagination**: All list endpoints support pagination
+- **Caching**: Consider Redis for session storage in production
+- **Query Optimization**: Use lean queries for better performance
+- **Connection Pooling**: MongoDB connection pooling configured
+
+## Deployment
+
+### Production Checklist
+- [ ] Set strong JWT secret
+- [ ] Configure production MongoDB URI
+- [ ] Set NODE_ENV=production
+- [ ] Configure CORS for production domains
+- [ ] Set up SSL/TLS
+- [ ] Configure proper logging
+- [ ] Set up monitoring and health checks
+- [ ] Configure backup strategy
+
+### Environment Variables
+```env
+# Required
+MONGODB_URI=mongodb://production-uri
+JWT_SECRET=production-jwt-secret
+NODE_ENV=production
+
+# Optional
+PORT=3001
+BCRYPT_SALT_ROUNDS=12
+ALLOWED_ORIGINS=https://yourdomain.com
 ```
 
-Returns server uptime, environment, and status information.
+## Contributing
 
-## 🛠️ Development
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/new-feature`)
+3. Implement changes with tests
+4. Ensure all tests pass (`npm run test:api`)
+5. Submit pull request
 
-### Adding New Features
+## API Documentation
 
-1. **Create Model** (if needed):
-   - Add new schema in `models/`
-   - Define relationships and validations
+For detailed API documentation with examples, see [NAEBERLY_API_DOCS.md](./NAEBERLY_API_DOCS.md)
 
-2. **Create Service**:
-   - Add business logic in `services/`
-   - Handle database operations
+## Support
 
-3. **Create Controller**:
-   - Add route handlers in `controllers/`
-   - Use services for business logic
+For issues and questions:
+- Check existing GitHub issues
+- Review API documentation
+- Test with provided examples
+- Contact development team
 
-4. **Create Routes**:
-   - Define endpoints in `routes/`
-   - Add validation middleware
+---
 
-5. **Add Validation**:
-   - Create validation rules in `middleware/validation.js`
-
-### Error Handling
-
-All async operations should use the `asyncHandler` wrapper:
-```javascript
-const { asyncHandler } = require('../middleware/errorHandler');
-
-const myController = asyncHandler(async (req, res) => {
-  // Your async code here
-});
-```
-
-### Database Queries
-
-Always use the service layer for database operations:
-```javascript
-// ❌ Don't do this in controllers
-const user = await User.findById(id);
-
-// ✅ Do this instead
-const user = await userService.getUserById(id);
-```
-
-## 📦 Dependencies
-
-### Production Dependencies
-- `express` - Web framework
-- `mongoose` - MongoDB ODM
-- `bcryptjs` - Password hashing
-- `jsonwebtoken` - JWT implementation
-- `dotenv` - Environment variables
-- `cors` - CORS middleware
-- `helmet` - Security headers
-- `express-rate-limit` - Rate limiting
-- `express-validator` - Input validation
-- `morgan` - Request logging
-
-### Development Dependencies
-- `nodemon` - Auto-restart development server
-
-## 🚀 Deployment
-
-1. Set production environment variables
-2. Ensure MongoDB is accessible
-3. Build and start the application:
-```bash
-NODE_ENV=production npm start
-```
-
-## 📋 TODO / Future Enhancements
-
-- [ ] API documentation with Swagger
-- [ ] Email service integration
-- [ ] File upload functionality
-- [ ] Advanced logging with Winston
-- [ ] Unit and integration tests
-- [ ] Docker containerization
-- [ ] CI/CD pipeline setup
-- [ ] Monitoring and metrics
+**Built with Node.js, Express, MongoDB, and JWT authentication for secure, scalable B2B sales enablement.**
