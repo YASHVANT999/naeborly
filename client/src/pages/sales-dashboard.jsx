@@ -22,6 +22,7 @@ import {
 
 export default function SalesDashboard() {
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [databaseUnlocked, setDatabaseUnlocked] = useState(false);
   const [inviteForm, setInviteForm] = useState({
     decisionMakerName: "",
     decisionMakerEmail: "",
