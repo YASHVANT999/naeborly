@@ -1,33 +1,21 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
-  id: number;
-  username: string;
+  id: string;
   name: string;
   email: string;
   role: 'admin' | 'sales_rep' | 'decision_maker';
-  company?: string | null;
-  standing?: string | null;
+  subscriptionStatus?: string;
+  subscriptionTier?: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
-  login: (username: string, password: string) => Promise<boolean>;
-  register: (userData: RegisterData) => Promise<boolean>;
-  logout: () => void;
   isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (userData: any) => Promise<void>;
+  logout: () => void;
   isAuthenticated: boolean;
-}
-
-interface RegisterData {
-  username: string;
-  name: string;
-  email: string;
-  password: string;
-  role: 'admin' | 'sales_rep' | 'decision_maker';
-  company?: string;
-  standing?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,107 +28,82 @@ export const useAuth = () => {
   return context;
 };
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem('naeberly_token');
-    const savedUser = localStorage.getItem('naeberly_user');
-    
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-    }
-    
-    setIsLoading(false);
-  }, []);
-
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        const { user: userData, token: userToken } = data.data;
-        setUser(userData);
-        setToken(userToken);
-        localStorage.setItem('naeberly_token', userToken);
-        localStorage.setItem('naeberly_user', JSON.stringify(userData));
-        return true;
+      // Simulate authentication - for demo purposes
+      if (email === 'admin@naeberly.com') {
+        setUser({
+          id: '1',
+          name: 'Admin User',
+          email: 'admin@naeberly.com',
+          role: 'admin'
+        });
+      } else if (email.includes('sales')) {
+        setUser({
+          id: '2',
+          name: 'Sales Rep',
+          email: email,
+          role: 'sales_rep'
+        });
+      } else {
+        setUser({
+          id: '3',
+          name: 'Decision Maker',
+          email: email,
+          role: 'decision_maker'
+        });
       }
-      
-      return false;
+      localStorage.setItem('user', JSON.stringify(user));
     } catch (error) {
-      console.error('Login error:', error);
-      return false;
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (userData: RegisterData): Promise<boolean> => {
+  const signup = async (userData: any) => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        const { user: newUser, token: userToken } = data.data;
-        setUser(newUser);
-        setToken(userToken);
-        localStorage.setItem('naeberly_token', userToken);
-        localStorage.setItem('naeberly_user', JSON.stringify(newUser));
-        return true;
-      }
-      
-      return false;
+      const newUser: User = {
+        id: Date.now().toString(),
+        name: userData.name,
+        email: userData.email,
+        role: userData.role
+      };
+      setUser(newUser);
+      localStorage.setItem('user', JSON.stringify(newUser));
     } catch (error) {
-      console.error('Registration error:', error);
-      return false;
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
   const logout = () => {
+    localStorage.removeItem('user');
     setUser(null);
-    setToken(null);
-    localStorage.removeItem('naeberly_token');
-    localStorage.removeItem('naeberly_user');
   };
 
-  const value: AuthContextType = {
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+  const value = {
     user,
-    token,
-    login,
-    register,
-    logout,
     isLoading,
+    login,
+    signup,
+    logout,
     isAuthenticated: !!user,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-export default AuthProvider;

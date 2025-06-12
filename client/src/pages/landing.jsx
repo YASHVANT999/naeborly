@@ -1,4 +1,5 @@
-import { Link } from "wouter";
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -9,10 +10,17 @@ import {
   Mail, 
   Users,
   Check,
-  ArrowRight
+  ArrowRight,
+  LogIn,
+  User
 } from "lucide-react";
+import { AuthModal } from '@/components/AuthModal';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Landing() {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { user, logout, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
   const features = [
     {
       icon: UserCheck,
@@ -115,8 +123,56 @@ export default function Landing() {
     return colors[color] || "bg-purple-100";
   };
 
+  const handleDashboardAccess = () => {
+    if (user?.role === 'admin') {
+      setLocation('/admin-dashboard');
+    } else if (user?.role === 'sales_rep') {
+      setLocation('/sales-dashboard');
+    } else if (user?.role === 'decision_maker') {
+      setLocation('/decision-dashboard');
+    }
+  };
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-white to-purple-50">
+      {/* Navigation */}
+      <nav className="bg-white/90 backdrop-blur-sm border-b border-purple-100 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <h1 className="text-2xl font-bold text-purple-700">Naeberly</h1>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="hidden md:block">
+                <div className="ml-10 flex items-baseline space-x-4">
+                  <a href="#features" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Features</a>
+                  <a href="#how-it-works" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">How It Works</a>
+                  <a href="#pricing" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Pricing</a>
+                </div>
+              </div>
+              {isAuthenticated ? (
+                <div className="flex items-center space-x-3">
+                  <Button onClick={handleDashboardAccess} variant="outline" className="border-purple-600 text-purple-600">
+                    <User className="w-4 h-4 mr-2" />
+                    {user?.name || 'Dashboard'}
+                  </Button>
+                  <Button onClick={logout} variant="ghost" size="sm">
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <Button onClick={() => setIsAuthModalOpen(true)} className="bg-purple-600 hover:bg-purple-700">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Sign In
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
