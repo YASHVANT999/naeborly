@@ -65,7 +65,7 @@ export default function SalesRepPersonalInfo() {
                   </Label>
                   <Input
                     id="firstName"
-                    placeholder="e"
+                    placeholder="Enter your first name"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange("firstName", e.target.value)}
                     className="mt-1"
@@ -77,7 +77,7 @@ export default function SalesRepPersonalInfo() {
                   </Label>
                   <Input
                     id="lastName"
-                    placeholder="wer"
+                    placeholder="Enter your last name"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange("lastName", e.target.value)}
                     className="mt-1"
@@ -93,7 +93,7 @@ export default function SalesRepPersonalInfo() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="er"
+                  placeholder="Enter your email address"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   className="mt-1"
@@ -123,7 +123,7 @@ export default function SalesRepPersonalInfo() {
                   </Label>
                   <Input
                     id="linkedinUrl"
-                    placeholder="wer"
+                    placeholder="https://linkedin.com/in/yourprofile"
                     value={formData.linkedinUrl}
                     onChange={(e) => handleInputChange("linkedinUrl", e.target.value)}
                     className="mt-1"
@@ -156,7 +156,7 @@ export default function SalesRepPersonalInfo() {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="••••"
+                    placeholder="Create a secure password"
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
                     className="mt-1"
@@ -169,7 +169,7 @@ export default function SalesRepPersonalInfo() {
                   <Input
                     id="confirmPassword"
                     type="password"
-                    placeholder="••••"
+                    placeholder="Confirm your password"
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                     className="mt-1"
