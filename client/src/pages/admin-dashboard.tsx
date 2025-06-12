@@ -48,23 +48,91 @@ const AdminDashboard = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
 
-  // Fetch admin statistics
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['/api/admin/stats'],
-    queryFn: () => apiRequest('GET', '/api/admin/stats'),
-  });
+  // Mock data for demonstration
+  const stats = {
+    totalUsers: 1247,
+    userGrowth: 12.5,
+    activeSubscriptions: 324,
+    subscriptionGrowth: 8.3,
+    totalRevenue: 45789,
+    revenueGrowth: 15.2,
+    supportTickets: 23
+  };
 
-  // Fetch all users
-  const { data: users, isLoading: usersLoading } = useQuery({
-    queryKey: ['/api/admin/users'],
-    queryFn: () => apiRequest('GET', '/api/admin/users'),
-  });
+  const users = [
+    {
+      id: '1',
+      name: 'John Smith',
+      email: 'john@techcorp.com',
+      role: 'sales_rep',
+      status: 'active',
+      subscription: { plan: 'Premium' },
+      lastActive: '2024-01-15'
+    },
+    {
+      id: '2',
+      name: 'Sarah Johnson',
+      email: 'sarah@startup.io',
+      role: 'decision_maker',
+      status: 'active',
+      subscription: { plan: 'Basic' },
+      lastActive: '2024-01-14'
+    },
+    {
+      id: '3',
+      name: 'Mike Wilson',
+      email: 'mike@enterprise.com',
+      role: 'sales_rep',
+      status: 'inactive',
+      subscription: null,
+      lastActive: '2024-01-10'
+    },
+    {
+      id: '4',
+      name: 'Lisa Chen',
+      email: 'lisa@bigcorp.com',
+      role: 'decision_maker',
+      status: 'active',
+      subscription: { plan: 'Pro Team' },
+      lastActive: '2024-01-16'
+    },
+    {
+      id: '5',
+      name: 'Admin User',
+      email: 'admin@naeberly.com',
+      role: 'admin',
+      status: 'active',
+      subscription: null,
+      lastActive: '2024-01-16'
+    }
+  ];
 
-  // Fetch all subscriptions
-  const { data: subscriptions, isLoading: subscriptionsLoading } = useQuery({
-    queryKey: ['/api/admin/subscriptions'],
-    queryFn: () => apiRequest('GET', '/api/admin/subscriptions'),
-  });
+  const subscriptions = [
+    {
+      id: 'sub_1',
+      user: { name: 'John Smith', email: 'john@techcorp.com' },
+      plan: 'Premium',
+      status: 'active',
+      amount: 49,
+      nextBilling: '2024-02-15'
+    },
+    {
+      id: 'sub_2',
+      user: { name: 'Sarah Johnson', email: 'sarah@startup.io' },
+      plan: 'Basic',
+      status: 'active',
+      amount: 19,
+      nextBilling: '2024-02-14'
+    },
+    {
+      id: 'sub_3',
+      user: { name: 'Lisa Chen', email: 'lisa@bigcorp.com' },
+      plan: 'Pro Team',
+      status: 'active',
+      amount: 99,
+      nextBilling: '2024-02-16'
+    }
+  ];
 
   // User management mutations
   const updateUserMutation = useMutation({

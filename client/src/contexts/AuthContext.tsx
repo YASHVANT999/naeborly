@@ -35,30 +35,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      // Simulate authentication - for demo purposes
+      let newUser: User;
+      
       if (email === 'admin@naeberly.com') {
-        setUser({
+        newUser = {
           id: '1',
           name: 'Admin User',
           email: 'admin@naeberly.com',
           role: 'admin'
-        });
+        };
       } else if (email.includes('sales')) {
-        setUser({
+        newUser = {
           id: '2',
           name: 'Sales Rep',
           email: email,
           role: 'sales_rep'
-        });
+        };
       } else {
-        setUser({
+        newUser = {
           id: '3',
           name: 'Decision Maker',
           email: email,
           role: 'decision_maker'
-        });
+        };
       }
-      localStorage.setItem('user', JSON.stringify(user));
+      
+      setUser(newUser);
+      localStorage.setItem('user', JSON.stringify(newUser));
     } catch (error) {
       throw error;
     } finally {

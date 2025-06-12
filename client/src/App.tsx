@@ -13,22 +13,12 @@ import PostCallEvaluation from "@/pages/post-call-evaluation";
 import AdminDashboard from "@/pages/admin-dashboard";
 
 function Router() {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
-      </div>
-    );
-  }
-
   return (
     <Switch>
       <Route path="/" component={Landing} />
-      {user?.role === 'sales_rep' && <Route path="/sales-dashboard" component={SalesDashboard} />}
-      {user?.role === 'decision_maker' && <Route path="/decision-dashboard" component={DecisionDashboard} />}
-      {user?.role === 'admin' && <Route path="/admin-dashboard" component={AdminDashboard} />}
+      <Route path="/sales-dashboard" component={SalesDashboard} />
+      <Route path="/decision-dashboard" component={DecisionDashboard} />
+      <Route path="/admin-dashboard" component={AdminDashboard} />
       <Route path="/call-feedback" component={CallFeedback} />
       <Route path="/post-call-evaluation" component={PostCallEvaluation} />
       <Route component={NotFound} />

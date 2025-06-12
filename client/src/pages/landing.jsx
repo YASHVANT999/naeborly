@@ -15,11 +15,9 @@ import {
   User
 } from "lucide-react";
 import { AuthModal } from '@/components/AuthModal';
-import { useAuth } from '@/contexts/AuthContext';
 
 export default function Landing() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const { user, logout, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const features = [
     {
@@ -123,15 +121,7 @@ export default function Landing() {
     return colors[color] || "bg-purple-100";
   };
 
-  const handleDashboardAccess = () => {
-    if (user?.role === 'admin') {
-      setLocation('/admin-dashboard');
-    } else if (user?.role === 'sales_rep') {
-      setLocation('/sales-dashboard');
-    } else if (user?.role === 'decision_maker') {
-      setLocation('/decision-dashboard');
-    }
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-purple-50">
@@ -152,22 +142,10 @@ export default function Landing() {
                   <a href="#pricing" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Pricing</a>
                 </div>
               </div>
-              {isAuthenticated ? (
-                <div className="flex items-center space-x-3">
-                  <Button onClick={handleDashboardAccess} variant="outline" className="border-purple-600 text-purple-600">
-                    <User className="w-4 h-4 mr-2" />
-                    {user?.name || 'Dashboard'}
-                  </Button>
-                  <Button onClick={logout} variant="ghost" size="sm">
-                    Logout
-                  </Button>
-                </div>
-              ) : (
-                <Button onClick={() => setIsAuthModalOpen(true)} className="bg-purple-600 hover:bg-purple-700">
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Sign In
-                </Button>
-              )}
+              <Button onClick={() => setIsAuthModalOpen(true)} className="bg-purple-600 hover:bg-purple-700">
+                <LogIn className="w-4 h-4 mr-2" />
+                Sign In
+              </Button>
             </div>
           </div>
         </div>
@@ -316,6 +294,9 @@ export default function Landing() {
           </Link>
         </div>
       </section>
+
+      {/* Auth Modal */}
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </div>
   );
 }
