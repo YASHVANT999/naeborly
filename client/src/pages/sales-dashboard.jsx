@@ -31,6 +31,36 @@ export default function SalesDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Mock data for invitations
+  const mockInvitations = [
+    {
+      id: 1,
+      name: "Sarah Johnson",
+      email: "sarah@techcorp.com",
+      status: "pending",
+      sentDate: "2024-01-15"
+    },
+    {
+      id: 2,
+      name: "Mike Chen",
+      email: "mike@startup.io",
+      status: "accepted",
+      sentDate: "2024-01-14"
+    },
+    {
+      id: 3,
+      name: "Lisa Rodriguez",
+      email: "lisa@enterprise.com",
+      status: "pending",
+      sentDate: "2024-01-16"
+    }
+  ];
+
+  // Helper function to get initials
+  const getInitials = (name) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
   // Fetch invitations from API
   const { data: invitations = [], isLoading: invitationsLoading } = useQuery({
     queryKey: ['/api/invitations'],
@@ -84,9 +114,7 @@ export default function SalesDashboard() {
     return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
   };
 
-  const getInitials = (name) => {
-    return name.split(' ').map(n => n[0]).join('');
-  };
+
 
   const simulateAcceptance = () => {
     setDatabaseUnlocked(true);
