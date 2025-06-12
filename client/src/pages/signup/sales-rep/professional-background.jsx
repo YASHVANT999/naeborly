@@ -82,7 +82,7 @@ export default function SalesRepProfessionalBackground() {
                 </Label>
                 <Input
                   id="jobTitle"
-                  placeholder="re"
+                  placeholder="e.g. Senior Sales Manager"
                   value={formData.jobTitle}
                   onChange={(e) => handleInputChange("jobTitle", e.target.value)}
                   className="mt-1"
@@ -96,7 +96,7 @@ export default function SalesRepProfessionalBackground() {
                 </Label>
                 <Input
                   id="company"
-                  placeholder="32"
+                  placeholder="e.g. Salesforce, HubSpot, Microsoft"
                   value={formData.company}
                   onChange={(e) => handleInputChange("company", e.target.value)}
                   className="mt-1"
@@ -111,7 +111,7 @@ export default function SalesRepProfessionalBackground() {
                   </Label>
                   <Select onValueChange={(value) => handleInputChange("industry", value)}>
                     <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Manufacturing" />
+                      <SelectValue placeholder="Select your industry" />
                     </SelectTrigger>
                     <SelectContent>
                       {industries.map((industry) => (
@@ -129,7 +129,7 @@ export default function SalesRepProfessionalBackground() {
                   </Label>
                   <Select onValueChange={(value) => handleInputChange("companySize", value)}>
                     <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="51-200 employees" />
+                      <SelectValue placeholder="Select company size" />
                     </SelectTrigger>
                     <SelectContent>
                       {companySizes.map((size) => (
@@ -149,7 +149,7 @@ export default function SalesRepProfessionalBackground() {
                 </Label>
                 <Input
                   id="yearsInRole"
-                  placeholder="324"
+                  placeholder="e.g. 3"
                   value={formData.yearsInRole}
                   onChange={(e) => handleInputChange("yearsInRole", e.target.value)}
                   className="mt-1"

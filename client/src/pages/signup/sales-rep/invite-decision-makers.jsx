@@ -58,7 +58,7 @@ export default function InviteDecisionMakers() {
                     </Label>
                     <Input
                       id={`dmName${index}`}
-                      placeholder={index === 0 ? "34" : index === 1 ? "234" : "234"}
+                      placeholder={index === 0 ? "John Smith" : index === 1 ? "Sarah Johnson" : "Michael Chen"}
                       value={dm.name}
                       onChange={(e) => handleInputChange(index, "name", e.target.value)}
                       className="mt-1"
@@ -71,7 +71,7 @@ export default function InviteDecisionMakers() {
                     <Input
                       id={`dmEmail${index}`}
                       type="email"
-                      placeholder={index === 0 ? "34" : index === 1 ? "324" : "234"}
+                      placeholder={index === 0 ? "john.smith@company.com" : index === 1 ? "sarah.johnson@company.com" : "michael.chen@company.com"}
                       value={dm.email}
                       onChange={(e) => handleInputChange(index, "email", e.target.value)}
                       className="mt-1"
