@@ -26,7 +26,7 @@ function ProtectedRoute({ component: Component, allowedRoles }: { component: any
   return <Component />;
 }
 
-function Router() {
+function AppRouter() {
   const { user, isAuthenticated } = useAuth();
   
   return (
@@ -62,7 +62,7 @@ function App() {
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <AppRouter />
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

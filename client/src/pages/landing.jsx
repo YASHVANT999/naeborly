@@ -130,7 +130,7 @@ export default function Landing() {
             Contribute decision-makers, earn credits, book quality intro calls.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/signup/sales-rep/personal">
+            <Link href="/sales-dashboard">
               <Button 
                 size="lg" 
                 className="bg-purple-600 text-white px-8 py-4 text-lg font-semibold hover:bg-purple-700 transform hover:scale-105 transition-all shadow-lg"
@@ -138,7 +138,7 @@ export default function Landing() {
                 I'm a Sales Rep <ArrowRight className="ml-2" size={20} />
               </Button>
             </Link>
-            <Link href="/signup/personal">
+            <Link href="/decision-dashboard">
               <Button 
                 variant="outline" 
                 size="lg"
