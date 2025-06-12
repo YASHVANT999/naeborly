@@ -4,9 +4,142 @@ import { storage } from "./storage";
 import { insertInvitationSchema, insertCallSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get current user (mock endpoint)
+  // Authentication routes
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { username, name, email, password, role, company, standing } = req.body;
+      
+      // Check if user exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "User already exists" 
+        });
+      }
+
+      const newUser = await storage.createUser({
+        username,
+        name,
+        email,
+        password,
+        role: role || 'sales_rep',
+        company: company || null,
+        standing: standing || null
+      });
+
+      res.status(201).json({
+        success: true,
+        message: "User registered successfully",
+        data: {
+          user: newUser,
+          token: `jwt-token-${newUser.id}`
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Registration failed"
+      });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user || user.password !== password) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid credentials"
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Login successful",
+        data: {
+          user,
+          token: `jwt-token-${user.id}`
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Login failed"
+      });
+    }
+  });
+
+  app.get("/api/auth/me", async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return res.status(401).json({ message: "No token provided" });
+      }
+
+      const token = authHeader.split(' ')[1];
+      const userId = token.split('-')[2]; // Extract user ID from token
+      
+      const user = await storage.getUser(parseInt(userId));
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(user);
+    } catch (error) {
+      res.status(401).json({ message: "Invalid token" });
+    }
+  });
+
+  // Admin routes
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      const users = Array.from(storage['users'].values());
+      res.json({
+        success: true,
+        data: users
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch users"
+      });
+    }
+  });
+
+  app.get("/api/admin/stats", async (req, res) => {
+    try {
+      const users = Array.from(storage['users'].values());
+      const invitations = Array.from(storage['invitations'].values());
+      const calls = Array.from(storage['calls'].values());
+
+      const stats = {
+        totalUsers: users.length,
+        salesReps: users.filter(u => u.role === 'sales_rep').length,
+        decisionMakers: users.filter(u => u.role === 'decision_maker').length,
+        admins: users.filter(u => u.role === 'admin').length,
+        totalInvitations: invitations.length,
+        pendingInvitations: invitations.filter(i => i.status === 'pending').length,
+        totalCalls: calls.length,
+        completedCalls: calls.filter(c => c.status === 'completed').length
+      };
+
+      res.json({
+        success: true,
+        data: stats
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch stats"
+      });
+    }
+  });
+
+  // Get current user (legacy endpoint)
   app.get("/api/user", async (req, res) => {
-    // For demo purposes, return a mock sales rep user
     const user = await storage.getUser(1);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
