@@ -14,10 +14,9 @@ import {
   LogIn,
   User
 } from "lucide-react";
-import { AuthModal } from '@/components/AuthModal';
+
 
 export default function Landing() {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [, setLocation] = useLocation();
   const features = [
     {
@@ -142,10 +141,12 @@ export default function Landing() {
                   <a href="#pricing" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Pricing</a>
                 </div>
               </div>
-              <Button onClick={() => setIsAuthModalOpen(true)} className="bg-purple-600 hover:bg-purple-700">
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign In
-              </Button>
+              <Link href="/admin-dashboard">
+                <Button className="bg-purple-600 hover:bg-purple-700">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Admin Panel
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -295,8 +296,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Auth Modal */}
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+
     </div>
   );
 }
