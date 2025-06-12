@@ -1,24 +1,53 @@
 const axios = require('axios');
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'http://localhost:3001/api';
 
-// Test data
-const testUser = {
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  password: 'TestPass123'
+// Test data for Naeberly platform
+const salesRepUser = {
+  name: 'John Smith',
+  email: 'john.smith@salescompany.com',
+  password: 'SalesPass123',
+  role: 'sales_rep',
+  packageType: 'premium',
+  company: 'SalesCorp Inc',
+  jobTitle: 'Senior Sales Manager',
+  industry: 'Technology',
+  companySize: '51-200 employees',
+  linkedinUrl: 'https://linkedin.com/in/johnsmith'
 };
 
 const adminUser = {
-  name: 'Admin User',
-  email: 'admin@example.com',
+  name: 'Platform Admin',
+  email: 'admin@naeberly.com',
   password: 'AdminPass123',
   role: 'admin'
 };
 
-let userToken = '';
+const invitationData = {
+  decisionMakerEmail: 'sarah.johnson@targetcompany.com',
+  decisionMakerName: 'Sarah Johnson',
+  message: 'I would love to discuss how our solution can help your sales team achieve better results.'
+};
+
+const decisionMakerSignup = {
+  name: 'Sarah Johnson',
+  password: 'DecisionPass123',
+  company: 'Target Company Inc',
+  jobTitle: 'VP of Sales',
+  availability: {
+    timezone: 'EST',
+    preferredDays: ['Monday', 'Tuesday', 'Wednesday'],
+    preferredTimes: ['09:00', '14:00', '16:00']
+  },
+  interests: ['SaaS', 'Sales Technology'],
+  expertnessAreas: ['Sales Leadership', 'B2B Sales']
+};
+
+let salesRepToken = '';
 let adminToken = '';
-let userId = '';
+let salesRepId = '';
+let invitationId = '';
+let callId = '';
 
 /**
  * Test API endpoints
@@ -58,12 +87,13 @@ async function testHealthCheck() {
   console.log('✅ Health check passed:', response.data.message);
 }
 
-async function testUserRegistration() {
-  console.log('\n👤 Testing user registration...');
-  const response = await axios.post(`${API_BASE}/auth/register`, testUser);
-  console.log('✅ User registered:', response.data.data.user.name);
-  userToken = response.data.data.token;
-  userId = response.data.data.user.id;
+async function testSalesRepRegistration() {
+  console.log('\n👤 Testing sales rep registration...');
+  const response = await axios.post(`${API_BASE}/auth/register`, salesRepUser);
+  console.log('✅ Sales rep registered:', response.data.data.user.name);
+  console.log('Package:', response.data.data.user.packageType, 'Credits:', response.data.data.user.callCredits);
+  salesRepToken = response.data.data.token;
+  salesRepId = response.data.data.user.id;
 }
 
 async function testUserLogin() {
