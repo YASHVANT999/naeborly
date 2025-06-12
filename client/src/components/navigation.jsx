@@ -41,9 +41,11 @@ export default function Navigation() {
                 Decision Maker
               </Button>
             </Link>
-            <Button className="bg-purple-600 text-white hover:bg-purple-700">
-              Sign In
-            </Button>
+            <Link href="/signup/personal">
+              <Button className="bg-purple-600 text-white hover:bg-purple-700">
+                Sign Up
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
