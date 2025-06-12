@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Users, UserCheck, UserPlus, PhoneCall, Mail, TrendingUp, Activity, Shield } from 'lucide-react';
 
 const AdminDashboard = () => {
-  const { user, logout } = useAuth();
+  const user = { name: "Admin User", role: "admin" };
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -99,7 +98,7 @@ const AdminDashboard = () => {
               <Avatar>
                 <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
               </Avatar>
-              <Button onClick={logout} variant="outline">Logout</Button>
+              <Button variant="outline">Settings</Button>
             </div>
           </div>
         </div>
