@@ -13,7 +13,7 @@ class UserService {
    * @returns {Object} Created user and token
    */
   async createUser(userData) {
-    const { name, email, password, role = 'user' } = userData;
+    const { name, email, password, role, packageType, ...otherData } = userData;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -21,12 +21,38 @@ class UserService {
       throw new Error('User with this email already exists');
     }
 
+    // Set default values based on role
+    let userDefaults = {};
+    
+    if (role === 'sales_rep') {
+      // Set package defaults for sales representatives
+      const packageDefaults = {
+        free: { callCredits: 1, monthlyDMLimit: 1 },
+        basic: { callCredits: 5, monthlyDMLimit: 3 },
+        premium: { callCredits: 15, monthlyDMLimit: 10 },
+        'pro-team': { callCredits: 50, monthlyDMLimit: 25 }
+      };
+      
+      const selectedPackage = packageType || 'free';
+      userDefaults = {
+        packageType: selectedPackage,
+        callCredits: packageDefaults[selectedPackage]?.callCredits || 1,
+        monthlyDMLimit: packageDefaults[selectedPackage]?.monthlyDMLimit || 1
+      };
+    } else if (role === 'decision_maker') {
+      userDefaults = {
+        standing: 'good'
+      };
+    }
+
     // Create new user
     const user = await User.create({
       name,
       email,
       password,
-      role
+      role,
+      ...userDefaults,
+      ...otherData
     });
 
     // Generate JWT token

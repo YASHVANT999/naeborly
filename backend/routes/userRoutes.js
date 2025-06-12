@@ -19,8 +19,8 @@ const router = express.Router();
 // Validate role update
 const validateRoleUpdate = [
   body('role')
-    .isIn(['user', 'admin'])
-    .withMessage('Role must be either user or admin'),
+    .isIn(['admin', 'sales_rep', 'decision_maker'])
+    .withMessage('Role must be admin, sales_rep, or decision_maker'),
   handleValidationErrors
 ];
 

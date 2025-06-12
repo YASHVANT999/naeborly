@@ -16,6 +16,8 @@ const {
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const invitationRoutes = require('./routes/invitationRoutes');
+const callRoutes = require('./routes/callRoutes');
 
 // Create Express app
 const app = express();
@@ -58,6 +60,8 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/invitations', invitationRoutes);
+app.use('/api/calls', callRoutes);
 
 // Root route
 app.get('/', (req, res) => {
@@ -85,6 +89,8 @@ const server = app.listen(PORT, () => {
 📚 API Base URL: http://localhost:${PORT}/api
 🔐 Auth endpoints: http://localhost:${PORT}/api/auth
 👥 User endpoints: http://localhost:${PORT}/api/users
+📩 Invitation endpoints: http://localhost:${PORT}/api/invitations
+📞 Call endpoints: http://localhost:${PORT}/api/calls
   `);
 });
 

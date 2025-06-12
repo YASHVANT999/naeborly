@@ -43,9 +43,8 @@ const validateRegister = [
     .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
   
   body('role')
-    .optional()
-    .isIn(['user', 'admin'])
-    .withMessage('Role must be either user or admin'),
+    .isIn(['admin', 'sales_rep', 'decision_maker'])
+    .withMessage('Role must be admin, sales_rep, or decision_maker'),
   
   handleValidationErrors
 ];
