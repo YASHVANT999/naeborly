@@ -55,10 +55,12 @@ export default function SalesRepPersonalInfo() {
 
   const savePersonalInfoMutation = useMutation({
     mutationFn: async (data) => {
+      console.log('Submitting form data:', data, 'LinkedIn verified:', linkedinVerified);
       const response = await apiRequest('POST', '/api/sales-rep/personal-info', { ...data, linkedinVerified });
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Form submission successful:', data);
       toast({
         title: "Information Saved",
         description: "Your personal information has been saved successfully."
@@ -66,6 +68,7 @@ export default function SalesRepPersonalInfo() {
       setLocation("/signup/sales-rep/professional");
     },
     onError: (error) => {
+      console.error('Form submission error:', error);
       toast({
         title: "Save Failed",
         description: error.message || "Failed to save information. Please try again.",

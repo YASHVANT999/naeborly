@@ -15,7 +15,7 @@ import AvailabilityPreferences from "@/pages/signup/availability-preferences";
 import NominateSalesRep from "@/pages/signup/nominate-sales-rep";
 import ChoosePackage from "@/pages/signup/choose-package";
 import SalesRepPersonalInfo from "@/pages/signup/sales-rep/personal-info";
-import SalesRepProfessionalBackground from "@/pages/signup/sales-rep/professional-background";
+import SalesRepProfessionalInfo from "@/pages/signup/sales-rep/professional-info";
 import InviteDecisionMakers from "@/pages/signup/sales-rep/invite-decision-makers";
 import SalesRepChoosePackage from "@/pages/signup/sales-rep/choose-package";
 import NotFound from "@/pages/not-found";
@@ -34,7 +34,7 @@ function Router() {
       <Route path="/signup/nominate" component={NominateSalesRep} />
       <Route path="/signup/package" component={ChoosePackage} />
       <Route path="/signup/sales-rep/personal-info" component={SalesRepPersonalInfo} />
-      <Route path="/signup/sales-rep/professional" component={SalesRepProfessionalBackground} />
+      <Route path="/signup/sales-rep/professional" component={SalesRepProfessionalInfo} />
       <Route path="/signup/sales-rep/invite-decision-makers" component={InviteDecisionMakers} />
       <Route path="/signup/sales-rep/package" component={SalesRepChoosePackage} />
       <Route component={NotFound} />

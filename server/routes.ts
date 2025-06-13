@@ -132,11 +132,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Save personal information
   app.post("/api/sales-rep/personal-info", async (req, res) => {
     try {
+      console.log('Received signup request:', req.body);
       const validatedData = salesRepPersonalInfoSchema.parse(req.body);
+      console.log('Validated data:', validatedData);
       
       // Check if email already exists
       const existingUser = await storage.getUserByEmail(validatedData.email);
       if (existingUser) {
+        console.log('Email already exists:', validatedData.email);
         return res.status(400).json({ message: "Email address is already registered" });
       }
       
@@ -155,17 +158,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isActive: false // Mark as inactive until signup is complete
       };
       
+      console.log('Creating user with data:', userData);
       const user = await storage.createUser(userData);
+      console.log('User created successfully:', user.id);
       
       // Store user ID in session for multi-step process
       (req.session as any).signupUserId = user.id;
       
       res.json({ success: true, message: "Personal information saved", userId: user.id });
     } catch (error: any) {
+      console.error('Signup error:', error);
       if (error.name === 'ZodError') {
         return res.status(400).json({ message: "Validation failed", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to save personal information" });
+      res.status(500).json({ message: "Failed to save personal information", error: error.message });
     }
   });
 
