@@ -87,6 +87,8 @@ export default function DecisionMakerPersonalInfo() {
 
   const handleLinkedinVerify = () => {
     const linkedinUrl = form.getValues("linkedinUrl");
+    console.log('Decision maker LinkedIn verification attempt:', { linkedinUrl });
+    
     if (!linkedinUrl) {
       toast({
         title: "LinkedIn URL Required",
@@ -95,6 +97,8 @@ export default function DecisionMakerPersonalInfo() {
       });
       return;
     }
+    
+    console.log('Starting LinkedIn verification for decision maker:', linkedinUrl);
     linkedinVerifyMutation.mutate(linkedinUrl);
   };
 

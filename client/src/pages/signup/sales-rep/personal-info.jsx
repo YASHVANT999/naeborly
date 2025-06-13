@@ -34,11 +34,19 @@ export default function SalesRepPersonalInfo() {
 
   const linkedinVerifyMutation = useMutation({
     mutationFn: async (linkedinUrl) => {
-      const response = await apiRequest('POST', '/api/verify-linkedin', { linkedinUrl });
-      return response;
+      console.log('LinkedIn verification API call starting for:', linkedinUrl);
+      try {
+        const response = await apiRequest('POST', '/api/verify-linkedin', { linkedinUrl });
+        console.log('LinkedIn verification API response:', response);
+        return response;
+      } catch (error) {
+        console.error('LinkedIn verification API error:', error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
-      if (data.verified) {
+      console.log('LinkedIn verification success handler:', data);
+      if (data && data.verified) {
         setLinkedinVerified(true);
         toast({
           title: "LinkedIn Verified",
@@ -47,12 +55,13 @@ export default function SalesRepPersonalInfo() {
       } else {
         toast({
           title: "Verification Failed",
-          description: data.message || "Unable to verify LinkedIn profile.",
+          description: data?.message || "Unable to verify LinkedIn profile.",
           variant: "destructive"
         });
       }
     },
     onError: (error) => {
+      console.error('LinkedIn verification error handler:', error);
       toast({
         title: "Verification Failed",
         description: error.message || "Unable to verify LinkedIn profile. Please check the URL.",
@@ -87,6 +96,8 @@ export default function SalesRepPersonalInfo() {
 
   const handleLinkedinVerify = () => {
     const linkedinUrl = form.getValues("linkedinUrl");
+    console.log('LinkedIn verification attempt:', { linkedinUrl });
+    
     if (!linkedinUrl) {
       toast({
         title: "LinkedIn URL Required",
@@ -95,6 +106,8 @@ export default function SalesRepPersonalInfo() {
       });
       return;
     }
+    
+    console.log('Starting LinkedIn verification for:', linkedinUrl);
     linkedinVerifyMutation.mutate(linkedinUrl);
   };
 
