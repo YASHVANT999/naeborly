@@ -1,13 +1,8 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
 import { 
   Phone, 
   Users, 
@@ -15,97 +10,37 @@ import {
   Plus, 
   TrendingUp,
   Lock,
-  CalendarPlus,
-  Mail,
-  Building
+  CalendarPlus
 } from "lucide-react";
 
 export default function SalesDashboard() {
-  const [showInviteModal, setShowInviteModal] = useState(false);
   const [databaseUnlocked, setDatabaseUnlocked] = useState(false);
-  const [inviteForm, setInviteForm] = useState({
-    decisionMakerName: "",
-    decisionMakerEmail: "",
-    message: ""
-  });
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  // Mock data for invitations
+  const { data: invitations = [] } = useQuery({
+    queryKey: ['/api/invitations'],
+    enabled: false // Using mock data for now
+  });
+
   const mockInvitations = [
     {
       id: 1,
-      name: "Sarah Johnson",
+      name: "Sarah Chen",
       email: "sarah@techcorp.com",
-      status: "pending",
-      sentDate: "2024-01-15"
+      status: "pending"
     },
     {
-      id: 2,
-      name: "Mike Chen",
-      email: "mike@startup.io",
-      status: "accepted",
-      sentDate: "2024-01-14"
+      id: 2, 
+      name: "Michael Rodriguez",
+      email: "michael@leadflow.com",
+      status: "accepted"
     },
     {
       id: 3,
-      name: "Lisa Rodriguez",
-      email: "lisa@enterprise.com",
-      status: "pending",
-      sentDate: "2024-01-16"
+      name: "Jennifer Walsh", 
+      email: "jennifer@cloudscale.com",
+      status: "pending"
     }
   ];
-
-  // Helper function to get initials
-  const getInitials = (name) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  };
-
-  // Fetch invitations from API
-  const { data: invitations = [], isLoading: invitationsLoading } = useQuery({
-    queryKey: ['/api/invitations'],
-    queryFn: () => fetch('/api/invitations?userId=1').then(res => res.json())
-  });
-
-  // Fetch calls from API
-  const { data: calls = [], isLoading: callsLoading } = useQuery({
-    queryKey: ['/api/calls'],
-    queryFn: () => fetch('/api/calls?userId=1').then(res => res.json())
-  });
-
-  // Create invitation mutation
-  const createInvitationMutation = useMutation({
-    mutationFn: (invitationData) => 
-      fetch('/api/invitations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...invitationData,
-          salesRepId: 1
-        })
-      }).then(res => res.json()),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['/api/invitations']);
-      setShowInviteModal(false);
-      setInviteForm({ decisionMakerName: "", decisionMakerEmail: "", message: "" });
-      toast({
-        title: "Invitation sent!",
-        description: "Your invitation has been sent successfully.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to send invitation. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const handleInviteSubmit = (e) => {
-    e.preventDefault();
-    createInvitationMutation.mutate(inviteForm);
-  };
 
   const getStatusBadge = (status) => {
     if (status === "accepted") {
@@ -114,7 +49,9 @@ export default function SalesDashboard() {
     return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
   };
 
-
+  const getInitials = (name) => {
+    return name.split(' ').map(n => n[0]).join('');
+  };
 
   const simulateAcceptance = () => {
     setDatabaseUnlocked(true);

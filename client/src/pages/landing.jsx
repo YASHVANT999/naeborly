@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -10,14 +9,10 @@ import {
   Mail, 
   Users,
   Check,
-  ArrowRight,
-  LogIn,
-  User
+  ArrowRight
 } from "lucide-react";
 
-
 export default function Landing() {
-  const [, setLocation] = useLocation();
   const features = [
     {
       icon: UserCheck,
@@ -120,38 +115,8 @@ export default function Landing() {
     return colors[color] || "bg-purple-100";
   };
 
-
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-purple-50">
-      {/* Navigation */}
-      <nav className="bg-white/90 backdrop-blur-sm border-b border-purple-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-purple-700">Naeberly</h1>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="hidden md:block">
-                <div className="ml-10 flex items-baseline space-x-4">
-                  <a href="#features" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Features</a>
-                  <a href="#how-it-works" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">How It Works</a>
-                  <a href="#pricing" className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">Pricing</a>
-                </div>
-              </div>
-              <Link href="/admin-dashboard">
-                <Button className="bg-purple-600 hover:bg-purple-700">
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Admin Panel
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <div className="min-h-screen">
       {/* Hero Section */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
@@ -165,7 +130,7 @@ export default function Landing() {
             Contribute decision-makers, earn credits, book quality intro calls.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/sales-dashboard">
+            <Link href="/signup/sales-rep/personal">
               <Button 
                 size="lg" 
                 className="bg-purple-600 text-white px-8 py-4 text-lg font-semibold hover:bg-purple-700 transform hover:scale-105 transition-all shadow-lg"
@@ -173,7 +138,7 @@ export default function Landing() {
                 I'm a Sales Rep <ArrowRight className="ml-2" size={20} />
               </Button>
             </Link>
-            <Link href="/decision-dashboard">
+            <Link href="/signup/personal">
               <Button 
                 variant="outline" 
                 size="lg"
@@ -182,7 +147,6 @@ export default function Landing() {
                 I'm a Decision Maker ✓
               </Button>
             </Link>
-
           </div>
         </div>
       </section>
@@ -287,8 +251,6 @@ export default function Landing() {
           </Link>
         </div>
       </section>
-
-
     </div>
   );
 }

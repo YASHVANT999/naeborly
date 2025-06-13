@@ -3,24 +3,14 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import NotFound from "@/pages/not-found";
-import Landing from "@/pages/landing";
-import SalesDashboard from "@/pages/sales-dashboard";
-import DecisionDashboard from "@/pages/decision-dashboard";
-import CallFeedback from "@/pages/call-feedback";
-import PostCallEvaluation from "@/pages/post-call-evaluation";
-import AdminDashboard from "@/pages/admin-dashboard";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Landing} />
-      <Route path="/sales-dashboard" component={SalesDashboard} />
-      <Route path="/decision-dashboard" component={DecisionDashboard} />
-      <Route path="/admin-dashboard" component={AdminDashboard} />
-      <Route path="/call-feedback" component={CallFeedback} />
-      <Route path="/post-call-evaluation" component={PostCallEvaluation} />
+      {/* Add pages below */}
+      {/* <Route path="/" component={Home}/> */}
+      {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
   );
@@ -29,12 +19,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Router />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
