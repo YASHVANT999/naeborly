@@ -490,23 +490,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, password } = req.body;
       
+      console.log('Login attempt:', { email, password: password ? '***' : 'missing' });
+      
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
       }
       
       // Get user by email
       const user = await storage.getUserByEmail(email);
+      console.log('User found:', user ? { id: user.id, email: user.email, role: user.role, isActive: user.isActive } : 'NOT FOUND');
+      
       if (!user) {
         return res.status(401).json({ message: "Invalid email or password" });
       }
       
       // Check if account is active (completed signup)
       if (!user.isActive) {
+        console.log('User account inactive');
         return res.status(401).json({ message: "Please complete your signup process first" });
       }
       
       // Verify password
       const isPasswordValid = await bcrypt.compare(password, user.password);
+      console.log('Password valid:', isPasswordValid);
+      
       if (!isPasswordValid) {
         return res.status(401).json({ message: "Invalid email or password" });
       }
@@ -514,6 +521,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store user session
       (req.session as any).userId = user.id;
       (req.session as any).userRole = user.role;
+      
+      console.log('Login successful for:', user.email);
       
       // Return user data (excluding password)
       const { password: _, ...userWithoutPassword } = user;
