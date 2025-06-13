@@ -322,16 +322,23 @@ export default function DecisionDashboard() {
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium text-gray-600">Calls Completed</span>
-                    <span className="text-sm font-bold text-gray-900">1/3</span>
+                    <span className="text-sm font-bold text-gray-900">
+                      {metrics?.completedCalls || 0}/{metrics?.totalCallLimit || 3}
+                    </span>
                   </div>
-                  <Progress value={33} className="h-2" />
+                  <Progress value={metrics?.completionPercentage || 0} className="h-2" />
                 </div>
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium text-gray-600">Remaining</span>
-                    <span className="text-sm font-bold text-gray-900">2/3</span>
+                    <span className="text-sm font-bold text-gray-900">
+                      {metrics?.remainingCalls || 0}/{metrics?.totalCallLimit || 3}
+                    </span>
                   </div>
-                  <Progress value={67} className="h-2 bg-purple-200" />
+                  <Progress 
+                    value={metrics?.remainingCalls ? (metrics.remainingCalls / (metrics.totalCallLimit || 3)) * 100 : 0} 
+                    className="h-2 bg-purple-200" 
+                  />
                 </div>
               </CardContent>
             </Card>
