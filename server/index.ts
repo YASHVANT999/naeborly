@@ -54,13 +54,9 @@ async function startServer() {
     log(`API routes registered`);
 
     // Setup vite/static serving after API routes to avoid route conflicts
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-      log(`Vite development server configured`);
-    } else {
-      serveStatic(app);
-      log(`Static files configured`);
-    }
+    // Temporarily using static serving due to Vite TypeScript compilation issues
+    serveStatic(app);
+    log(`Static files configured`);
 
     // Add error handling middleware last
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
