@@ -65,7 +65,7 @@ export default function SalesRepPersonalInfo() {
         title: "Information Saved",
         description: "Your personal information has been saved successfully."
       });
-      setLocation("/signup/sales-rep/professional");
+      setLocation("/signup/sales-rep/professional-info");
     },
     onError: (error) => {
       console.error('Form submission error:', error);

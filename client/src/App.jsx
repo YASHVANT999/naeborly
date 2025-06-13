@@ -34,8 +34,8 @@ function Router() {
       <Route path="/signup/nominate" component={NominateSalesRep} />
       <Route path="/signup/package" component={ChoosePackage} />
       <Route path="/signup/sales-rep/personal-info" component={SalesRepPersonalInfo} />
-      <Route path="/signup/sales-rep/professional" component={SalesRepProfessionalInfo} />
-      <Route path="/signup/sales-rep/invite-decision-makers" component={InviteDecisionMakers} />
+      <Route path="/signup/sales-rep/professional-info" component={SalesRepProfessionalInfo} />
+      <Route path="/signup/sales-rep/invites" component={InviteDecisionMakers} />
       <Route path="/signup/sales-rep/package" component={SalesRepChoosePackage} />
       <Route component={NotFound} />
     </Switch>

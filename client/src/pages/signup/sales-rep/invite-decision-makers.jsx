@@ -185,7 +185,7 @@ export default function InviteDecisionMakers() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setLocation("/signup/sales-rep/professional")}
+                    onClick={() => setLocation("/signup/sales-rep/professional-info")}
                     className="flex items-center gap-2"
                   >
                     <ArrowLeft className="h-4 w-4" />
