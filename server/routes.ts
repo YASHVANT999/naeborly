@@ -208,7 +208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = salesRepInvitesSchema.parse(req.body);
       
       // Get user ID from session
-      const userId = req.session?.signupUserId;
+      const userId = (req.session as any)?.signupUserId;
       if (!userId) {
         return res.status(400).json({ message: "Please complete previous steps first" });
       }
@@ -244,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = salesRepPackageSchema.parse(req.body);
       
       // Get user ID from session
-      const userId = req.session?.signupUserId;
+      const userId = (req.session as any)?.signupUserId;
       if (!userId) {
         return res.status(400).json({ message: "Please complete previous steps first" });
       }
@@ -260,7 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Clear signup session
-      delete req.session?.signupUserId;
+      delete (req.session as any).signupUserId;
       
       res.json({ 
         success: true, 
