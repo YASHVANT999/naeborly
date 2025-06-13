@@ -341,6 +341,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ===== SUPER ADMIN ROUTES =====
   
+  // Create Super Admin (development only)
+  app.post("/api/create-super-admin", async (req, res) => {
+    try {
+      const email = 'superadmin@naeberly.com';
+      const password = 'SuperAdmin123!';
+      
+      // Check if super admin already exists
+      const existingAdmin = await storage.getUserByEmail(email);
+      if (existingAdmin) {
+        return res.json({ message: "Super admin already exists", email });
+      }
+      
+      // Create super admin user
+      const superAdmin = await storage.createUser({
+        email,
+        password, // Will be hashed in storage
+        role: 'super_admin',
+        firstName: 'Super',
+        lastName: 'Admin',
+        isActive: true,
+        packageType: 'premium',
+        standing: 'excellent'
+      });
+      
+      res.json({ 
+        success: true, 
+        message: "Super admin created successfully", 
+        email,
+        temporaryPassword: password 
+      });
+    } catch (error) {
+      console.error('Error creating super admin:', error);
+      res.status(500).json({ message: "Failed to create super admin" });
+    }
+  });
+  
   // Super Admin Authentication
   app.post("/api/super-admin/login", async (req, res) => {
     try {
