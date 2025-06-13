@@ -31,14 +31,16 @@ export default function TestSignup() {
 
   const testStep2 = async () => {
     try {
-      const response = await apiRequest('POST', '/api/sales-rep/professional-info', {
-        jobTitle: "Sales Representative",
-        company: "Test Company",
-        industry: "Technology",
-        companySize: "51-200 employees",
-        yearsInRole: "1-2 years"
+      const response = await apiRequest('/api/sales-rep/professional-info', {
+        method: 'POST',
+        body: JSON.stringify({
+          jobTitle: "Sales Representative",
+          company: "Test Company",
+          industry: "Technology",
+          companySize: "51-200 employees",
+          yearsInRole: "1-2 years"
+        })
       });
-      await response.json();
       setStep(3);
       toast({ title: "Step 2 Complete", description: "Professional info saved" });
     } catch (error) {
@@ -48,12 +50,14 @@ export default function TestSignup() {
 
   const testStep3 = async () => {
     try {
-      const response = await apiRequest('POST', '/api/sales-rep/invites', {
-        decisionMakers: [
-          { name: "Test Decision Maker", email: "dm@test.com" }
-        ]
+      const response = await apiRequest('/api/sales-rep/invites', {
+        method: 'POST',
+        body: JSON.stringify({
+          decisionMakers: [
+            { name: "Test Decision Maker", email: "dm@test.com" }
+          ]
+        })
       });
-      await response.json();
       setStep(4);
       toast({ title: "Step 3 Complete", description: "Invites saved" });
     } catch (error) {
@@ -63,10 +67,12 @@ export default function TestSignup() {
 
   const testStep4 = async () => {
     try {
-      const response = await apiRequest('POST', '/api/sales-rep/package', {
-        packageType: "premium"
+      const response = await apiRequest('/api/sales-rep/package', {
+        method: 'POST',
+        body: JSON.stringify({
+          packageType: "premium"
+        })
       });
-      const data = await response.json();
       setStep(5);
       toast({ title: "Step 4 Complete", description: "Signup completed!" });
     } catch (error) {

@@ -27,8 +27,11 @@ export default function DecisionMakerChoosePackage() {
   const savePackageMutation = useMutation({
     mutationFn: async (data) => {
       console.log('Submitting decision maker package data:', data);
-      const response = await apiRequest('POST', '/api/decision-maker/package', data);
-      return await response.json();
+      const response = await apiRequest('/api/decision-maker/package', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+      return response;
     },
     onSuccess: (data) => {
       console.log('Decision maker package selection saved successfully:', data);
