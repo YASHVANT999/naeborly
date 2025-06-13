@@ -40,7 +40,7 @@ export default function SuperAdminDashboard() {
   const queryClient = useQueryClient();
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [userFilters, setUserFilters] = useState({ role: '', search: '', page: 1 });
+  const [userFilters, setUserFilters] = useState({ role: 'all', search: '', page: 1 });
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [isCreatePlanOpen, setIsCreatePlanOpen] = useState(false);
   const [isEditPlanOpen, setIsEditPlanOpen] = useState(false);
@@ -384,7 +384,7 @@ export default function SuperAdminDashboard() {
                       <SelectValue placeholder="Filter by role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Roles</SelectItem>
+                      <SelectItem value="all">All Roles</SelectItem>
                       <SelectItem value="sales_rep">Sales Rep</SelectItem>
                       <SelectItem value="decision_maker">Decision Maker</SelectItem>
                       <SelectItem value="super_admin">Super Admin</SelectItem>
@@ -713,10 +713,10 @@ export default function SuperAdminDashboard() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Select role" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -735,10 +735,10 @@ export default function SuperAdminDashboard() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Package Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Select package" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
