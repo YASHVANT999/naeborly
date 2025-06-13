@@ -34,8 +34,18 @@ export default function DecisionMakerPersonalInfo() {
 
   const linkedinVerifyMutation = useMutation({
     mutationFn: async (linkedinUrl) => {
-      const response = await apiRequest('POST', '/api/verify-linkedin', { linkedinUrl });
-      return response;
+      console.log('Decision maker LinkedIn verification API call starting for:', linkedinUrl);
+      try {
+        const response = await apiRequest('/api/verify-linkedin', {
+          method: 'POST',
+          body: JSON.stringify({ linkedinUrl })
+        });
+        console.log('Decision maker LinkedIn verification API response:', response);
+        return response;
+      } catch (error) {
+        console.error('Decision maker LinkedIn verification API error:', error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       if (data.verified) {

@@ -36,7 +36,10 @@ export default function SalesRepPersonalInfo() {
     mutationFn: async (linkedinUrl) => {
       console.log('LinkedIn verification API call starting for:', linkedinUrl);
       try {
-        const response = await apiRequest('POST', '/api/verify-linkedin', { linkedinUrl });
+        const response = await apiRequest('/api/verify-linkedin', {
+          method: 'POST',
+          body: JSON.stringify({ linkedinUrl })
+        });
         console.log('LinkedIn verification API response:', response);
         return response;
       } catch (error) {
