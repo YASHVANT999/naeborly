@@ -40,7 +40,7 @@ export default function SuperAdminDashboard() {
   const queryClient = useQueryClient();
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [userFilters, setUserFilters] = useState({ role: 'all', search: '', page: 1 });
+  const [userFilters, setUserFilters] = useState({ role: '', search: '', page: 1 });
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [isCreatePlanOpen, setIsCreatePlanOpen] = useState(false);
   const [isEditPlanOpen, setIsEditPlanOpen] = useState(false);
@@ -384,7 +384,7 @@ export default function SuperAdminDashboard() {
                       <SelectValue placeholder="Filter by role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Roles</SelectItem>
+                      <SelectItem value="">All Roles</SelectItem>
                       <SelectItem value="sales_rep">Sales Rep</SelectItem>
                       <SelectItem value="decision_maker">Decision Maker</SelectItem>
                       <SelectItem value="super_admin">Super Admin</SelectItem>

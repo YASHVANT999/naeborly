@@ -440,7 +440,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const search = req.query.search as string;
       
       let filters: any = {};
-      if (role && role !== 'all') filters.role = role;
+      if (role) filters.role = role;
       if (search) {
         filters.$or = [
           { firstName: { $regex: search, $options: 'i' } },
