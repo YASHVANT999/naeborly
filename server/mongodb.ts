@@ -2,14 +2,12 @@ import mongoose from 'mongoose';
 
 export async function connectToMongoDB() {
   try {
-    // Use local MongoDB for development
-    const mongoUrl = process.env.MONGODB_URL || 'mongodb://localhost:27017/naeberly';
+    const mongoUrl = process.env.MONGODB_URI || 'mongodb+srv://yash6491:YASHVANT@cluster0.f3pmu6p.mongodb.net/biobridge?retryWrites=true&w=majority';
     await mongoose.connect(mongoUrl);
-    console.log('Connected to MongoDB successfully');
+    console.log('Connected to MongoDB Atlas successfully');
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    // If MongoDB is not available, we'll continue without it for now
-    console.log('Continuing without MongoDB connection...');
+    throw error;
   }
 }
 

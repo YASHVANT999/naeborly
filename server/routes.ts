@@ -15,7 +15,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user (mock endpoint)
   app.get("/api/user", async (req, res) => {
     // For demo purposes, return a mock sales rep user
-    const user = await storage.getUser(1);
+    const user = await storage.getUser("1");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

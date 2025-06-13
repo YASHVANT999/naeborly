@@ -12,21 +12,21 @@ import {
 
 export interface IStorage {
   // User methods
-  getUser(id: number): Promise<any | undefined>;
+  getUser(id: string): Promise<any | undefined>;
   getUserByUsername(username: string): Promise<any | undefined>;
   getUserByEmail(email: string): Promise<any | undefined>;
   createUser(user: any): Promise<any>;
-  updateUser(id: number, updates: any): Promise<any | undefined>;
+  updateUser(id: string, updates: any): Promise<any | undefined>;
   
   // Invitation methods
-  getInvitationsByUserId(userId: number): Promise<any[]>;
+  getInvitationsByUserId(userId: string): Promise<any[]>;
   createInvitation(invitation: any): Promise<any>;
-  updateInvitationStatus(id: number, status: string): Promise<any | undefined>;
+  updateInvitationStatus(id: string, status: string): Promise<any | undefined>;
   
   // Call methods
-  getCallsByUserId(userId: number): Promise<any[]>;
+  getCallsByUserId(userId: string): Promise<any[]>;
   createCall(call: any): Promise<any>;
-  updateCall(id: number, updates: any): Promise<any | undefined>;
+  updateCall(id: string, updates: any): Promise<any | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -230,6 +230,6 @@ export class MemStorage implements IStorage {
   }
 }
 
-import { DatabaseStorage } from "./database-storage";
+import { SimpleMongoDBStorage } from './simple-mongodb-storage';
 
-export const storage = new MemStorage();
+export const storage = new SimpleMongoDBStorage();
