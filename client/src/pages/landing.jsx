@@ -138,7 +138,7 @@ export default function Landing() {
                 I'm a Sales Rep <ArrowRight className="ml-2" size={20} />
               </Button>
             </Link>
-            <Link href="/signup/personal">
+            <Link href="/signup/decision-maker/personal-info">
               <Button 
                 variant="outline" 
                 size="lg"

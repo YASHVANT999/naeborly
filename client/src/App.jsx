@@ -18,6 +18,11 @@ import SalesRepPersonalInfo from "@/pages/signup/sales-rep/personal-info";
 import SalesRepProfessionalInfo from "@/pages/signup/sales-rep/professional-info";
 import InviteDecisionMakers from "@/pages/signup/sales-rep/invite-decision-makers";
 import SalesRepChoosePackage from "@/pages/signup/sales-rep/choose-package";
+import DecisionMakerPersonalInfo from "@/pages/signup/decision-maker/personal-info";
+import DecisionMakerProfessionalInfo from "@/pages/signup/decision-maker/professional-info";
+import DecisionMakerAvailability from "@/pages/signup/decision-maker/availability";
+import DecisionMakerNominate from "@/pages/signup/decision-maker/nominate";
+import DecisionMakerChoosePackage from "@/pages/signup/decision-maker/package";
 import TestSignup from "@/pages/test-signup";
 import NotFound from "@/pages/not-found";
 
@@ -38,6 +43,11 @@ function Router() {
       <Route path="/signup/sales-rep/professional-info" component={SalesRepProfessionalInfo} />
       <Route path="/signup/sales-rep/invites" component={InviteDecisionMakers} />
       <Route path="/signup/sales-rep/package" component={SalesRepChoosePackage} />
+      <Route path="/signup/decision-maker/personal-info" component={DecisionMakerPersonalInfo} />
+      <Route path="/signup/decision-maker/professional-info" component={DecisionMakerProfessionalInfo} />
+      <Route path="/signup/decision-maker/availability" component={DecisionMakerAvailability} />
+      <Route path="/signup/decision-maker/nominate" component={DecisionMakerNominate} />
+      <Route path="/signup/decision-maker/package" component={DecisionMakerChoosePackage} />
       <Route path="/test-signup" component={TestSignup} />
       <Route component={NotFound} />
     </Switch>
