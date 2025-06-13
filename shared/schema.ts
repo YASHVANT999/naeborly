@@ -82,6 +82,56 @@ export const salesRepPackageSchema = z.object({
   packageType: z.enum(["free", "basic", "premium", "pro-team"]),
 });
 
+// Decision Maker signup validation schemas
+export const decisionMakerPersonalInfoSchema = z.object({
+  firstName: z.string().min(2, "First name must be at least 2 characters").max(50, "First name must be less than 50 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters").max(50, "Last name must be less than 50 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  linkedinUrl: z.string().url("Please enter a valid LinkedIn URL").refine(
+    (url) => url.includes("linkedin.com"),
+    "Must be a valid LinkedIn URL"
+  ),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/\d/, "Password must contain at least one number")
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, "Password must contain at least one special character"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+export const decisionMakerProfessionalSchema = z.object({
+  jobTitle: z.string().min(2, "Job title is required"),
+  company: z.string().min(2, "Company name is required"),
+  industry: z.string().min(1, "Please select an industry"),
+  companySize: z.string().min(1, "Please select company size"),
+  yearsInRole: z.string().optional(),
+});
+
+export const decisionMakerAvailabilitySchema = z.object({
+  availabilityType: z.enum(["flexible", "specific_times", "by_appointment"]),
+  preferredDays: z.array(z.string()).optional(),
+  preferredTimes: z.array(z.string()).optional(),
+  timezone: z.string().min(1, "Please select your timezone"),
+  callDuration: z.enum(["15", "30", "45"]).default("15"),
+});
+
+export const decisionMakerNominationSchema = z.object({
+  nominatedSalesReps: z.array(z.object({
+    name: z.string().min(2, "Name must be at least 2 characters").optional().or(z.literal("")),
+    email: z.string().email("Please enter a valid email").optional().or(z.literal("")),
+    company: z.string().optional().or(z.literal("")),
+    referralReason: z.string().optional().or(z.literal("")),
+  })).optional(),
+});
+
+export const decisionMakerPackageSchema = z.object({
+  packageType: z.enum(["free", "basic", "premium"]),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
