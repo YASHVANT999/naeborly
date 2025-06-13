@@ -28,8 +28,11 @@ export default function InviteDecisionMakers() {
   const saveInvitesMutation = useMutation({
     mutationFn: async (data) => {
       console.log('Submitting invites data:', data);
-      const response = await apiRequest('POST', '/api/sales-rep/invites', data);
-      return await response.json();
+      const response = await apiRequest('/api/sales-rep/invites', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+      return response;
     },
     onSuccess: (data) => {
       console.log('Invites saved successfully:', data);

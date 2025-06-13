@@ -29,8 +29,11 @@ export default function DecisionMakerNominate() {
   const saveNominationMutation = useMutation({
     mutationFn: async (data) => {
       console.log('Submitting decision maker nomination data:', data);
-      const response = await apiRequest('POST', '/api/decision-maker/nominate', data);
-      return await response.json();
+      const response = await apiRequest('/api/decision-maker/nominate', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+      return response;
     },
     onSuccess: (data) => {
       console.log('Decision maker nominations saved successfully:', data);

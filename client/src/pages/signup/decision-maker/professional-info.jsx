@@ -31,8 +31,11 @@ export default function DecisionMakerProfessionalInfo() {
   const saveProfessionalInfoMutation = useMutation({
     mutationFn: async (data) => {
       console.log('Submitting decision maker professional data:', data);
-      const response = await apiRequest('POST', '/api/decision-maker/professional-info', data);
-      return await response.json();
+      const response = await apiRequest('/api/decision-maker/professional-info', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+      return response;
     },
     onSuccess: (data) => {
       console.log('Decision maker professional info saved successfully:', data);

@@ -33,8 +33,11 @@ export default function DecisionMakerAvailability() {
   const saveAvailabilityMutation = useMutation({
     mutationFn: async (data) => {
       console.log('Submitting decision maker availability data:', data);
-      const response = await apiRequest('POST', '/api/decision-maker/availability', data);
-      return await response.json();
+      const response = await apiRequest('/api/decision-maker/availability', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+      return response;
     },
     onSuccess: (data) => {
       console.log('Decision maker availability saved successfully:', data);

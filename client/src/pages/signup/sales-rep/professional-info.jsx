@@ -31,8 +31,11 @@ export default function SalesRepProfessionalInfo() {
   const saveProfessionalInfoMutation = useMutation({
     mutationFn: async (data) => {
       console.log('Submitting professional data:', data);
-      const response = await apiRequest('POST', '/api/sales-rep/professional-info', data);
-      return await response.json();
+      const response = await apiRequest('/api/sales-rep/professional-info', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+      return response;
     },
     onSuccess: (data) => {
       console.log('Professional info saved successfully:', data);

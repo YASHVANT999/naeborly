@@ -28,8 +28,11 @@ export default function SalesRepChoosePackage() {
   const savePackageMutation = useMutation({
     mutationFn: async (data) => {
       console.log('Submitting package data:', data);
-      const response = await apiRequest('POST', '/api/sales-rep/package', data);
-      return await response.json();
+      const response = await apiRequest('/api/sales-rep/package', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+      return response;
     },
     onSuccess: (data) => {
       console.log('Package selection saved successfully:', data);
