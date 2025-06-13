@@ -37,12 +37,20 @@ export default function DecisionMakerPersonalInfo() {
       const response = await apiRequest('POST', '/api/verify-linkedin', { linkedinUrl });
       return response;
     },
-    onSuccess: () => {
-      setLinkedinVerified(true);
-      toast({
-        title: "LinkedIn Verified",
-        description: "Your LinkedIn profile has been successfully verified."
-      });
+    onSuccess: (data) => {
+      if (data.verified) {
+        setLinkedinVerified(true);
+        toast({
+          title: "LinkedIn Verified",
+          description: data.message || "Your LinkedIn profile has been successfully verified."
+        });
+      } else {
+        toast({
+          title: "Verification Failed",
+          description: data.message || "Unable to verify LinkedIn profile.",
+          variant: "destructive"
+        });
+      }
     },
     onError: (error) => {
       toast({
