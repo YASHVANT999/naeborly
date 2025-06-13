@@ -91,6 +91,11 @@ export default function SalesRepPersonalInfo() {
   };
 
   const onSubmit = (data) => {
+    console.log('Form submission attempt:', data);
+    console.log('Form errors:', form.formState.errors);
+    console.log('LinkedIn verified:', linkedinVerified);
+    console.log('Form valid:', form.formState.isValid);
+    
     if (!linkedinVerified) {
       toast({
         title: "LinkedIn Verification Required",
@@ -102,7 +107,7 @@ export default function SalesRepPersonalInfo() {
     savePersonalInfoMutation.mutate(data);
   };
 
-  const isFormValid = form.formState.isValid && linkedinVerified;
+  const isFormValid = Object.keys(form.formState.errors).length === 0 && linkedinVerified;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
@@ -350,7 +355,7 @@ export default function SalesRepPersonalInfo() {
           </Button>
           <Button
             onClick={form.handleSubmit(onSubmit)}
-            disabled={!isFormValid || savePersonalInfoMutation.isPending}
+            disabled={savePersonalInfoMutation.isPending}
             className="bg-purple-600 hover:bg-purple-700 px-8"
           >
             {savePersonalInfoMutation.isPending ? (
