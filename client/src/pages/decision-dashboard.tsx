@@ -22,10 +22,10 @@ const DecisionDashboard = () => {
   }
 
   const stats = {
-    totalCalls: calls?.length || 0,
-    upcomingCalls: calls?.filter((call: any) => call.status === 'scheduled').length || 0,
-    completedCalls: calls?.filter((call: any) => call.status === 'completed').length || 0,
-    pendingFeedback: calls?.filter((call: any) => call.status === 'completed' && !call.feedback).length || 0
+    totalCalls: Array.isArray(calls) ? calls.length : 0,
+    upcomingCalls: Array.isArray(calls) ? calls.filter((call: any) => call.status === 'scheduled').length : 0,
+    completedCalls: Array.isArray(calls) ? calls.filter((call: any) => call.status === 'completed').length : 0,
+    pendingFeedback: Array.isArray(calls) ? calls.filter((call: any) => call.status === 'completed' && !call.feedback).length : 0
   };
 
   return (
@@ -108,7 +108,7 @@ const DecisionDashboard = () => {
                     <div key={i} className="h-20 bg-gray-100 rounded-md animate-pulse" />
                   ))}
                 </div>
-              ) : calls && calls.filter((call: any) => call.status === 'scheduled').length > 0 ? (
+              ) : Array.isArray(calls) && calls.filter((call: any) => call.status === 'scheduled').length > 0 ? (
                 <div className="space-y-4">
                   {calls.filter((call: any) => call.status === 'scheduled').map((call: any) => (
                     <div key={call.id} className="p-4 border rounded-lg">
@@ -158,7 +158,7 @@ const DecisionDashboard = () => {
                     <div key={i} className="h-20 bg-gray-100 rounded-md animate-pulse" />
                   ))}
                 </div>
-              ) : calls && calls.filter((call: any) => call.status === 'completed').length > 0 ? (
+              ) : Array.isArray(calls) && calls.filter((call: any) => call.status === 'completed').length > 0 ? (
                 <div className="space-y-4">
                   {calls.filter((call: any) => call.status === 'completed').slice(0, 5).map((call: any) => (
                     <div key={call.id} className="p-4 border rounded-lg">

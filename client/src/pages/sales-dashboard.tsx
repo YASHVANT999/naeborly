@@ -28,10 +28,10 @@ const SalesDashboard = () => {
   }
 
   const stats = {
-    totalInvitations: invitations?.length || 0,
-    acceptedInvitations: invitations?.filter((inv: any) => inv.status === 'accepted').length || 0,
-    scheduledCalls: calls?.filter((call: any) => call.status === 'scheduled').length || 0,
-    completedCalls: calls?.filter((call: any) => call.status === 'completed').length || 0
+    totalInvitations: Array.isArray(invitations) ? invitations.length : 0,
+    acceptedInvitations: Array.isArray(invitations) ? invitations.filter((inv: any) => inv.status === 'accepted').length : 0,
+    scheduledCalls: Array.isArray(calls) ? calls.filter((call: any) => call.status === 'scheduled').length : 0,
+    completedCalls: Array.isArray(calls) ? calls.filter((call: any) => call.status === 'completed').length : 0
   };
 
   return (
@@ -122,7 +122,7 @@ const SalesDashboard = () => {
                     <div key={i} className="h-16 bg-gray-100 rounded-md animate-pulse" />
                   ))}
                 </div>
-              ) : invitations && invitations.length > 0 ? (
+              ) : Array.isArray(invitations) && invitations.length > 0 ? (
                 <div className="space-y-4">
                   {invitations.slice(0, 5).map((invitation: any) => (
                     <div key={invitation.id} className="flex items-center justify-between p-3 border rounded-lg">
@@ -172,7 +172,7 @@ const SalesDashboard = () => {
                     <div key={i} className="h-16 bg-gray-100 rounded-md animate-pulse" />
                   ))}
                 </div>
-              ) : calls && calls.length > 0 ? (
+              ) : Array.isArray(calls) && calls.length > 0 ? (
                 <div className="space-y-4">
                   {calls.filter((call: any) => call.status === 'scheduled').slice(0, 5).map((call: any) => (
                     <div key={call.id} className="flex items-center justify-between p-3 border rounded-lg">
