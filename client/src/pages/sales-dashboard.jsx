@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,52 +10,89 @@ import {
   Plus, 
   TrendingUp,
   Lock,
-  CalendarPlus
+  CalendarPlus,
+  Loader2
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SalesDashboard() {
-  const [databaseUnlocked, setDatabaseUnlocked] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: invitations = [] } = useQuery({
-    queryKey: ['/api/invitations'],
-    enabled: false // Using mock data for now
+  // Fetch sales rep's invitations
+  const { data: invitations = [], isLoading: invitationsLoading } = useQuery({
+    queryKey: ['/api/sales-rep/invitations'],
+    enabled: !!user?.id
   });
 
-  const mockInvitations = [
-    {
-      id: 1,
-      name: "Sarah Chen",
-      email: "sarah@techcorp.com",
-      status: "pending"
+  // Fetch sales rep's calls
+  const { data: calls = [], isLoading: callsLoading } = useQuery({
+    queryKey: ['/api/sales-rep/calls'],
+    enabled: !!user?.id
+  });
+
+  // Fetch sales rep's metrics
+  const { data: metrics, isLoading: metricsLoading } = useQuery({
+    queryKey: ['/api/sales-rep/metrics'],
+    enabled: !!user?.id
+  });
+
+  const simulateAcceptanceMutation = useMutation({
+    mutationFn: async () => {
+      return { success: true };
     },
-    {
-      id: 2, 
-      name: "Michael Rodriguez",
-      email: "michael@leadflow.com",
-      status: "accepted"
-    },
-    {
-      id: 3,
-      name: "Jennifer Walsh", 
-      email: "jennifer@cloudscale.com",
-      status: "pending"
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/sales-rep/metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales-rep/invitations'] });
+      toast({
+        title: "Database Unlocked!",
+        description: "You can now browse decision makers",
+      });
     }
-  ];
+  });
 
   const getStatusBadge = (status) => {
-    if (status === "accepted") {
-      return <Badge className="bg-green-100 text-green-800">Accepted</Badge>;
+    switch (status) {
+      case 'accepted':
+        return <Badge className="bg-green-100 text-green-800">Accepted</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+      case 'declined':
+        return <Badge className="bg-red-100 text-red-800">Declined</Badge>;
+      default:
+        return <Badge className="bg-gray-100 text-gray-800">Unknown</Badge>;
     }
-    return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
   };
 
   const getInitials = (name) => {
-    return name.split(' ').map(n => n[0]).join('');
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
-  const simulateAcceptance = () => {
-    setDatabaseUnlocked(true);
+  const getPackageDisplayName = (packageType) => {
+    const packageNames = {
+      'free': 'Free • 1 DM/month',
+      'pro': 'Pro • 10 DM/month',
+      'pro-team': 'Pro Team • 50 DM/month',
+      'enterprise': 'Enterprise • 500 DM/month'
+    };
+    return packageNames[packageType] || 'Free • 1 DM/month';
   };
+
+  if (!user || metricsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const databaseUnlocked = metrics?.databaseUnlocked || false;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
@@ -65,11 +102,11 @@ export default function SalesDashboard() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Sales Rep Dashboard</h1>
-              <p className="text-gray-600 mt-1">Welcome back, John!</p>
+              <p className="text-gray-600 mt-1">Welcome back, {user?.firstName}!</p>
             </div>
             <div className="flex items-center space-x-4">
-              <Badge className="bg-green-100 text-green-800">Free • 1 DM/month</Badge>
-              <Badge className="bg-blue-100 text-blue-800">Good Standing</Badge>
+              <Badge className="bg-green-100 text-green-800">{getPackageDisplayName(user?.packageType)}</Badge>
+              <Badge className="bg-blue-100 text-blue-800">{metrics?.standing === 'good' ? 'Good Standing' : 'Standing: ' + metrics?.standing}</Badge>
               <Button variant="ghost" size="sm">
                 <TrendingUp className="mr-2" size={16} />
                 Analytics
@@ -89,7 +126,7 @@ export default function SalesDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-100 text-sm font-medium">Call Credits</p>
-                  <p className="text-3xl font-bold">0</p>
+                  <p className="text-3xl font-bold">{metrics?.callCredits || 0}</p>
                   <p className="text-purple-100 text-xs">this month</p>
                 </div>
                 <Phone className="text-purple-200" size={32} />
@@ -101,8 +138,8 @@ export default function SalesDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-100 text-sm font-medium">DM SMS</p>
-                  <p className="text-3xl font-bold">1/1</p>
+                  <p className="text-green-100 text-sm font-medium">DM Invitations</p>
+                  <p className="text-3xl font-bold">{metrics?.dmInvitations || 0}/{metrics?.maxDmInvitations || 1}</p>
                 </div>
                 <Users className="text-green-200" size={32} />
               </div>
@@ -114,7 +151,7 @@ export default function SalesDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm font-medium">Upcoming Calls</p>
-                  <p className="text-3xl font-bold text-gray-900">1</p>
+                  <p className="text-3xl font-bold text-gray-900">{metrics?.upcomingCalls || 0}</p>
                 </div>
                 <Calendar className="text-gray-400" size={32} />
               </div>
@@ -125,8 +162,8 @@ export default function SalesDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm font-medium">DM Invitations</p>
-                  <p className="text-3xl font-bold text-gray-900">1/3</p>
+                  <p className="text-gray-500 text-sm font-medium">Accepted Invitations</p>
+                  <p className="text-3xl font-bold text-gray-900">{metrics?.acceptedInvitations || 0}</p>
                 </div>
                 <Plus className="text-gray-400" size={32} />
               </div>
@@ -138,7 +175,7 @@ export default function SalesDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm font-medium">Success Rate</p>
-                  <p className="text-3xl font-bold text-gray-900">-</p>
+                  <p className="text-3xl font-bold text-gray-900">{metrics?.successRate ? `${metrics.successRate}%` : '-'}</p>
                 </div>
                 <TrendingUp className="text-gray-400" size={32} />
               </div>

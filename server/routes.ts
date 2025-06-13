@@ -570,6 +570,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== SALES REP DASHBOARD ROUTES =====
+
+  // Get sales rep's invitations
+  app.get("/api/sales-rep/invitations", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const invitations = await storage.getInvitationsByUserId(userId);
+      res.json(invitations);
+    } catch (error: any) {
+      console.error('Get invitations error:', error);
+      res.status(500).json({ message: "Failed to fetch invitations" });
+    }
+  });
+
+  // Get sales rep's calls
+  app.get("/api/sales-rep/calls", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const calls = await storage.getCallsByUserId(userId);
+      res.json(calls);
+    } catch (error: any) {
+      console.error('Get calls error:', error);
+      res.status(500).json({ message: "Failed to fetch calls" });
+    }
+  });
+
+  // Get sales rep's metrics
+  app.get("/api/sales-rep/metrics", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const invitations = await storage.getInvitationsByUserId(userId);
+      const calls = await storage.getCallsByUserId(userId);
+
+      // Calculate metrics
+      const totalInvitations = invitations.length;
+      const acceptedInvitations = invitations.filter(inv => inv.status === 'accepted').length;
+      const pendingInvitations = invitations.filter(inv => inv.status === 'pending').length;
+      const completedCalls = calls.filter(call => call.status === 'completed').length;
+      const upcomingCalls = calls.filter(call => call.status === 'scheduled').length;
+      
+      // Calculate success rate
+      const successRate = completedCalls > 0 ? Math.round((completedCalls / calls.length) * 100) : 0;
+      
+      // Package limits based on user's package type
+      const packageLimits = {
+        'free': { dmLimit: 1, callCredits: 1 },
+        'pro': { dmLimit: 10, callCredits: 10 },
+        'pro-team': { dmLimit: 50, callCredits: 50 },
+        'enterprise': { dmLimit: 500, callCredits: 500 }
+      };
+
+      const limits = packageLimits[user.packageType as keyof typeof packageLimits] || packageLimits['free'];
+
+      const metrics = {
+        callCredits: limits.callCredits - completedCalls,
+        maxCallCredits: limits.callCredits,
+        dmInvitations: totalInvitations,
+        maxDmInvitations: limits.dmLimit,
+        acceptedInvitations,
+        pendingInvitations,
+        upcomingCalls,
+        completedCalls,
+        successRate: completedCalls > 0 ? successRate : null,
+        packageType: user.packageType,
+        standing: user.standing || 'good',
+        databaseUnlocked: acceptedInvitations > 0
+      };
+
+      res.json(metrics);
+    } catch (error: any) {
+      console.error('Get metrics error:', error);
+      res.status(500).json({ message: "Failed to fetch metrics" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
