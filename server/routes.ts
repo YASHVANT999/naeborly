@@ -4,6 +4,13 @@ import { storage } from "./storage";
 import { insertInvitationSchema, insertCallSchema, salesRepPersonalInfoSchema, salesRepProfessionalSchema, salesRepInvitesSchema, salesRepPackageSchema } from "@shared/schema";
 import bcrypt from "bcrypt";
 
+// Extend Express Request type to include session
+declare module 'express-session' {
+  interface SessionData {
+    signupUserId?: number;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user (mock endpoint)
   app.get("/api/user", async (req, res) => {
@@ -151,8 +158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser(userData);
       
       // Store user ID in session for multi-step process
-      req.session = req.session || {};
-      req.session.signupUserId = user.id;
+      (req.session as any).signupUserId = user.id;
       
       res.json({ success: true, message: "Personal information saved", userId: user.id });
     } catch (error: any) {
@@ -169,7 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = salesRepProfessionalSchema.parse(req.body);
       
       // Get user ID from session
-      const userId = req.session?.signupUserId;
+      const userId = (req.session as any)?.signupUserId;
       if (!userId) {
         return res.status(400).json({ message: "Please complete personal information first" });
       }
