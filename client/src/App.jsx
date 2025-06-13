@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Navigation from "@/components/navigation";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import SalesDashboard from "@/pages/sales-dashboard";
@@ -32,8 +33,16 @@ function Router() {
     <Switch>
       <Route path="/" component={Landing} />
       <Route path="/login" component={Login} />
-      <Route path="/sales-dashboard" component={SalesDashboard} />
-      <Route path="/decision-dashboard" component={DecisionDashboard} />
+      <Route path="/sales-dashboard">
+        <ProtectedRoute requiredRole="sales_rep">
+          <SalesDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/decision-dashboard">
+        <ProtectedRoute requiredRole="decision_maker">
+          <DecisionDashboard />
+        </ProtectedRoute>
+      </Route>
       <Route path="/evaluation/rep" component={PostCallEvaluation} />
       <Route path="/evaluation/dm" component={CallFeedback} />
       <Route path="/signup/personal" component={PersonalInfo} />
