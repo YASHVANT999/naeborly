@@ -12,6 +12,8 @@ import DecisionDashboard from "@/pages/decision-dashboard";
 import PostCallEvaluation from "@/pages/post-call-evaluation";
 import CallFeedback from "@/pages/call-feedback";
 import AdminPanel from "@/pages/admin-panel";
+import SuperAdminLogin from "@/pages/super-admin-login";
+import SuperAdminDashboard from "@/pages/super-admin-dashboard";
 import PersonalInfo from "@/pages/signup/personal-info";
 import ProfessionalBackground from "@/pages/signup/professional-background";
 import AvailabilityPreferences from "@/pages/signup/availability-preferences";
@@ -47,6 +49,12 @@ function Router() {
       <Route path="/admin">
         <ProtectedRoute requiredRole="admin">
           <AdminPanel />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/super-admin/login" component={SuperAdminLogin} />
+      <Route path="/super-admin/dashboard">
+        <ProtectedRoute requiredRole="super_admin">
+          <SuperAdminDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/evaluation/rep" component={PostCallEvaluation} />
