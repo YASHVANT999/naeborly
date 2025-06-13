@@ -7,6 +7,8 @@ export interface IStorage {
   updateUser(id: string, updates: any): Promise<any | undefined>;
   deleteUser(id: string): Promise<boolean>;
   getAllUsers(): Promise<any[]>;
+  getUsersByRole(role: string): Promise<any[]>;
+  getUsersWithPagination(page: number, limit: number, filters?: any): Promise<{users: any[], total: number}>;
   
   // Invitation methods
   getInvitationsByUserId(userId: string): Promise<any[]>;
@@ -19,6 +21,22 @@ export interface IStorage {
   createCall(call: any): Promise<any>;
   updateCall(id: string, updates: any): Promise<any | undefined>;
   getAllCalls(): Promise<any[]>;
+  
+  // Subscription Plan methods
+  getAllSubscriptionPlans(): Promise<any[]>;
+  getSubscriptionPlan(id: string): Promise<any | undefined>;
+  createSubscriptionPlan(plan: any): Promise<any>;
+  updateSubscriptionPlan(id: string, updates: any): Promise<any | undefined>;
+  deleteSubscriptionPlan(id: string): Promise<boolean>;
+  
+  // Activity Log methods
+  createActivityLog(log: any): Promise<any>;
+  getActivityLogs(page: number, limit: number, filters?: any): Promise<{logs: any[], total: number}>;
+  
+  // Analytics methods
+  getUserAnalytics(): Promise<any>;
+  getCallAnalytics(): Promise<any>;
+  getSubscriptionAnalytics(): Promise<any>;
 }
 
 // Import and use only MongoDB storage

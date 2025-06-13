@@ -339,6 +339,276 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== SUPER ADMIN ROUTES =====
+  
+  // Super Admin Authentication
+  app.post("/api/super-admin/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      console.log('Super admin login attempt:', { email, password: '***' });
+      
+      const user = await storage.getUserByEmail(email);
+      if (!user || user.role !== 'super_admin') {
+        console.log('Super admin not found or wrong role:', user?.role);
+        return res.status(401).json({ message: "Invalid super admin credentials" });
+      }
+      
+      // Verify password
+      const bcrypt = require('bcrypt');
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      
+      if (!isValidPassword) {
+        console.log('Invalid super admin password');
+        return res.status(401).json({ message: "Invalid super admin credentials" });
+      }
+      
+      // Set session
+      (req.session as any).userId = user.id;
+      (req.session as any).userRole = user.role;
+      
+      console.log('Super admin login successful:', email);
+      res.json({ 
+        success: true, 
+        message: "Super admin login successful", 
+        user: { 
+          id: user.id, 
+          email: user.email, 
+          role: user.role,
+          firstName: user.firstName,
+          lastName: user.lastName
+        } 
+      });
+    } catch (error) {
+      console.error('Super admin login error:', error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // Super Admin middleware
+  const requireSuperAdmin = (req: any, res: any, next: any) => {
+    const userId = req.session?.userId;
+    const userRole = req.session?.userRole;
+    
+    if (!userId || userRole !== 'super_admin') {
+      return res.status(403).json({ message: "Super admin access required" });
+    }
+    
+    next();
+  };
+
+  // User Management Routes
+  app.get("/api/super-admin/users", requireSuperAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const role = req.query.role as string;
+      const search = req.query.search as string;
+      
+      let filters: any = {};
+      if (role) filters.role = role;
+      if (search) {
+        filters.$or = [
+          { firstName: { $regex: search, $options: 'i' } },
+          { lastName: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } }
+        ];
+      }
+      
+      const result = await storage.getUsersWithPagination(page, limit, filters);
+      res.json(result);
+    } catch (error) {
+      console.error('Error getting users:', error);
+      res.status(500).json({ message: "Failed to get users" });
+    }
+  });
+
+  app.put("/api/super-admin/users/:id", requireSuperAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId: (req.session as any).userId,
+        action: 'UPDATE_USER',
+        entityType: 'user',
+        entityId: id,
+        details: `Updated user: ${JSON.stringify(updates)}`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+      
+      const updatedUser = await storage.updateUser(id, updates);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ success: true, user: updatedUser });
+    } catch (error) {
+      console.error('Error updating user:', error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/super-admin/users/:id", requireSuperAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId: (req.session as any).userId,
+        action: 'DELETE_USER',
+        entityType: 'user',
+        entityId: id,
+        details: `Deleted user with ID: ${id}`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+      
+      const deleted = await storage.deleteUser(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ success: true, message: "User deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // Subscription Plan Management Routes
+  app.get("/api/super-admin/subscription-plans", requireSuperAdmin, async (req, res) => {
+    try {
+      const plans = await storage.getAllSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error('Error getting subscription plans:', error);
+      res.status(500).json({ message: "Failed to get subscription plans" });
+    }
+  });
+
+  app.post("/api/super-admin/subscription-plans", requireSuperAdmin, async (req, res) => {
+    try {
+      const planData = req.body;
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId: (req.session as any).userId,
+        action: 'CREATE_SUBSCRIPTION_PLAN',
+        entityType: 'subscription_plan',
+        details: `Created plan: ${planData.name}`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+      
+      const plan = await storage.createSubscriptionPlan(planData);
+      res.json({ success: true, plan });
+    } catch (error) {
+      console.error('Error creating subscription plan:', error);
+      res.status(500).json({ message: "Failed to create subscription plan" });
+    }
+  });
+
+  app.put("/api/super-admin/subscription-plans/:id", requireSuperAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId: (req.session as any).userId,
+        action: 'UPDATE_SUBSCRIPTION_PLAN',
+        entityType: 'subscription_plan',
+        entityId: id,
+        details: `Updated plan: ${JSON.stringify(updates)}`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+      
+      const plan = await storage.updateSubscriptionPlan(id, updates);
+      if (!plan) {
+        return res.status(404).json({ message: "Subscription plan not found" });
+      }
+      
+      res.json({ success: true, plan });
+    } catch (error) {
+      console.error('Error updating subscription plan:', error);
+      res.status(500).json({ message: "Failed to update subscription plan" });
+    }
+  });
+
+  app.delete("/api/super-admin/subscription-plans/:id", requireSuperAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Log activity
+      await storage.createActivityLog({
+        userId: (req.session as any).userId,
+        action: 'DELETE_SUBSCRIPTION_PLAN',
+        entityType: 'subscription_plan',
+        entityId: id,
+        details: `Deleted plan with ID: ${id}`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+      
+      const deleted = await storage.deleteSubscriptionPlan(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Subscription plan not found" });
+      }
+      
+      res.json({ success: true, message: "Subscription plan deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting subscription plan:', error);
+      res.status(500).json({ message: "Failed to delete subscription plan" });
+    }
+  });
+
+  // Analytics Routes
+  app.get("/api/super-admin/analytics/users", requireSuperAdmin, async (req, res) => {
+    try {
+      const analytics = await storage.getUserAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error getting user analytics:', error);
+      res.status(500).json({ message: "Failed to get user analytics" });
+    }
+  });
+
+  app.get("/api/super-admin/analytics/calls", requireSuperAdmin, async (req, res) => {
+    try {
+      const analytics = await storage.getCallAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error getting call analytics:', error);
+      res.status(500).json({ message: "Failed to get call analytics" });
+    }
+  });
+
+  app.get("/api/super-admin/analytics/subscriptions", requireSuperAdmin, async (req, res) => {
+    try {
+      const analytics = await storage.getSubscriptionAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error getting subscription analytics:', error);
+      res.status(500).json({ message: "Failed to get subscription analytics" });
+    }
+  });
+
+  app.get("/api/super-admin/activity-logs", requireSuperAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 50;
+      
+      const result = await storage.getActivityLogs(page, limit);
+      res.json(result);
+    } catch (error) {
+      console.error('Error getting activity logs:', error);
+      res.status(500).json({ message: "Failed to get activity logs" });
+    }
+  });
+
   // ===== DECISION MAKER SIGNUP ROUTES =====
 
   // Save decision maker personal information

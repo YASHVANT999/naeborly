@@ -6,7 +6,7 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
-  role: text("role").notNull(), // 'sales_rep' or 'decision_maker'
+  role: text("role").notNull(), // 'sales_rep', 'decision_maker', 'super_admin'
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   linkedinUrl: text("linkedin_url"),
@@ -42,6 +42,35 @@ export const calls = pgTable("calls", {
   feedback: text("feedback"),
   company: text("company"),
   pitch: text("pitch"),
+});
+
+// Subscription Plans Table
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  price: text("price").notNull(),
+  billingInterval: text("billing_interval").notNull(), // 'monthly', 'yearly'
+  features: text("features").array(), // Array of feature strings
+  maxCallCredits: integer("max_call_credits").notNull(),
+  maxInvitations: integer("max_invitations").notNull(),
+  prioritySupport: boolean("priority_support").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Activity Logs Table for Super Admin monitoring
+export const activityLogs = pgTable("activity_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id"),
+  action: text("action").notNull(),
+  entityType: text("entity_type").notNull(), // 'user', 'subscription', 'call', etc.
+  entityId: text("entity_id"),
+  details: text("details"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Sales Rep signup validation schemas
@@ -132,6 +161,48 @@ export const decisionMakerPackageSchema = z.object({
   packageType: z.enum(["free", "basic", "premium"]),
 });
 
+// Super Admin Authentication Schema
+export const superAdminLoginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+// Subscription Plan Management Schemas
+export const createSubscriptionPlanSchema = z.object({
+  name: z.string().min(2, "Plan name must be at least 2 characters"),
+  description: z.string().optional(),
+  price: z.string().min(1, "Price is required"),
+  billingInterval: z.enum(["monthly", "yearly"]),
+  features: z.array(z.string()).optional(),
+  maxCallCredits: z.number().min(0, "Call credits must be 0 or greater"),
+  maxInvitations: z.number().min(0, "Invitations must be 0 or greater"),
+  prioritySupport: z.boolean().default(false),
+});
+
+export const updateSubscriptionPlanSchema = createSubscriptionPlanSchema.partial();
+
+// User Management Schema for Super Admin
+export const updateUserSchema = z.object({
+  email: z.string().email().optional(),
+  firstName: z.string().min(2).optional(),
+  lastName: z.string().min(2).optional(),
+  role: z.enum(["sales_rep", "decision_maker", "super_admin"]).optional(),
+  packageType: z.string().optional(),
+  isActive: z.boolean().optional(),
+  standing: z.enum(["good", "warning", "suspended"]).optional(),
+});
+
+// Activity Log Schema
+export const createActivityLogSchema = z.object({
+  userId: z.number().optional(),
+  action: z.string().min(1, "Action is required"),
+  entityType: z.string().min(1, "Entity type is required"),
+  entityId: z.string().optional(),
+  details: z.string().optional(),
+  ipAddress: z.string().optional(),
+  userAgent: z.string().optional(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -147,9 +218,24 @@ export const insertCallSchema = createInsertSchema(calls).omit({
   id: true,
 });
 
+export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
 export type Invitation = typeof invitations.$inferSelect;
 export type InsertCall = z.infer<typeof insertCallSchema>;
 export type Call = typeof calls.$inferSelect;
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
+export type ActivityLog = typeof activityLogs.$inferSelect;
+export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
