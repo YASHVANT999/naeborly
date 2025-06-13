@@ -23,9 +23,27 @@ export default function PersonalInfo() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleLinkedinVerify = () => {
-    if (formData.linkedinUrl) {
-      setLinkedinVerified(true);
+  const handleLinkedinVerify = async () => {
+    if (!formData.linkedinUrl) {
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/verify-linkedin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ linkedinUrl: formData.linkedinUrl }),
+      });
+      
+      const result = await response.json();
+      
+      if (result.verified) {
+        setLinkedinVerified(true);
+      }
+    } catch (error) {
+      console.error('LinkedIn verification failed:', error);
     }
   };
 

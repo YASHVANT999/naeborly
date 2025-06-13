@@ -35,7 +35,7 @@ export default function DecisionMakerPersonalInfo() {
   const linkedinVerifyMutation = useMutation({
     mutationFn: async (linkedinUrl) => {
       const response = await apiRequest('POST', '/api/verify-linkedin', { linkedinUrl });
-      return await response.json();
+      return response;
     },
     onSuccess: () => {
       setLinkedinVerified(true);
@@ -57,7 +57,7 @@ export default function DecisionMakerPersonalInfo() {
     mutationFn: async (data) => {
       console.log('Submitting decision maker form data:', data, 'LinkedIn verified:', linkedinVerified);
       const response = await apiRequest('POST', '/api/decision-maker/personal-info', { ...data, linkedinVerified });
-      return await response.json();
+      return response;
     },
     onSuccess: (data) => {
       console.log('Decision maker personal info saved successfully:', data);

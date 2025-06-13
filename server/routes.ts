@@ -124,20 +124,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { linkedinUrl } = req.body;
       
-      if (!linkedinUrl || !linkedinUrl.includes("linkedin.com")) {
-        return res.status(400).json({ message: "Invalid LinkedIn URL" });
+      console.log('LinkedIn verification request:', { linkedinUrl });
+      
+      if (!linkedinUrl) {
+        return res.status(400).json({ 
+          verified: false, 
+          message: "LinkedIn URL is required" 
+        });
       }
       
-      // Basic LinkedIn URL validation
-      const urlPattern = /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
+      if (!linkedinUrl.includes("linkedin.com")) {
+        return res.status(400).json({ 
+          verified: false, 
+          message: "Invalid LinkedIn URL - must be a LinkedIn profile" 
+        });
+      }
+      
+      // Enhanced LinkedIn URL validation
+      const urlPattern = /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-._]+\/?(\?.*)?$/;
       if (!urlPattern.test(linkedinUrl)) {
-        return res.status(400).json({ message: "Please provide a valid LinkedIn profile URL" });
+        return res.status(400).json({ 
+          verified: false, 
+          message: "Please provide a valid LinkedIn profile URL (e.g., https://linkedin.com/in/your-profile)" 
+        });
       }
       
-      // Simulate verification process
-      res.json({ verified: true, message: "LinkedIn profile verified successfully" });
+      // Additional checks for common LinkedIn URL formats
+      const cleanUrl = linkedinUrl.toLowerCase().trim();
+      
+      // Check for valid LinkedIn profile path
+      if (!cleanUrl.includes('/in/')) {
+        return res.status(400).json({ 
+          verified: false, 
+          message: "LinkedIn URL must be a profile link (containing '/in/')" 
+        });
+      }
+      
+      // Extract profile identifier
+      const profileMatch = cleanUrl.match(/\/in\/([a-zA-Z0-9-._]+)/);
+      if (!profileMatch || profileMatch[1].length < 3) {
+        return res.status(400).json({ 
+          verified: false, 
+          message: "LinkedIn profile identifier is too short or invalid" 
+        });
+      }
+      
+      console.log('LinkedIn verification successful for:', profileMatch[1]);
+      
+      // Verification successful
+      res.json({ 
+        verified: true, 
+        message: "LinkedIn profile verified successfully",
+        profileId: profileMatch[1]
+      });
+      
     } catch (error) {
-      res.status(500).json({ message: "LinkedIn verification failed" });
+      console.error('LinkedIn verification error:', error);
+      res.status(500).json({ 
+        verified: false, 
+        message: "LinkedIn verification failed due to server error" 
+      });
     }
   });
 

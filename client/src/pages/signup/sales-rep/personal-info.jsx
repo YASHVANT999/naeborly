@@ -35,14 +35,22 @@ export default function SalesRepPersonalInfo() {
   const linkedinVerifyMutation = useMutation({
     mutationFn: async (linkedinUrl) => {
       const response = await apiRequest('POST', '/api/verify-linkedin', { linkedinUrl });
-      return await response.json();
+      return response;
     },
-    onSuccess: () => {
-      setLinkedinVerified(true);
-      toast({
-        title: "LinkedIn Verified",
-        description: "Your LinkedIn profile has been successfully verified."
-      });
+    onSuccess: (data) => {
+      if (data.verified) {
+        setLinkedinVerified(true);
+        toast({
+          title: "LinkedIn Verified",
+          description: data.message || "Your LinkedIn profile has been successfully verified."
+        });
+      } else {
+        toast({
+          title: "Verification Failed",
+          description: data.message || "Unable to verify LinkedIn profile.",
+          variant: "destructive"
+        });
+      }
     },
     onError: (error) => {
       toast({
@@ -57,7 +65,7 @@ export default function SalesRepPersonalInfo() {
     mutationFn: async (data) => {
       console.log('Submitting form data:', data, 'LinkedIn verified:', linkedinVerified);
       const response = await apiRequest('POST', '/api/sales-rep/personal-info', { ...data, linkedinVerified });
-      return await response.json();
+      return response;
     },
     onSuccess: (data) => {
       console.log('Form submission successful:', data);
