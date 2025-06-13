@@ -4,12 +4,22 @@ import { z } from "zod";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
   email: text("email").notNull().unique(),
+  password: text("password").notNull(),
   role: text("role").notNull(), // 'sales_rep' or 'decision_maker'
-  name: text("name").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  linkedinUrl: text("linkedin_url"),
+  linkedinVerified: boolean("linkedin_verified").default(false),
+  jobTitle: text("job_title"),
   company: text("company"),
+  industry: text("industry"),
+  companySize: text("company_size"),
+  yearsInRole: text("years_in_role"),
+  packageType: text("package_type").default("free"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
   standing: text("standing").default("good"), // 'good', 'excellent'
 });
 
@@ -34,8 +44,48 @@ export const calls = pgTable("calls", {
   pitch: text("pitch"),
 });
 
+// Sales Rep signup validation schemas
+export const salesRepPersonalInfoSchema = z.object({
+  firstName: z.string().min(2, "First name must be at least 2 characters").max(50, "First name must be less than 50 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters").max(50, "Last name must be less than 50 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  linkedinUrl: z.string().url("Please enter a valid LinkedIn URL").refine(
+    (url) => url.includes("linkedin.com"),
+    "URL must be a LinkedIn profile"
+  ),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, 
+      "Password must contain uppercase, lowercase, number and special character"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+export const salesRepProfessionalSchema = z.object({
+  jobTitle: z.string().min(2, "Job title is required"),
+  company: z.string().min(2, "Company name is required"),
+  industry: z.string().min(1, "Please select an industry"),
+  companySize: z.string().min(1, "Please select company size"),
+  yearsInRole: z.string().optional(),
+});
+
+export const salesRepInvitesSchema = z.object({
+  decisionMakers: z.array(z.object({
+    name: z.string().min(2, "Name must be at least 2 characters").optional().or(z.literal("")),
+    email: z.string().email("Please enter a valid email").optional().or(z.literal("")),
+  })).optional(),
+});
+
+export const salesRepPackageSchema = z.object({
+  packageType: z.enum(["free", "basic", "premium", "pro-team"]),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const insertInvitationSchema = createInsertSchema(invitations).omit({
