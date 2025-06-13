@@ -251,6 +251,21 @@ export default function Landing() {
           </Link>
         </div>
       </section>
+
+      {/* Footer with Admin Access */}
+      <footer className="bg-gray-900 text-white py-8">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <div className="flex justify-center items-center space-x-8">
+            <p className="text-gray-400">© 2024 Naeberly. All rights reserved.</p>
+            <Link href="/super-admin/login">
+              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                <Shield className="h-4 w-4 mr-2" />
+                Admin Access
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
