@@ -12,21 +12,21 @@ import {
 
 export interface IStorage {
   // User methods
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
+  getUser(id: string): Promise<any | undefined>;
+  getUserByUsername(username: string): Promise<any | undefined>;
+  getUserByEmail(email: string): Promise<any | undefined>;
+  createUser(user: any): Promise<any>;
+  updateUser(id: string, updates: any): Promise<any | undefined>;
   
   // Invitation methods
-  getInvitationsByUserId(userId: number): Promise<Invitation[]>;
-  createInvitation(invitation: InsertInvitation): Promise<Invitation>;
-  updateInvitationStatus(id: number, status: string): Promise<Invitation | undefined>;
+  getInvitationsByUserId(userId: string): Promise<any[]>;
+  createInvitation(invitation: any): Promise<any>;
+  updateInvitationStatus(id: string, status: string): Promise<any | undefined>;
   
   // Call methods
-  getCallsByUserId(userId: number): Promise<Call[]>;
-  createCall(call: InsertCall): Promise<Call>;
-  updateCall(id: number, updates: Partial<Call>): Promise<Call | undefined>;
+  getCallsByUserId(userId: string): Promise<any[]>;
+  createCall(call: any): Promise<any>;
+  updateCall(id: string, updates: any): Promise<any | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -232,4 +232,6 @@ export class MemStorage implements IStorage {
 
 import { DatabaseStorage } from "./database-storage";
 
-export const storage = new DatabaseStorage();
+import { MongoDBStorage } from './mongodb-storage';
+
+export const storage = new MongoDBStorage();
