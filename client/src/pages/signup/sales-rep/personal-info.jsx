@@ -76,7 +76,10 @@ export default function SalesRepPersonalInfo() {
   const savePersonalInfoMutation = useMutation({
     mutationFn: async (data) => {
       console.log('Submitting form data:', data, 'LinkedIn verified:', linkedinVerified);
-      const response = await apiRequest('POST', '/api/sales-rep/personal-info', { ...data, linkedinVerified });
+      const response = await apiRequest('/api/sales-rep/personal-info', {
+        method: 'POST',
+        body: JSON.stringify({ ...data, linkedinVerified })
+      });
       return response;
     },
     onSuccess: (data) => {
