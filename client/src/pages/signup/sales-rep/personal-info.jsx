@@ -34,10 +34,8 @@ export default function SalesRepPersonalInfo() {
 
   const linkedinVerifyMutation = useMutation({
     mutationFn: async (linkedinUrl) => {
-      return await apiRequest('/api/verify-linkedin', {
-        method: 'POST',
-        body: { linkedinUrl }
-      });
+      const response = await apiRequest('POST', '/api/verify-linkedin', { linkedinUrl });
+      return await response.json();
     },
     onSuccess: () => {
       setLinkedinVerified(true);
@@ -57,10 +55,8 @@ export default function SalesRepPersonalInfo() {
 
   const savePersonalInfoMutation = useMutation({
     mutationFn: async (data) => {
-      return await apiRequest('/api/sales-rep/personal-info', {
-        method: 'POST',
-        body: { ...data, linkedinVerified }
-      });
+      const response = await apiRequest('POST', '/api/sales-rep/personal-info', { ...data, linkedinVerified });
+      return await response.json();
     },
     onSuccess: () => {
       toast({

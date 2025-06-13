@@ -53,24 +53,42 @@ export class MemStorage implements IStorage {
     // Create mock users
     const salesRep: User = {
       id: 1,
-      username: "john_sales",
-      password: "password",
       email: "john@example.com",
+      password: "password",
       role: "sales_rep",
-      name: "John Doe",
+      firstName: "John",
+      lastName: "Doe",
+      linkedinUrl: "https://linkedin.com/in/johndoe",
+      linkedinVerified: true,
+      jobTitle: "Senior Sales Representative",
       company: "TechCorp",
-      standing: "good"
+      yearsOfExperience: 5,
+      industry: "Technology",
+      packageType: "premium",
+      isActive: true,
+      standing: "good",
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     const decisionMaker: User = {
       id: 2,
-      username: "sarah_dm",
-      password: "password", 
       email: "sarah@example.com",
+      password: "password",
       role: "decision_maker",
-      name: "Sarah Johnson",
+      firstName: "Sarah",
+      lastName: "Johnson",
+      linkedinUrl: "https://linkedin.com/in/sarahjohnson",
+      linkedinVerified: true,
+      jobTitle: "Chief Technology Officer",
       company: "CloudScale Inc",
-      standing: "excellent"
+      yearsOfExperience: 8,
+      industry: "Technology",
+      packageType: null,
+      isActive: true,
+      standing: "excellent",
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
     this.users.set(1, salesRep);
@@ -130,7 +148,12 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
     this.users.set(id, user);
     return user;
   }
