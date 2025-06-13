@@ -45,20 +45,30 @@ const port = 5000;
 
 async function startServer() {
   try {
-    // Register routes first
-    await registerRoutes(app);
+    // Create HTTP server with the Express app
+    const { createServer } = await import("http");
+    const server = createServer(app);
 
-    // Add error handling middleware
+    // Register API routes first (before Vite middleware)
+    await registerRoutes(app);
+    log(`API routes registered`);
+
+    // Setup vite/static serving after API routes to avoid route conflicts
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+      log(`Vite development server configured`);
+    } else {
+      serveStatic(app);
+      log(`Static files configured`);
+    }
+
+    // Add error handling middleware last
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
       log(`Error: ${message}`);
       res.status(status).json({ message });
     });
-
-    // Create HTTP server with the Express app
-    const { createServer } = await import("http");
-    const server = createServer(app);
 
     // Handle server errors
     server.on('error', (err: any) => {
@@ -71,22 +81,9 @@ async function startServer() {
       }
     });
 
-    // Setup vite/static serving first
-    try {
-      if (app.get("env") === "development") {
-        await setupVite(app, server);
-        log(`Vite development server configured`);
-      } else {
-        serveStatic(app);
-        log(`Static files configured`);
-      }
-    } catch (viteError) {
-      log(`Vite setup error: ${viteError}`);
-    }
-
     // Start listening
     server.listen(port, "0.0.0.0", () => {
-      log(`Server listening on port ${port}`);
+      log(`Server ready on port ${port}`);
     });
 
   } catch (error) {
