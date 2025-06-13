@@ -26,7 +26,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/invitations", async (req, res) => {
     try {
       // For demo purposes, get invitations for user ID 1 (sales rep)
-      const invitations = await storage.getInvitationsByUserId(1);
+      const invitations = await storage.getInvitationsByUserId("1");
       res.json(invitations);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch invitations" });
@@ -54,7 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { status } = req.body;
       
-      const invitation = await storage.updateInvitationStatus(parseInt(id), status);
+      const invitation = await storage.updateInvitationStatus(id, status);
       if (!invitation) {
         return res.status(404).json({ message: "Invitation not found" });
       }
@@ -69,7 +69,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/calls", async (req, res) => {
     try {
       // For demo purposes, get calls for user ID 1 or 2
-      const userId = req.query.userId ? parseInt(req.query.userId as string) : 1;
+      const userId = req.query.userId ? req.query.userId as string : "1";
       const calls = await storage.getCallsByUserId(userId);
       res.json(calls);
     } catch (error) {
@@ -94,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const updates = req.body;
       
-      const call = await storage.updateCall(parseInt(id), updates);
+      const call = await storage.updateCall(id, updates);
       if (!call) {
         return res.status(404).json({ message: "Call not found" });
       }
