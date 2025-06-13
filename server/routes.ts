@@ -390,8 +390,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify password
-      const bcrypt = require('bcrypt');
-      const isValidPassword = await bcrypt.compare(password, user.password);
+      const bcrypt = await import('bcrypt');
+      const isValidPassword = await bcrypt.default.compare(password, user.password);
       
       if (!isValidPassword) {
         console.log('Invalid super admin password');
