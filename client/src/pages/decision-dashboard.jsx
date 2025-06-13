@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,46 +15,29 @@ import {
   ExternalLink,
   Phone,
   AlertTriangle,
-  MessageCircle
+  MessageCircle,
+  Loader2
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DecisionDashboard() {
-  const mockUpcomingCalls = [
-    {
-      id: 1,
-      salesRep: "Alex Johnson",
-      company: "SalesForce Pro", 
-      industry: "CRM Software",
-      pitch: "AI-powered CRM that increases sales productivity by 40%",
-      scheduledAt: "Today, 3:00 PM",
-      duration: "15 min",
-      color: "blue"
-    },
-    {
-      id: 2,
-      salesRep: "Maria Garcia",
-      company: "CloudTech Solutions",
-      industry: "Cloud Infrastructure", 
-      pitch: "Scalable cloud solutions for enterprise growth",
-      scheduledAt: "Tomorrow, 11:00 AM",
-      duration: "15 min",
-      color: "purple"
-    }
-  ];
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const mockRecentCalls = [
-    {
-      id: 1,
-      salesRep: "David Thompson",
-      company: "MarketingAI",
-      industry: "Marketing Automation",
-      feedback: "Great presentation, relevant to our needs",
-      rating: 5,
-      status: "Interested",
-      completedAt: "Yesterday"
-    }
-  ];
+  // Fetch decision maker's calls
+  const { data: calls = [], isLoading: callsLoading } = useQuery({
+    queryKey: ['/api/decision-maker/calls'],
+    enabled: !!user?.id
+  });
 
+  // Fetch decision maker's metrics
+  const { data: metrics, isLoading: metricsLoading } = useQuery({
+    queryKey: ['/api/decision-maker/metrics'],
+    enabled: !!user?.id
+  });
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star 
@@ -65,6 +48,69 @@ export default function DecisionDashboard() {
     ));
   };
 
+  const getCallColor = (index) => {
+    return index % 2 === 0 ? 'blue' : 'purple';
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      return `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return `Tomorrow, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    } else {
+      return date.toLocaleDateString([], { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    }
+  };
+
+  const rateCallMutation = useMutation({
+    mutationFn: async ({ callId, rating, feedback }) => {
+      return await apiRequest(`/api/decision-maker/calls/${callId}/rate`, {
+        method: 'POST',
+        body: JSON.stringify({ rating, feedback }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/decision-maker/calls'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/decision-maker/metrics'] });
+      toast({
+        title: "Call Rated",
+        description: "Thank you for your feedback!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to rate call",
+        variant: "destructive",
+      });
+    }
+  });
+
+  if (!user || metricsLoading || callsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const upcomingCalls = calls.filter(call => call.status === 'scheduled');
+  const recentCalls = calls.filter(call => call.status === 'completed');
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -73,10 +119,12 @@ export default function DecisionDashboard() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Decision Maker Dashboard</h1>
-              <p className="text-gray-600 mt-1">Welcome back, Sarah!</p>
+              <p className="text-gray-600 mt-1">Welcome back, {user?.firstName}!</p>
             </div>
             <div className="flex items-center space-x-4">
-              <Badge className="bg-green-100 text-green-800">Excellent Standing</Badge>
+              <Badge className="bg-green-100 text-green-800">
+                {metrics?.standing === 'good' ? 'Excellent Standing' : 'Standing: ' + metrics?.standing}
+              </Badge>
               <Button variant="ghost" size="sm">
                 <Settings className="mr-2" size={16} />
                 Settings
@@ -92,7 +140,7 @@ export default function DecisionDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-100 text-sm font-medium">Calls Completed</p>
-                  <p className="text-3xl font-bold">1</p>
+                  <p className="text-3xl font-bold">{metrics?.completedCalls || 0}</p>
                 </div>
                 <CheckCircle className="text-purple-200" size={32} />
               </div>
@@ -104,7 +152,7 @@ export default function DecisionDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm font-medium">Remaining Calls</p>
-                  <p className="text-3xl font-bold text-gray-900">2</p>
+                  <p className="text-3xl font-bold text-gray-900">{metrics?.remainingCalls || 0}</p>
                 </div>
                 <Calendar className="text-gray-400" size={32} />
               </div>
@@ -116,7 +164,7 @@ export default function DecisionDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm font-medium">Avg Call Rating</p>
-                  <p className="text-3xl font-bold text-gray-900">4.8</p>
+                  <p className="text-3xl font-bold text-gray-900">{metrics?.avgRating ? metrics.avgRating.toFixed(1) : '-'}</p>
                 </div>
                 <Star className="text-yellow-400" size={32} />
               </div>
@@ -128,7 +176,7 @@ export default function DecisionDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm font-medium">Quality Score</p>
-                  <p className="text-3xl font-bold text-gray-900">95%</p>
+                  <p className="text-3xl font-bold text-gray-900">{metrics?.qualityScore ? `${metrics.qualityScore}%` : '-'}</p>
                 </div>
                 <TrendingUp className="text-green-500" size={32} />
               </div>
@@ -148,61 +196,69 @@ export default function DecisionDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {mockUpcomingCalls.map((call) => (
-                  <div 
-                    key={call.id} 
-                    className={`flex items-center justify-between p-4 rounded-lg border-2 ${
-                      call.color === 'blue' 
-                        ? 'bg-blue-50 border-blue-200' 
-                        : 'bg-purple-50 border-purple-200'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        call.color === 'blue' ? 'bg-blue-100' : 'bg-purple-100'
-                      }`}>
-                        <User className={call.color === 'blue' ? 'text-blue-600' : 'text-purple-600'} size={24} />
+                {upcomingCalls.length > 0 ? upcomingCalls.map((call, index) => {
+                  const color = getCallColor(index);
+                  return (
+                    <div 
+                      key={call._id || call.id} 
+                      className={`flex items-center justify-between p-4 rounded-lg border-2 ${
+                        color === 'blue' 
+                          ? 'bg-blue-50 border-blue-200' 
+                          : 'bg-purple-50 border-purple-200'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                          color === 'blue' ? 'bg-blue-100' : 'bg-purple-100'
+                        }`}>
+                          <User className={color === 'blue' ? 'text-blue-600' : 'text-purple-600'} size={24} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-gray-900">{call.salesRepName || 'Sales Rep'}</h3>
+                          <p className={`font-medium ${color === 'blue' ? 'text-blue-600' : 'text-purple-600'}`}>
+                            {call.company || 'Company'}
+                          </p>
+                          <p className="text-sm text-gray-600">{call.industry || 'Industry'}</p>
+                          <p className={`text-sm font-medium italic ${color === 'blue' ? 'text-blue-600' : 'text-purple-600'}`}>
+                            "{call.pitch || 'Scheduled call'}"
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-bold text-gray-900">{call.salesRep}</h3>
-                        <p className={`font-medium ${call.color === 'blue' ? 'text-blue-600' : 'text-purple-600'}`}>
-                          {call.company}
+                      <div className="text-right">
+                        <p className={`font-bold ${color === 'blue' ? 'text-blue-600' : 'text-purple-600'}`}>
+                          {call.scheduledAt ? formatDate(call.scheduledAt) : 'TBD'}
                         </p>
-                        <p className="text-sm text-gray-600">{call.industry}</p>
-                        <p className={`text-sm font-medium italic ${call.color === 'blue' ? 'text-blue-600' : 'text-purple-600'}`}>
-                          "{call.pitch}"
-                        </p>
+                        <p className="text-sm text-gray-500">15 min</p>
+                        <div className="mt-2 space-x-2">
+                          <Button variant="outline" size="sm">
+                            <Repeat className="mr-1" size={12} />
+                            Reschedule
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className={color === 'blue' ? 'border-blue-200 text-blue-600' : 'border-purple-200 text-purple-600'}
+                          >
+                            <ExternalLink className="mr-1" size={12} />
+                            View Rep Profile
+                          </Button>
+                          <Button 
+                            size="sm"
+                            className={color === 'blue' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'}
+                          >
+                            <Phone className="mr-1" size={12} />
+                            Join Call
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className={`font-bold ${call.color === 'blue' ? 'text-blue-600' : 'text-purple-600'}`}>
-                        {call.scheduledAt}
-                      </p>
-                      <p className="text-sm text-gray-500">{call.duration}</p>
-                      <div className="mt-2 space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Repeat className="mr-1" size={12} />
-                          Reschedule
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className={call.color === 'blue' ? 'border-blue-200 text-blue-600' : 'border-purple-200 text-purple-600'}
-                        >
-                          <ExternalLink className="mr-1" size={12} />
-                          View Rep Profile
-                        </Button>
-                        <Button 
-                          size="sm"
-                          className={call.color === 'blue' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'}
-                        >
-                          <Phone className="mr-1" size={12} />
-                          Join Call
-                        </Button>
-                      </div>
-                    </div>
+                  );
+                }) : (
+                  <div className="text-center py-8">
+                    <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <p className="text-gray-500">No upcoming calls scheduled</p>
                   </div>
-                ))}
+                )}
               </CardContent>
             </Card>
 
@@ -215,32 +271,39 @@ export default function DecisionDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {mockRecentCalls.map((call) => (
-                  <div key={call.id} className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                {recentCalls.length > 0 ? recentCalls.map((call) => (
+                  <div key={call._id || call.id} className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200 mb-4">
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                         <User className="text-green-600" size={24} />
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-900">{call.salesRep}</h3>
-                        <p className="text-green-600 font-medium">{call.company}</p>
-                        <p className="text-sm text-gray-600">{call.industry}</p>
-                        <p className="text-sm text-green-600 font-medium italic">"{call.feedback}"</p>
+                        <h3 className="font-bold text-gray-900">{call.salesRepName || 'Sales Rep'}</h3>
+                        <p className="text-green-600 font-medium">{call.company || 'Company'}</p>
+                        <p className="text-sm text-gray-600">{call.industry || 'Industry'}</p>
+                        <p className="text-sm text-green-600 font-medium italic">"{call.feedback || 'Call completed'}"</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-gray-900">{call.completedAt}</p>
+                      <p className="font-medium text-gray-900">
+                        {call.completedAt ? new Date(call.completedAt).toLocaleDateString() : 'Recently'}
+                      </p>
                       <div className="flex items-center mt-1">
                         <div className="flex">
-                          {renderStars(call.rating)}
+                          {renderStars(call.rating || 0)}
                         </div>
                       </div>
                       <Badge className="bg-green-100 text-green-800 mt-2">
-                        {call.status}
+                        Completed
                       </Badge>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-center py-8">
+                    <Clock className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <p className="text-gray-500">No completed calls yet</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -665,6 +665,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== DECISION MAKER DASHBOARD ROUTES =====
+
+  // Get decision maker's calls
+  app.get("/api/decision-maker/calls", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const calls = await storage.getCallsByUserId(userId);
+      res.json(calls);
+    } catch (error: any) {
+      console.error('Get decision maker calls error:', error);
+      res.status(500).json({ message: "Failed to fetch calls" });
+    }
+  });
+
+  // Get decision maker's metrics
+  app.get("/api/decision-maker/metrics", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const calls = await storage.getCallsByUserId(userId);
+
+      // Calculate metrics
+      const completedCalls = calls.filter(call => call.status === 'completed');
+      const upcomingCalls = calls.filter(call => call.status === 'scheduled');
+      const totalCalls = calls.length;
+      
+      // Calculate average rating
+      const ratedCalls = completedCalls.filter(call => call.rating);
+      const avgRating = ratedCalls.length > 0 
+        ? (ratedCalls.reduce((sum, call) => sum + call.rating, 0) / ratedCalls.length).toFixed(1)
+        : null;
+
+      // Package limits based on user's package type
+      const packageLimits = {
+        'basic': { callLimit: 3 },
+        'premium': { callLimit: 10 },
+        'enterprise': { callLimit: 50 }
+      };
+
+      const limits = packageLimits[user.packageType as keyof typeof packageLimits] || packageLimits['basic'];
+      const remainingCalls = Math.max(0, limits.callLimit - completedCalls.length);
+      const completionPercentage = limits.callLimit > 0 ? Math.round((completedCalls.length / limits.callLimit) * 100) : 0;
+
+      // Calculate quality score based on ratings and completion rate
+      const qualityScore = avgRating && totalCalls > 0 
+        ? Math.round((parseFloat(avgRating) / 5) * 100)
+        : null;
+
+      const metrics = {
+        completedCalls: completedCalls.length,
+        remainingCalls,
+        totalCallLimit: limits.callLimit,
+        upcomingCalls: upcomingCalls.length,
+        avgRating: avgRating ? parseFloat(avgRating) : null,
+        qualityScore,
+        completionPercentage,
+        packageType: user.packageType,
+        standing: user.standing || 'good'
+      };
+
+      res.json(metrics);
+    } catch (error: any) {
+      console.error('Get decision maker metrics error:', error);
+      res.status(500).json({ message: "Failed to fetch metrics" });
+    }
+  });
+
+  // Rate a call
+  app.post("/api/decision-maker/calls/:callId/rate", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      const { callId } = req.params;
+      const { rating, feedback } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
+      }
+
+      const updatedCall = await storage.updateCall(callId, {
+        rating: parseInt(rating),
+        feedback: feedback || '',
+        status: 'completed'
+      });
+
+      if (!updatedCall) {
+        return res.status(404).json({ message: "Call not found" });
+      }
+
+      res.json({ success: true, message: "Call rated successfully", call: updatedCall });
+    } catch (error: any) {
+      console.error('Rate call error:', error);
+      res.status(500).json({ message: "Failed to rate call" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
