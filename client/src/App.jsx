@@ -18,6 +18,7 @@ import SalesRepPersonalInfo from "@/pages/signup/sales-rep/personal-info";
 import SalesRepProfessionalInfo from "@/pages/signup/sales-rep/professional-info";
 import InviteDecisionMakers from "@/pages/signup/sales-rep/invite-decision-makers";
 import SalesRepChoosePackage from "@/pages/signup/sales-rep/choose-package";
+import TestSignup from "@/pages/test-signup";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/signup/sales-rep/professional-info" component={SalesRepProfessionalInfo} />
       <Route path="/signup/sales-rep/invites" component={InviteDecisionMakers} />
       <Route path="/signup/sales-rep/package" component={SalesRepChoosePackage} />
+      <Route path="/test-signup" component={TestSignup} />
       <Route component={NotFound} />
     </Switch>
   );
