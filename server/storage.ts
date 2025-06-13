@@ -12,21 +12,21 @@ import {
 
 export interface IStorage {
   // User methods
-  getUser(id: string): Promise<any | undefined>;
+  getUser(id: number): Promise<any | undefined>;
   getUserByUsername(username: string): Promise<any | undefined>;
   getUserByEmail(email: string): Promise<any | undefined>;
   createUser(user: any): Promise<any>;
-  updateUser(id: string, updates: any): Promise<any | undefined>;
+  updateUser(id: number, updates: any): Promise<any | undefined>;
   
   // Invitation methods
-  getInvitationsByUserId(userId: string): Promise<any[]>;
+  getInvitationsByUserId(userId: number): Promise<any[]>;
   createInvitation(invitation: any): Promise<any>;
-  updateInvitationStatus(id: string, status: string): Promise<any | undefined>;
+  updateInvitationStatus(id: number, status: string): Promise<any | undefined>;
   
   // Call methods
-  getCallsByUserId(userId: string): Promise<any[]>;
+  getCallsByUserId(userId: number): Promise<any[]>;
   createCall(call: any): Promise<any>;
-  updateCall(id: string, updates: any): Promise<any | undefined>;
+  updateCall(id: number, updates: any): Promise<any | undefined>;
 }
 
 export class MemStorage implements IStorage {

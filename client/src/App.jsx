@@ -33,7 +33,7 @@ function Router() {
       <Route path="/signup/availability" component={AvailabilityPreferences} />
       <Route path="/signup/nominate" component={NominateSalesRep} />
       <Route path="/signup/package" component={ChoosePackage} />
-      <Route path="/signup/sales-rep/personal" component={SalesRepPersonalInfo} />
+      <Route path="/signup/sales-rep/personal-info" component={SalesRepPersonalInfo} />
       <Route path="/signup/sales-rep/professional" component={SalesRepProfessionalBackground} />
       <Route path="/signup/sales-rep/invite-decision-makers" component={InviteDecisionMakers} />
       <Route path="/signup/sales-rep/package" component={SalesRepChoosePackage} />
