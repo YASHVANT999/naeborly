@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { 
   insertInvitationSchema, 
@@ -14,7 +15,6 @@ import {
   decisionMakerNominationSchema,
   decisionMakerPackageSchema
 } from "@shared/schema";
-import bcrypt from "bcrypt";
 
 // Extend Express Request type to include session
 declare module 'express-session' {
@@ -390,8 +390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify password
-      const bcrypt = await import('bcrypt');
-      const isValidPassword = await bcrypt.default.compare(password, user.password);
+      const isValidPassword = await bcrypt.compare(password, user.password);
       
       if (!isValidPassword) {
         console.log('Invalid super admin password');
