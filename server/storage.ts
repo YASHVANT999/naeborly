@@ -62,8 +62,9 @@ export class MemStorage implements IStorage {
       linkedinVerified: true,
       jobTitle: "Senior Sales Representative",
       company: "TechCorp",
-      yearsOfExperience: 5,
       industry: "Technology",
+      companySize: "100-500",
+      yearsInRole: "5-10",
       packageType: "premium",
       isActive: true,
       standing: "good",
@@ -82,8 +83,9 @@ export class MemStorage implements IStorage {
       linkedinVerified: true,
       jobTitle: "Chief Technology Officer",
       company: "CloudScale Inc",
-      yearsOfExperience: 8,
       industry: "Technology",
+      companySize: "500-1000",
+      yearsInRole: "10+",
       packageType: null,
       isActive: true,
       standing: "excellent",
@@ -151,6 +153,16 @@ export class MemStorage implements IStorage {
     const user: User = { 
       ...insertUser, 
       id,
+      linkedinUrl: insertUser.linkedinUrl || null,
+      linkedinVerified: insertUser.linkedinVerified ?? false,
+      jobTitle: insertUser.jobTitle || null,
+      company: insertUser.company || null,
+      industry: insertUser.industry || null,
+      companySize: insertUser.companySize || null,
+      yearsInRole: insertUser.yearsInRole || null,
+      packageType: insertUser.packageType || "free",
+      isActive: insertUser.isActive ?? true,
+      standing: insertUser.standing || "good",
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -169,6 +181,7 @@ export class MemStorage implements IStorage {
     const invitation: Invitation = { 
       ...insertInvitation, 
       id,
+      status: insertInvitation.status || "pending",
       createdAt: new Date()
     };
     this.invitations.set(id, invitation);
@@ -193,7 +206,15 @@ export class MemStorage implements IStorage {
 
   async createCall(insertCall: InsertCall): Promise<Call> {
     const id = this.currentCallId++;
-    const call: Call = { ...insertCall, id };
+    const call: Call = { 
+      ...insertCall, 
+      id,
+      status: insertCall.status || "scheduled",
+      company: insertCall.company || null,
+      rating: insertCall.rating || null,
+      feedback: insertCall.feedback || null,
+      pitch: insertCall.pitch || null
+    };
     this.calls.set(id, call);
     return call;
   }

@@ -17,7 +17,7 @@ export const users = pgTable("users", {
   companySize: text("company_size"),
   yearsInRole: text("years_in_role"),
   packageType: text("package_type").default("free"),
-  isActive: boolean("is_active").default(true),
+  isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   standing: text("standing").default("good"), // 'good', 'excellent'
