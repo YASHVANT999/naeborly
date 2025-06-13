@@ -1,21 +1,15 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
-import connectPg from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { connectToMongoDB } from "./mongodb";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session configuration
-const pgSession = connectPg(session);
+// Session configuration - using memory store for MongoDB
 app.use(session({
-  store: new pgSession({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: true,
-    tableName: 'sessions'
-  }),
   secret: process.env.SESSION_SECRET || 'your-secret-key-here',
   resave: false,
   saveUninitialized: false,
@@ -57,6 +51,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Connect to MongoDB
+  await connectToMongoDB();
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
