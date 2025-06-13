@@ -208,30 +208,42 @@ export default function SalesDashboard() {
                       <h4 className="font-semibold text-gray-900 mb-4">Invitation Status:</h4>
                       
                       <div className="space-y-4">
-                        {mockInvitations.map((invitation) => (
-                          <div key={invitation.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                        {invitations.length > 0 ? invitations.map((invitation) => (
+                          <div key={invitation._id || invitation.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
                             <div className="flex items-center space-x-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
                                 invitation.status === 'accepted' ? 'bg-green-100 text-green-600' : 'bg-purple-100 text-purple-600'
                               }`}>
-                                {getInitials(invitation.name)}
+                                {getInitials(invitation.decisionMakerName || invitation.name || 'DM')}
                               </div>
                               <div>
-                                <p className="font-medium text-gray-900">{invitation.name}</p>
-                                <p className="text-sm text-gray-500">{invitation.email}</p>
+                                <p className="font-medium text-gray-900">{invitation.decisionMakerName || invitation.name || 'Decision Maker'}</p>
+                                <p className="text-sm text-gray-500">{invitation.decisionMakerEmail || invitation.email || 'email@example.com'}</p>
                               </div>
                             </div>
                             {getStatusBadge(invitation.status)}
                           </div>
-                        ))}
+                        )) : (
+                          <div className="text-center py-8">
+                            <p className="text-gray-500">No invitations sent yet</p>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     <Button 
-                      onClick={simulateAcceptance}
+                      onClick={() => simulateAcceptanceMutation.mutate()}
+                      disabled={simulateAcceptanceMutation.isPending}
                       className="bg-purple-600 hover:bg-purple-700"
                     >
-                      Simulate DM Acceptance (Demo)
+                      {simulateAcceptanceMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Simulating...
+                        </>
+                      ) : (
+                        "Simulate DM Acceptance (Demo)"
+                      )}
                     </Button>
                   </div>
                 </CardContent>
