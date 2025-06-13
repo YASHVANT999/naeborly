@@ -36,8 +36,16 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
+// Add a basic health check route first
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+const port = 5000;
+
+async function startServer() {
   try {
+    // Register routes and get server
     const server = await registerRoutes(app);
 
     // Add error handling middleware
@@ -48,24 +56,39 @@ app.use((req, res, next) => {
       res.status(status).json({ message });
     });
 
-    // importantly only setup vite in development and after
-    // setting up all the other routes so the catch-all route
-    // doesn't interfere with the other routes
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
-    }
-
-    // ALWAYS serve the app on port 5000
-    // this serves both the API and the client.
-    // It is the only port that is not firewalled.
-    const port = 5000;
-    server.listen(port, "0.0.0.0", () => {
-      log(`serving on port ${port}`);
+    // Handle server errors
+    server.on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        log(`Port ${port} is already in use`);
+        process.exit(1);
+      } else {
+        log(`Server error: ${err.message}`);
+        process.exit(1);
+      }
     });
+
+    // Start listening
+    server.listen(port, "0.0.0.0", async () => {
+      log(`Server listening on port ${port}`);
+      
+      try {
+        // Setup vite after server is successfully listening
+        if (app.get("env") === "development") {
+          await setupVite(app, server);
+          log(`Vite development server ready`);
+        } else {
+          serveStatic(app);
+          log(`Static files ready`);
+        }
+      } catch (viteError) {
+        log(`Vite setup error: ${viteError}`);
+      }
+    });
+
   } catch (error) {
     log(`Failed to start server: ${error}`);
     process.exit(1);
   }
-})();
+}
+
+startServer();
