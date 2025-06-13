@@ -45,8 +45,8 @@ const port = 5000;
 
 async function startServer() {
   try {
-    // Register routes and get server
-    const server = await registerRoutes(app);
+    // Register routes first
+    await registerRoutes(app);
 
     // Add error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -55,6 +55,10 @@ async function startServer() {
       log(`Error: ${message}`);
       res.status(status).json({ message });
     });
+
+    // Create HTTP server with the Express app
+    const { createServer } = await import("http");
+    const server = createServer(app);
 
     // Handle server errors
     server.on('error', (err: any) => {
