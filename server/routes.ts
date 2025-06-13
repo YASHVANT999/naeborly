@@ -778,6 +778,167 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== ADMIN PANEL ROUTES =====
+
+  // Get admin statistics
+  app.get('/api/admin/stats', async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      const userRole = (req.session as any)?.userRole;
+      
+      if (!userId || userRole !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      // Get all users
+      const allUsers = await storage.getAllUsers();
+      const allCalls = await storage.getAllCalls();
+      const allInvitations = await storage.getAllInvitations();
+
+      // Calculate statistics
+      const totalUsers = allUsers.length;
+      const activeSalesReps = allUsers.filter(user => user.role === 'sales_rep' && user.isActive).length;
+      const totalCalls = allCalls.length;
+      const completedCalls = allCalls.filter(call => call.status === 'completed').length;
+      const scheduledCalls = allCalls.filter(call => call.status === 'scheduled').length;
+      
+      // Calculate average rating
+      const completedCallsWithRating = allCalls.filter(call => call.rating && call.rating > 0);
+      const avgRating = completedCallsWithRating.length > 0 
+        ? (completedCallsWithRating.reduce((sum, call) => sum + call.rating, 0) / completedCallsWithRating.length).toFixed(1)
+        : 0;
+
+      // Calculate revenue based on package types
+      const totalRevenue = allUsers.reduce((sum, user) => {
+        if (user.packageType === 'pro-team') return sum + 199;
+        if (user.packageType === 'enterprise') return sum + 499;
+        if (user.packageType === 'starter') return sum + 99;
+        return sum;
+      }, 0);
+
+      const stats = {
+        totalUsers,
+        activeSalesReps,
+        totalCalls,
+        completedCalls,
+        scheduledCalls,
+        avgRating: parseFloat(avgRating),
+        totalRevenue
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching admin stats:', error);
+      res.status(500).json({ message: 'Failed to fetch admin statistics' });
+    }
+  });
+
+  // Get all users for admin
+  app.get('/api/admin/users', async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      const userRole = (req.session as any)?.userRole;
+      
+      if (!userId || userRole !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error('Error fetching users for admin:', error);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
+  // Get all calls for admin
+  app.get('/api/admin/calls', async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      const userRole = (req.session as any)?.userRole;
+      
+      if (!userId || userRole !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const calls = await storage.getAllCalls();
+      res.json(calls);
+    } catch (error) {
+      console.error('Error fetching calls for admin:', error);
+      res.status(500).json({ message: 'Failed to fetch calls' });
+    }
+  });
+
+  // Get all invitations for admin
+  app.get('/api/admin/invitations', async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      const userRole = (req.session as any)?.userRole;
+      
+      if (!userId || userRole !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const invitations = await storage.getAllInvitations();
+      res.json(invitations);
+    } catch (error) {
+      console.error('Error fetching invitations for admin:', error);
+      res.status(500).json({ message: 'Failed to fetch invitations' });
+    }
+  });
+
+  // Update user status
+  app.patch('/api/admin/users/:userId/status', async (req, res) => {
+    try {
+      const adminUserId = (req.session as any)?.userId;
+      const userRole = (req.session as any)?.userRole;
+      
+      if (!adminUserId || userRole !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const { userId } = req.params;
+      const { status } = req.body;
+
+      const isActive = status === 'active';
+      const updatedUser = await storage.updateUser(userId, { isActive });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      res.json({ success: true, user: updatedUser });
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      res.status(500).json({ message: 'Failed to update user status' });
+    }
+  });
+
+  // Delete user
+  app.delete('/api/admin/users/:userId', async (req, res) => {
+    try {
+      const adminUserId = (req.session as any)?.userId;
+      const userRole = (req.session as any)?.userRole;
+      
+      if (!adminUserId || userRole !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const { userId } = req.params;
+      
+      const deleted = await storage.deleteUser(userId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      res.json({ success: true, message: 'User deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: 'Failed to delete user' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

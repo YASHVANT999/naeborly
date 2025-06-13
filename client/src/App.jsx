@@ -11,6 +11,7 @@ import SalesDashboard from "@/pages/sales-dashboard";
 import DecisionDashboard from "@/pages/decision-dashboard";
 import PostCallEvaluation from "@/pages/post-call-evaluation";
 import CallFeedback from "@/pages/call-feedback";
+import AdminPanel from "@/pages/admin-panel";
 import PersonalInfo from "@/pages/signup/personal-info";
 import ProfessionalBackground from "@/pages/signup/professional-background";
 import AvailabilityPreferences from "@/pages/signup/availability-preferences";
@@ -41,6 +42,11 @@ function Router() {
       <Route path="/decision-dashboard">
         <ProtectedRoute requiredRole="decision_maker">
           <DecisionDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin">
+        <ProtectedRoute requiredRole="admin">
+          <AdminPanel />
         </ProtectedRoute>
       </Route>
       <Route path="/evaluation/rep" component={PostCallEvaluation} />

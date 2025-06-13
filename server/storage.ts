@@ -5,16 +5,20 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<any | undefined>;
   createUser(user: any): Promise<any>;
   updateUser(id: string, updates: any): Promise<any | undefined>;
+  deleteUser(id: string): Promise<boolean>;
+  getAllUsers(): Promise<any[]>;
   
   // Invitation methods
   getInvitationsByUserId(userId: string): Promise<any[]>;
   createInvitation(invitation: any): Promise<any>;
   updateInvitationStatus(id: string, status: string): Promise<any | undefined>;
+  getAllInvitations(): Promise<any[]>;
   
   // Call methods
   getCallsByUserId(userId: string): Promise<any[]>;
   createCall(call: any): Promise<any>;
   updateCall(id: string, updates: any): Promise<any | undefined>;
+  getAllCalls(): Promise<any[]>;
 }
 
 // Import and use only MongoDB storage
