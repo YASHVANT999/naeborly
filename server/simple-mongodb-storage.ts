@@ -122,6 +122,72 @@ export class SimpleMongoDBStorage implements IStorage {
     }
   }
 
+  async deleteUser(id: string): Promise<boolean> {
+    try {
+      await connectToMongoDB();
+      const result = await User.findByIdAndDelete(id);
+      return !!result;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      return false;
+    }
+  }
+
+  async getAllUsers(): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const users = await User.find({}).sort({ createdAt: -1 });
+      return users.map(user => this.toPlainObject(user));
+    } catch (error) {
+      console.error('Error getting all users:', error);
+      return [];
+    }
+  }
+
+  async getAllInvitations(): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const invitations = await Invitation.find({}).sort({ createdAt: -1 });
+      
+      // Populate sales rep names
+      const populatedInvitations = [];
+      for (const invitation of invitations) {
+        const salesRep = await User.findById(invitation.salesRepId);
+        const invitationObj = this.toPlainObject(invitation);
+        invitationObj.salesRepName = salesRep ? `${salesRep.firstName} ${salesRep.lastName}` : 'Unknown';
+        populatedInvitations.push(invitationObj);
+      }
+      
+      return populatedInvitations;
+    } catch (error) {
+      console.error('Error getting all invitations:', error);
+      return [];
+    }
+  }
+
+  async getAllCalls(): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const calls = await Call.find({}).sort({ createdAt: -1 });
+      
+      // Populate user names
+      const populatedCalls = [];
+      for (const call of calls) {
+        const salesRep = await User.findById(call.salesRepId);
+        const decisionMaker = await User.findById(call.decisionMakerId);
+        const callObj = this.toPlainObject(call);
+        callObj.salesRepName = salesRep ? `${salesRep.firstName} ${salesRep.lastName}` : 'Unknown';
+        callObj.decisionMakerName = decisionMaker ? `${decisionMaker.firstName} ${decisionMaker.lastName}` : 'Unknown';
+        populatedCalls.push(callObj);
+      }
+      
+      return populatedCalls;
+    } catch (error) {
+      console.error('Error getting all calls:', error);
+      return [];
+    }
+  }
+
   private toPlainObject(mongooseDoc: any): any {
     const obj = mongooseDoc.toObject();
     // Convert MongoDB _id to id for consistency
