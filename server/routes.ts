@@ -209,7 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Save decision maker invitations
-  app.post("/api/sales-rep/invitations", async (req, res) => {
+  app.post("/api/sales-rep/invites", async (req, res) => {
     try {
       const validatedData = salesRepInvitesSchema.parse(req.body);
       
@@ -245,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Complete signup with package selection
-  app.post("/api/sales-rep/complete-signup", async (req, res) => {
+  app.post("/api/sales-rep/package", async (req, res) => {
     try {
       const validatedData = salesRepPackageSchema.parse(req.body);
       

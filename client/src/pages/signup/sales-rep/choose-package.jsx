@@ -1,22 +1,56 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle, User, Users, Crown, Shield } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, Check, Loader2, Star } from "lucide-react";
+import { salesRepPackageSchema } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function SalesRepChoosePackage() {
   const [, setLocation] = useLocation();
-  const [selectedPackage, setSelectedPackage] = useState("free");
+  const { toast } = useToast();
 
-  const handleBack = () => {
-    setLocation("/signup/sales-rep/invite-decision-makers");
-  };
+  const form = useForm({
+    resolver: zodResolver(salesRepPackageSchema),
+    defaultValues: {
+      packageType: "free"
+    }
+  });
 
-  const handleComplete = () => {
-    // Complete registration and redirect to sales dashboard
-    setLocation("/sales-dashboard");
+  const savePackageMutation = useMutation({
+    mutationFn: async (data) => {
+      console.log('Submitting package data:', data);
+      const response = await apiRequest('POST', '/api/sales-rep/package', data);
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      console.log('Package selection saved successfully:', data);
+      toast({
+        title: "Account Created Successfully!",
+        description: "Welcome to Naeberly! Your sales rep account is now ready."
+      });
+      setLocation("/sales-dashboard");
+    },
+    onError: (error) => {
+      console.error('Package save error:', error);
+      toast({
+        title: "Save Failed",
+        description: error.message || "Failed to complete signup. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const onSubmit = (data) => {
+    savePackageMutation.mutate(data);
   };
 
   const packages = [
@@ -24,90 +58,70 @@ export default function SalesRepChoosePackage() {
       id: "free",
       name: "Free",
       price: "$0",
-      description: "Get started for free",
-      icon: User,
+      period: "forever",
+      description: "Perfect for getting started",
       features: [
-        "1 DM per month",
-        "1 call credit/month",
-        "Basic matching"
+        "Up to 3 decision maker invitations",
+        "Basic call scheduling",
+        "Email support",
+        "Basic analytics"
       ],
-      color: "gray",
-      selected: selectedPackage === "free"
+      popular: false
     },
     {
       id: "basic",
       name: "Basic",
-      price: "$17.99",
+      price: "$29",
       period: "per month",
-      description: "Essential features for growing sales",
-      icon: Users,
+      description: "Great for individual sales reps",
       features: [
-        "3 DMs per month",
-        "5 call credits/month",
-        "Email access",
-        "Priority matching"
+        "Up to 10 decision maker invitations",
+        "Advanced call scheduling",
+        "Priority email support",
+        "Detailed analytics",
+        "LinkedIn integration"
       ],
-      color: "blue",
-      selected: selectedPackage === "basic"
+      popular: false
     },
     {
       id: "premium",
       name: "Premium",
-      price: "$49.99",
+      price: "$79",
       period: "per month",
-      badge: "Popular",
-      description: "Advanced tools for serious sales professionals",
-      icon: Crown,
+      description: "Best for serious sales professionals",
       features: [
-        "10 DMs per month",
-        "15 call credits/month",
-        "Unlimited email access",
-        "Advanced analytics"
+        "Unlimited decision maker invitations",
+        "Advanced call scheduling",
+        "Phone & email support",
+        "Advanced analytics & reporting",
+        "LinkedIn integration",
+        "CRM integrations",
+        "Call recording & transcription"
       ],
-      color: "purple",
-      selected: selectedPackage === "premium"
+      popular: true
     },
     {
       id: "pro-team",
       name: "Pro Team",
-      price: "$99.99",
+      price: "$199",
       period: "per month",
-      description: "Enterprise solution for sales teams",
-      icon: Shield,
+      description: "For sales teams and organizations",
       features: [
-        "25 DMs per month",
-        "50 call credits/month",
+        "Everything in Premium",
         "Team management",
-        "Priority support"
+        "Bulk invitations",
+        "White-label options",
+        "Custom integrations",
+        "Dedicated account manager",
+        "Advanced security features"
       ],
-      color: "green",
-      selected: selectedPackage === "pro-team"
+      popular: false
     }
   ];
 
-  const getColorClasses = (color, selected) => {
-    const colors = {
-      gray: selected ? "border-gray-600 bg-gray-50" : "border-gray-200",
-      blue: selected ? "border-blue-600 bg-blue-50" : "border-gray-200",
-      purple: selected ? "border-purple-600 bg-purple-50" : "border-gray-200",
-      green: selected ? "border-green-600 bg-green-50" : "border-gray-200"
-    };
-    return colors[color] || colors.gray;
-  };
-
-  const getIconColor = (color) => {
-    const colors = {
-      gray: "text-gray-600",
-      blue: "text-blue-600",
-      purple: "text-purple-600",
-      green: "text-green-600"
-    };
-    return colors[color] || colors.gray;
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Progress Header */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
@@ -120,86 +134,109 @@ export default function SalesRepChoosePackage() {
         {/* Main Content */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Choose Your Package</h1>
-          <p className="text-gray-600">Select the plan that fits your needs</p>
+          <p className="text-gray-600">Select the plan that best fits your sales goals</p>
         </div>
 
-        {/* Package Options */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {packages.map((pkg) => {
-            const IconComponent = pkg.icon;
-            return (
-              <Card
-                key={pkg.id}
-                className={`relative cursor-pointer transition-all border-2 ${
-                  getColorClasses(pkg.color, pkg.selected)
-                } ${pkg.selected ? "shadow-xl" : "shadow-lg hover:shadow-xl"}`}
-                onClick={() => setSelectedPackage(pkg.id)}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <FormField
+              control={form.control}
+              name="packageType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <RadioGroup 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                      className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"
+                    >
+                      {packages.map((pkg) => (
+                        <div key={pkg.id} className="relative">
+                          <RadioGroupItem
+                            value={pkg.id}
+                            id={pkg.id}
+                            className="peer sr-only"
+                          />
+                          <label
+                            htmlFor={pkg.id}
+                            className="flex flex-col cursor-pointer"
+                          >
+                            <Card className="peer-checked:ring-2 peer-checked:ring-purple-500 peer-checked:border-purple-500 hover:shadow-lg transition-all duration-200 h-full">
+                              <CardContent className="p-6 flex flex-col h-full">
+                                {pkg.popular && (
+                                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                                    <Badge className="bg-purple-600 text-white flex items-center gap-1">
+                                      <Star className="h-3 w-3" />
+                                      Most Popular
+                                    </Badge>
+                                  </div>
+                                )}
+                                
+                                <div className="text-center mb-4">
+                                  <h3 className="text-xl font-bold text-gray-900 mb-2">{pkg.name}</h3>
+                                  <div className="mb-2">
+                                    <span className="text-3xl font-bold text-purple-600">{pkg.price}</span>
+                                    <span className="text-gray-600 ml-1">/{pkg.period}</span>
+                                  </div>
+                                  <p className="text-gray-600 text-sm">{pkg.description}</p>
+                                </div>
+
+                                <div className="flex-1">
+                                  <ul className="space-y-3">
+                                    {pkg.features.map((feature, index) => (
+                                      <li key={index} className="flex items-start gap-2">
+                                        <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                        <span className="text-sm text-gray-700">{feature}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+
+                                <div className="mt-4 peer-checked:block hidden">
+                                  <div className="text-center p-2 bg-purple-50 rounded-lg">
+                                    <span className="text-sm font-medium text-purple-700">Selected</span>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between pt-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLocation("/signup/sales-rep/invites")}
+                className="flex items-center gap-2"
               >
-                {pkg.badge && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-purple-600 text-white">
-                      {pkg.badge}
-                    </Badge>
-                  </div>
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </Button>
+
+              <Button
+                type="submit"
+                disabled={savePackageMutation.isPending}
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-8"
+              >
+                {savePackageMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    Complete Signup
+                  </>
                 )}
-                <CardContent className="p-6">
-                  <div className="text-center mb-6">
-                    <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center ${
-                      pkg.color === 'gray' ? 'bg-gray-100' :
-                      pkg.color === 'blue' ? 'bg-blue-100' :
-                      pkg.color === 'purple' ? 'bg-purple-100' : 'bg-green-100'
-                    }`}>
-                      <IconComponent 
-                        className={getIconColor(pkg.color)} 
-                        size={24} 
-                      />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">{pkg.name}</h3>
-                    <div className="text-2xl font-bold text-gray-900 mb-1">{pkg.price}</div>
-                    {pkg.period && <div className="text-sm text-gray-500">{pkg.period}</div>}
-                  </div>
-
-                  <div className="space-y-2 mb-6">
-                    {pkg.features.map((feature, index) => (
-                      <div key={index} className="flex items-center text-sm text-gray-600">
-                        <CheckCircle className="text-green-600 mr-2 flex-shrink-0" size={14} />
-                        <span>{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {pkg.selected && (
-                    <div className="text-center">
-                      <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        pkg.color === 'gray' ? 'bg-gray-100 text-gray-700' :
-                        pkg.color === 'blue' ? 'bg-blue-100 text-blue-700' :
-                        pkg.color === 'purple' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'
-                      }`}>
-                        <CheckCircle className="mr-1" size={12} />
-                        Selected
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Navigation */}
-        <div className="flex justify-between items-center">
-          <Button variant="ghost" onClick={handleBack} className="text-gray-600">
-            <ArrowLeft className="mr-2" size={16} />
-            Back
-          </Button>
-          <Button
-            onClick={handleComplete}
-            className="bg-purple-600 hover:bg-purple-700 px-8"
-          >
-            <CheckCircle className="mr-2" size={16} />
-            Complete Registration
-          </Button>
-        </div>
+              </Button>
+            </div>
+          </form>
+        </Form>
       </div>
     </div>
   );
