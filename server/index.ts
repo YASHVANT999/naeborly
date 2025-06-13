@@ -71,22 +71,22 @@ async function startServer() {
       }
     });
 
-    // Start listening
-    server.listen(port, "0.0.0.0", async () => {
-      log(`Server listening on port ${port}`);
-      
-      try {
-        // Setup vite after server is successfully listening
-        if (app.get("env") === "development") {
-          await setupVite(app, server);
-          log(`Vite development server ready`);
-        } else {
-          serveStatic(app);
-          log(`Static files ready`);
-        }
-      } catch (viteError) {
-        log(`Vite setup error: ${viteError}`);
+    // Setup vite/static serving first
+    try {
+      if (app.get("env") === "development") {
+        await setupVite(app, server);
+        log(`Vite development server configured`);
+      } else {
+        serveStatic(app);
+        log(`Static files configured`);
       }
+    } catch (viteError) {
+      log(`Vite setup error: ${viteError}`);
+    }
+
+    // Start listening
+    server.listen(port, "0.0.0.0", () => {
+      log(`Server listening on port ${port}`);
     });
 
   } catch (error) {
