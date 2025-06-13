@@ -803,13 +803,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const scheduledCalls = allCalls.filter(call => call.status === 'scheduled').length;
       
       // Calculate average rating
-      const completedCallsWithRating = allCalls.filter(call => call.rating && call.rating > 0);
+      const completedCallsWithRating = allCalls.filter((call: any) => call.rating && call.rating > 0);
       const avgRating = completedCallsWithRating.length > 0 
-        ? (completedCallsWithRating.reduce((sum, call) => sum + call.rating, 0) / completedCallsWithRating.length).toFixed(1)
-        : 0;
+        ? (completedCallsWithRating.reduce((sum: number, call: any) => sum + call.rating, 0) / completedCallsWithRating.length).toFixed(1)
+        : '0';
 
       // Calculate revenue based on package types
-      const totalRevenue = allUsers.reduce((sum, user) => {
+      const totalRevenue = allUsers.reduce((sum: number, user: any) => {
         if (user.packageType === 'pro-team') return sum + 199;
         if (user.packageType === 'enterprise') return sum + 499;
         if (user.packageType === 'starter') return sum + 99;

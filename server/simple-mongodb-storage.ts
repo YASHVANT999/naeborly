@@ -1,4 +1,4 @@
-import { User, Invitation, Call } from './mongodb';
+import { User, Invitation, Call, connectToMongoDB } from './mongodb';
 import type { IStorage } from './storage';
 import bcrypt from 'bcrypt';
 
