@@ -484,6 +484,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== LOGIN ROUTE =====
+  
+  app.post("/api/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+      
+      // Get user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+      
+      // Check if account is active (completed signup)
+      if (!user.isActive) {
+        return res.status(401).json({ message: "Please complete your signup process first" });
+      }
+      
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+      
+      // Store user session
+      (req.session as any).userId = user.id;
+      (req.session as any).userRole = user.role;
+      
+      // Return user data (excluding password)
+      const { password: _, ...userWithoutPassword } = user;
+      
+      res.json({
+        success: true,
+        message: "Login successful",
+        user: userWithoutPassword
+      });
+      
+    } catch (error: any) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: "Login failed", error: error.message });
+    }
+  });
+
+  // ===== LOGOUT ROUTE =====
+  
+  app.post("/api/logout", async (req, res) => {
+    try {
+      req.session.destroy((err) => {
+        if (err) {
+          return res.status(500).json({ message: "Logout failed" });
+        }
+        res.json({ success: true, message: "Logout successful" });
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Logout failed" });
+    }
+  });
+
+  // ===== GET CURRENT USER ROUTE =====
+  
+  app.get("/api/current-user", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      // Return user data (excluding password)
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+      
+    } catch (error: any) {
+      console.error('Get current user error:', error);
+      res.status(500).json({ message: "Failed to get user data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

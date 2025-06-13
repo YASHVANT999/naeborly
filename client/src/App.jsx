@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Navigation from "@/components/navigation";
 import Landing from "@/pages/landing";
+import Login from "@/pages/login";
 import SalesDashboard from "@/pages/sales-dashboard";
 import DecisionDashboard from "@/pages/decision-dashboard";
 import PostCallEvaluation from "@/pages/post-call-evaluation";
@@ -30,6 +31,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
+      <Route path="/login" component={Login} />
       <Route path="/sales-dashboard" component={SalesDashboard} />
       <Route path="/decision-dashboard" component={DecisionDashboard} />
       <Route path="/evaluation/rep" component={PostCallEvaluation} />

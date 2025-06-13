@@ -1,9 +1,19 @@
 import { Link, useLocation } from "wouter";
-import { Handshake } from "lucide-react";
+import { Handshake, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Navigation() {
   const [location] = useLocation();
+  const { user, isAuthenticated, logout, isLoggingOut } = useAuth();
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-100">
@@ -25,27 +35,71 @@ export default function Navigation() {
                 Home
               </Button>
             </Link>
-            <Link href="/sales-dashboard">
-              <Button
-                variant={location === "/sales-dashboard" ? "default" : "ghost"}
-                className={location === "/sales-dashboard" ? "bg-purple-600 hover:bg-purple-700" : "text-gray-600 hover:text-purple-600"}
-              >
-                Sales Dashboard
-              </Button>
-            </Link>
-            <Link href="/decision-dashboard">
-              <Button
-                variant={location === "/decision-dashboard" ? "default" : "ghost"}
-                className={location === "/decision-dashboard" ? "bg-purple-600 hover:bg-purple-700" : "text-gray-600 hover:text-purple-600"}
-              >
-                Decision Maker
-              </Button>
-            </Link>
-            <Link href="/signup/personal">
-              <Button className="bg-purple-600 text-white hover:bg-purple-700">
-                Sign Up
-              </Button>
-            </Link>
+            
+            {isAuthenticated ? (
+              <>
+                {/* Show dashboard based on user role */}
+                {user?.role === 'sales_rep' && (
+                  <Link href="/sales-dashboard">
+                    <Button
+                      variant={location === "/sales-dashboard" ? "default" : "ghost"}
+                      className={location === "/sales-dashboard" ? "bg-purple-600 hover:bg-purple-700" : "text-gray-600 hover:text-purple-600"}
+                    >
+                      Sales Dashboard
+                    </Button>
+                  </Link>
+                )}
+                
+                {user?.role === 'decision_maker' && (
+                  <Link href="/decision-dashboard">
+                    <Button
+                      variant={location === "/decision-dashboard" ? "default" : "ghost"}
+                      className={location === "/decision-dashboard" ? "bg-purple-600 hover:bg-purple-700" : "text-gray-600 hover:text-purple-600"}
+                    >
+                      Decision Dashboard
+                    </Button>
+                  </Link>
+                )}
+
+                {/* User dropdown menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center space-x-2">
+                      <User size={16} />
+                      <span className="text-gray-700">
+                        {user?.firstName} {user?.lastName}
+                      </span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-gray-600">
+                      {user?.email}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-gray-600 capitalize">
+                      {user?.role?.replace('_', ' ')}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={logout}
+                      disabled={isLoggingOut}
+                      className="text-red-600 cursor-pointer"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      {isLoggingOut ? "Signing out..." : "Sign out"}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              /* Show Sign In button when not authenticated */
+              <Link href="/login">
+                <Button className="bg-purple-600 text-white hover:bg-purple-700">
+                  Sign In
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>
