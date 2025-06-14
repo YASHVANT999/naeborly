@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -9,10 +10,17 @@ import {
   Mail, 
   Users,
   Check,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from "lucide-react";
 
 export default function Landing() {
+  // Fetch subscription plans from public endpoint
+  const { data: subscriptionPlans, isLoading: plansLoading, error: plansError } = useQuery({
+    queryKey: ['/api/subscription-plans'],
+    retry: false,
+  });
+
   const features = [
     {
       icon: UserCheck,
@@ -52,46 +60,24 @@ export default function Landing() {
     }
   ];
 
-  const plans = [
-    {
-      name: "Basic",
-      price: "Free",
-      features: [
-        "Invite 3 decision-makers",
-        "Access to calls only", 
-        "Basic analytics"
-      ],
-      buttonText: "Get Started",
-      buttonVariant: "outline"
-    },
-    {
-      name: "Premium", 
-      price: "$29",
-      period: "/month",
-      popular: true,
-      features: [
-        "Everything in Basic",
-        "Access to email addresses",
-        "50 emails per month",
-        "Advanced analytics"
-      ],
-      buttonText: "Upgrade to Premium",
-      buttonVariant: "default"
-    },
-    {
-      name: "Pro Team",
-      price: "$99", 
-      period: "/month",
-      features: [
-        "Everything in Premium",
-        "Up to 10 team members",
-        "5 calls per rep/month",
-        "Team analytics dashboard"
-      ],
-      buttonText: "Contact Sales",
-      buttonVariant: "outline"
-    }
-  ];
+  // Helper function to format plan data for display
+  const formatPlanForDisplay = (plan) => {
+    const price = plan.price === 0 ? "Free" : `$${plan.price}`;
+    const period = plan.price > 0 ? "/month" : "";
+    
+    return {
+      id: plan.id,
+      name: plan.name,
+      price: price,
+      period: period,
+      popular: plan.popular || false,
+      features: plan.features || [],
+      buttonText: plan.price === 0 ? "Get Started" : 
+                  plan.name.toLowerCase().includes('team') ? "Contact Sales" : 
+                  "Upgrade to " + plan.name,
+      buttonVariant: plan.popular ? "default" : "outline"
+    };
+  };
 
   const getIconColor = (color) => {
     const colors = {
@@ -188,49 +174,63 @@ export default function Landing() {
             <p className="text-xl text-gray-600">Flexible options for individuals and teams</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {plans.map((plan, index) => (
-              <Card 
-                key={index} 
-                className={`relative ${plan.popular ? 'border-2 border-purple-600 shadow-xl' : 'border border-gray-200 shadow-lg'}`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                <CardContent className="p-8">
-                  <div className="text-center mb-8">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                    <div className="text-4xl font-bold text-purple-600 mb-1">{plan.price}</div>
-                    {plan.period && <div className="text-gray-500">{plan.period}</div>}
-                  </div>
-                  <ul className="space-y-4 mb-8">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center text-gray-600">
-                        <Check className="text-green-600 mr-3" size={16} />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <Button 
-                    variant={plan.buttonVariant}
-                    className={`w-full py-3 font-semibold ${
-                      plan.buttonVariant === 'default' 
-                        ? 'bg-purple-600 hover:bg-purple-700' 
-                        : plan.name === 'Pro Team'
-                        ? 'border-blue-600 text-blue-600 hover:bg-blue-50'
-                        : 'bg-gray-900 text-white hover:bg-gray-800'
-                    }`}
+          {plansLoading ? (
+            <div className="flex justify-center items-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+              <span className="ml-3 text-gray-600">Loading pricing plans...</span>
+            </div>
+          ) : plansError ? (
+            <div className="text-center py-16">
+              <p className="text-gray-500">Unable to load pricing plans. Please try again later.</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              {subscriptionPlans?.map((planData, index) => {
+                const plan = formatPlanForDisplay(planData);
+                return (
+                  <Card 
+                    key={plan.id || index} 
+                    className={`relative ${plan.popular ? 'border-2 border-purple-600 shadow-xl' : 'border border-gray-200 shadow-lg'}`}
                   >
-                    {plan.buttonText}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    {plan.popular && (
+                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <span className="bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                          Most Popular
+                        </span>
+                      </div>
+                    )}
+                    <CardContent className="p-8">
+                      <div className="text-center mb-8">
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                        <div className="text-4xl font-bold text-purple-600 mb-1">{plan.price}</div>
+                        {plan.period && <div className="text-gray-500">{plan.period}</div>}
+                      </div>
+                      <ul className="space-y-4 mb-8">
+                        {plan.features.map((feature, featureIndex) => (
+                          <li key={featureIndex} className="flex items-center text-gray-600">
+                            <Check className="text-green-600 mr-3" size={16} />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                      <Button 
+                        variant={plan.buttonVariant}
+                        className={`w-full py-3 font-semibold ${
+                          plan.buttonVariant === 'default' 
+                            ? 'bg-purple-600 hover:bg-purple-700' 
+                            : plan.name.toLowerCase().includes('team')
+                            ? 'border-blue-600 text-blue-600 hover:bg-blue-50'
+                            : 'bg-gray-900 text-white hover:bg-gray-800'
+                        }`}
+                      >
+                        {plan.buttonText}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 

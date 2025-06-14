@@ -24,6 +24,17 @@ declare module 'express-session' {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Public endpoint for subscription plans (for landing page)
+  app.get("/api/subscription-plans", async (req, res) => {
+    try {
+      const plans = await storage.getAllSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error('Error getting subscription plans:', error);
+      res.status(500).json({ message: "Failed to get subscription plans" });
+    }
+  });
+
   // Get current user (mock endpoint)
   app.get("/api/user", async (req, res) => {
     // For demo purposes, return a mock sales rep user
