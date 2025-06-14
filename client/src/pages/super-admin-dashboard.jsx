@@ -102,7 +102,7 @@ export default function SuperAdminDashboard() {
       description: "",
       price: "",
       billingInterval: "monthly",
-      features: [],
+      features: [""],
       maxCallCredits: 0,
       maxInvitations: 0,
       prioritySupport: false,
@@ -119,7 +119,7 @@ export default function SuperAdminDashboard() {
       description: "",
       price: "",
       billingInterval: "monthly",
-      features: [],
+      features: [""],
       maxCallCredits: 0,
       maxInvitations: 0,
       prioritySupport: false,
@@ -256,12 +256,14 @@ export default function SuperAdminDashboard() {
 
   const handleEditPlan = (plan) => {
     setSelectedPlan(plan);
+    // Ensure features array has at least one empty string if empty
+    const features = plan.features && plan.features.length > 0 ? plan.features : [""];
     editPlanForm.reset({
       name: plan.name,
       description: plan.description,
       price: plan.price,
       billingInterval: plan.billingInterval,
-      features: plan.features,
+      features: features,
       maxCallCredits: plan.maxCallCredits,
       maxInvitations: plan.maxInvitations,
       prioritySupport: plan.prioritySupport,
@@ -634,6 +636,60 @@ export default function SuperAdminDashboard() {
                               </FormItem>
                             )}
                           />
+                          
+                          {/* Features Management */}
+                          <div className="col-span-2">
+                            <FormLabel>Plan Features</FormLabel>
+                            <div className="space-y-2 mt-2">
+                              {createPlanForm.watch("features").map((feature, index) => (
+                                <div key={index} className="flex gap-2">
+                                  <FormField
+                                    control={createPlanForm.control}
+                                    name={`features.${index}`}
+                                    render={({ field }) => (
+                                      <FormItem className="flex-1">
+                                        <FormControl>
+                                          <Input 
+                                            placeholder="Enter feature description" 
+                                            {...field}
+                                          />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  {createPlanForm.watch("features").length > 1 && (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const features = createPlanForm.getValues("features");
+                                        features.splice(index, 1);
+                                        createPlanForm.setValue("features", features);
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              ))}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const features = createPlanForm.getValues("features");
+                                  features.push("");
+                                  createPlanForm.setValue("features", features);
+                                }}
+                                className="w-full"
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Feature
+                              </Button>
+                            </div>
+                          </div>
                           <div className="flex gap-4">
                             <FormField
                               control={createPlanForm.control}
@@ -1061,6 +1117,60 @@ export default function SuperAdminDashboard() {
                       </FormItem>
                     )}
                   />
+                </div>
+              </div>
+
+              {/* Features Management for Edit Form */}
+              <div>
+                <FormLabel>Plan Features</FormLabel>
+                <div className="space-y-2 mt-2">
+                  {editPlanForm.watch("features").map((feature, index) => (
+                    <div key={index} className="flex gap-2">
+                      <FormField
+                        control={editPlanForm.control}
+                        name={`features.${index}`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter feature description" 
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {editPlanForm.watch("features").length > 1 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const features = editPlanForm.getValues("features");
+                            features.splice(index, 1);
+                            editPlanForm.setValue("features", features);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const features = editPlanForm.getValues("features");
+                      features.push("");
+                      editPlanForm.setValue("features", features);
+                    }}
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Feature
+                  </Button>
                 </div>
               </div>
 

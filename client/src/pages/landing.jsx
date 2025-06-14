@@ -64,22 +64,61 @@ export default function Landing() {
   const formatPlanForDisplay = (plan) => {
     // Extract numeric value from price string (e.g., "$0" -> 0, "$29" -> 29)
     const numericPrice = typeof plan.price === 'string' ? 
-      parseFloat(plan.price.replace('$', '')) : plan.price;
+      parseFloat(plan.price.replace(/[^0-9.]/g, '')) : plan.price;
     
     const price = numericPrice === 0 ? "Free" : plan.price;
-    const period = numericPrice > 0 ? "/month" : "";
+    const period = plan.billingInterval && numericPrice > 0 ? 
+      `/${plan.billingInterval}` : numericPrice > 0 ? "/month" : "";
+    
+    // Create comprehensive feature list from database
+    const features = [];
+    
+    // Add description if it exists
+    if (plan.description) {
+      features.push(plan.description);
+    }
+    
+    // Add call credits
+    if (plan.maxCallCredits !== undefined) {
+      const creditText = plan.maxCallCredits === -1 ? 
+        "Unlimited Call Credits" : 
+        `${plan.maxCallCredits} Call Credits`;
+      features.push(creditText);
+    }
+    
+    // Add invitations
+    if (plan.maxInvitations !== undefined) {
+      const invitationText = plan.maxInvitations === -1 ? 
+        "Unlimited Invitations" : 
+        `${plan.maxInvitations} Invitations`;
+      features.push(invitationText);
+    }
+    
+    // Add priority support
+    if (plan.prioritySupport) {
+      features.push("Priority Support");
+    }
+    
+    // Add any additional features from the features array
+    if (plan.features && Array.isArray(plan.features)) {
+      features.push(...plan.features);
+    }
     
     return {
       id: plan.id,
       name: plan.name,
       price: price,
       period: period,
-      popular: plan.popular || false,
-      features: plan.features || [],
+      bestSeller: plan.bestSeller || false,
+      features: features,
+      description: plan.description,
+      maxCallCredits: plan.maxCallCredits,
+      maxInvitations: plan.maxInvitations,
+      prioritySupport: plan.prioritySupport,
       buttonText: numericPrice === 0 ? "Get Started" : 
                   plan.name.toLowerCase().includes('team') ? "Contact Sales" : 
-                  "Upgrade to " + plan.name,
-      buttonVariant: plan.popular ? "default" : "outline"
+                  "Get Started",
+      buttonVariant: plan.bestSeller ? "default" : "outline"
     };
   };
 
@@ -208,23 +247,61 @@ export default function Landing() {
                         <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
                         <div className="text-4xl font-bold text-purple-600 mb-1">{plan.price}</div>
                         {plan.period && <div className="text-gray-500">{plan.period}</div>}
+                        {plan.description && plan.description !== plan.features[0] && (
+                          <p className="text-sm text-gray-600 mt-3 italic">{plan.description}</p>
+                        )}
                       </div>
-                      <ul className="space-y-4 mb-8">
-                        {plan.features.map((feature, featureIndex) => (
-                          <li key={featureIndex} className="flex items-center text-gray-600">
-                            <Check className="text-green-600 mr-3" size={16} />
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
+                      
+                      {/* Features List */}
+                      <div className="mb-8">
+                        <ul className="space-y-3">
+                          {plan.features.map((feature, featureIndex) => (
+                            <li key={featureIndex} className="flex items-start text-gray-600">
+                              <Check className="text-green-600 mr-3 mt-0.5 flex-shrink-0" size={16} />
+                              <span className="text-sm leading-relaxed">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        
+                        {/* Additional Plan Details */}
+                        {(plan.maxCallCredits !== undefined || plan.maxInvitations !== undefined || plan.prioritySupport) && (
+                          <div className="mt-6 pt-4 border-t border-gray-100">
+                            <div className="grid grid-cols-1 gap-2 text-xs text-gray-500">
+                              {plan.maxCallCredits !== undefined && (
+                                <div className="flex justify-between">
+                                  <span>Call Credits:</span>
+                                  <span className="font-medium">
+                                    {plan.maxCallCredits === -1 ? 'Unlimited' : plan.maxCallCredits}
+                                  </span>
+                                </div>
+                              )}
+                              {plan.maxInvitations !== undefined && (
+                                <div className="flex justify-between">
+                                  <span>Invitations:</span>
+                                  <span className="font-medium">
+                                    {plan.maxInvitations === -1 ? 'Unlimited' : plan.maxInvitations}
+                                  </span>
+                                </div>
+                              )}
+                              {plan.prioritySupport && (
+                                <div className="flex justify-between">
+                                  <span>Support:</span>
+                                  <span className="font-medium text-purple-600">Priority</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
                       <Button 
                         variant={plan.buttonVariant}
-                        className={`w-full py-3 font-semibold ${
-                          plan.buttonVariant === 'default' 
-                            ? 'bg-purple-600 hover:bg-purple-700' 
+                        className={`w-full py-3 font-semibold transition-all ${
+                          plan.bestSeller
+                            ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg hover:shadow-xl' 
                             : plan.name.toLowerCase().includes('team')
                             ? 'border-blue-600 text-blue-600 hover:bg-blue-50'
-                            : 'bg-gray-900 text-white hover:bg-gray-800'
+                            : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                         }`}
                       >
                         {plan.buttonText}
