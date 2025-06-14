@@ -194,12 +194,12 @@ export default function Landing() {
                 return (
                   <Card 
                     key={plan.id || index} 
-                    className={`relative ${plan.popular ? 'border-2 border-purple-600 shadow-xl' : 'border border-gray-200 shadow-lg'}`}
+                    className={`relative ${plan.bestSeller ? 'border-2 border-purple-600 shadow-xl' : 'border border-gray-200 shadow-lg'}`}
                   >
-                    {plan.popular && (
+                    {plan.bestSeller && (
                       <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                         <span className="bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                          Most Popular
+                          Best Seller
                         </span>
                       </div>
                     )}
