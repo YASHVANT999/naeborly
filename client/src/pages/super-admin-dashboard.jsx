@@ -251,7 +251,12 @@ export default function SuperAdminDashboard() {
   };
 
   const onCreatePlanSubmit = (data) => {
-    createPlanMutation.mutate(data);
+    // Filter out empty features before submission
+    const cleanData = {
+      ...data,
+      features: data.features.filter(feature => feature.trim() !== "")
+    };
+    createPlanMutation.mutate(cleanData);
   };
 
   const handleEditPlan = (plan) => {
@@ -280,7 +285,12 @@ export default function SuperAdminDashboard() {
   };
 
   const onEditPlanSubmit = (data) => {
-    updatePlanMutation.mutate({ id: selectedPlan.id, updates: data });
+    // Filter out empty features before submission
+    const cleanData = {
+      ...data,
+      features: data.features.filter(feature => feature.trim() !== "")
+    };
+    updatePlanMutation.mutate({ id: selectedPlan.id, updates: cleanData });
   };
 
   const getRoleColor = (role) => {
