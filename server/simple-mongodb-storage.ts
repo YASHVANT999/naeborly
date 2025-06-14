@@ -1,4 +1,4 @@
-import { User, Invitation, Call, connectToMongoDB } from './mongodb';
+import { User, Invitation, Call, SubscriptionPlan, connectToMongoDB } from './mongodb';
 import type { IStorage } from './storage';
 import bcrypt from 'bcrypt';
 
@@ -223,47 +223,30 @@ export class SimpleMongoDBStorage implements IStorage {
     }
   }
 
-  // Subscription Plan methods (using User collection for now, can be extended)
+  // Subscription Plan CRUD methods
   async getAllSubscriptionPlans(): Promise<any[]> {
-    // For now, return predefined plans. In a real system, these would be in a separate collection
-    return [
-      {
-        id: 'free',
-        name: 'Free Plan',
-        description: 'Basic features for getting started',
-        price: '$0',
-        billingInterval: 'monthly',
-        features: ['1 call credit per month', '3 invitations', 'Basic support'],
-        maxCallCredits: 1,
-        maxInvitations: 3,
-        prioritySupport: false,
-        isActive: true
-      },
-      {
-        id: 'basic',
-        name: 'Basic Plan',
-        description: 'Perfect for small teams',
-        price: '$29',
-        billingInterval: 'monthly',
-        features: ['10 call credits per month', '25 invitations', 'Email support'],
-        maxCallCredits: 10,
-        maxInvitations: 25,
-        prioritySupport: false,
-        isActive: true
-      },
-      {
-        id: 'premium',
-        name: 'Premium Plan',
-        description: 'Advanced features for power users',
-        price: '$99',
-        billingInterval: 'monthly',
-        features: ['Unlimited calls', 'Unlimited invitations', 'Priority support', 'Advanced analytics'],
-        maxCallCredits: -1,
-        maxInvitations: -1,
-        prioritySupport: true,
-        isActive: true
-      }
-    ];
+    try {
+      await connectToMongoDB();
+      const plans = await SubscriptionPlan.find({ isActive: true }).sort({ createdAt: 1 });
+      return plans.map(plan => ({
+        id: plan._id.toString(),
+        name: plan.name,
+        description: plan.description,
+        price: plan.price,
+        billingInterval: plan.billingInterval,
+        features: plan.features,
+        maxCallCredits: plan.maxCallCredits,
+        maxInvitations: plan.maxInvitations,
+        prioritySupport: plan.prioritySupport,
+        bestSeller: plan.bestSeller,
+        isActive: plan.isActive,
+        createdAt: plan.createdAt,
+        updatedAt: plan.updatedAt
+      }));
+    } catch (error) {
+      console.error('Error getting subscription plans:', error);
+      return [];
+    }
   }
 
   async getSubscriptionPlan(id: string): Promise<any | undefined> {

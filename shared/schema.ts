@@ -55,6 +55,7 @@ export const subscriptionPlans = pgTable("subscription_plans", {
   maxCallCredits: integer("max_call_credits").notNull(),
   maxInvitations: integer("max_invitations").notNull(),
   prioritySupport: boolean("priority_support").default(false),
+  bestSeller: boolean("best_seller").default(false), // Only one plan can be best seller
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -177,6 +178,8 @@ export const createSubscriptionPlanSchema = z.object({
   maxCallCredits: z.number().min(0, "Call credits must be 0 or greater"),
   maxInvitations: z.number().min(0, "Invitations must be 0 or greater"),
   prioritySupport: z.boolean().default(false),
+  bestSeller: z.boolean().default(false),
+  isActive: z.boolean().default(true),
 });
 
 export const updateSubscriptionPlanSchema = createSubscriptionPlanSchema.partial();

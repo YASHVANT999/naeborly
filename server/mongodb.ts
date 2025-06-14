@@ -91,9 +91,34 @@ const callSchema = new mongoose.Schema(
   },
 );
 
+// Subscription Plan Schema
+const subscriptionPlanSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    description: { type: String },
+    price: { type: String, required: true },
+    billingInterval: {
+      type: String,
+      required: true,
+      enum: ["monthly", "yearly"],
+      default: "monthly"
+    },
+    features: [{ type: String }],
+    maxCallCredits: { type: Number, required: true },
+    maxInvitations: { type: Number, required: true },
+    prioritySupport: { type: Boolean, default: false },
+    bestSeller: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: true },
+  },
+  {
+    timestamps: true,
+  },
+);
+
 export const User = mongoose.model("User", userSchema);
 export const Invitation = mongoose.model("Invitation", invitationSchema);
 export const Call = mongoose.model("Call", callSchema);
+export const SubscriptionPlan = mongoose.model("SubscriptionPlan", subscriptionPlanSchema);
 
 export type UserDocument = mongoose.Document & {
   _id: mongoose.Types.ObjectId;
@@ -136,6 +161,22 @@ export type CallDocument = mongoose.Document & {
   feedback?: string;
   company?: string;
   pitch?: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type SubscriptionPlanDocument = mongoose.Document & {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  description?: string;
+  price: string;
+  billingInterval: "monthly" | "yearly";
+  features: string[];
+  maxCallCredits: number;
+  maxInvitations: number;
+  prioritySupport: boolean;
+  bestSeller: boolean;
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
