@@ -104,7 +104,26 @@ export default function SuperAdminDashboard() {
       features: [],
       maxCallCredits: 0,
       maxInvitations: 0,
-      prioritySupport: false
+      prioritySupport: false,
+      bestSeller: false,
+      isActive: true
+    }
+  });
+
+  // Edit Plan Form
+  const editPlanForm = useForm({
+    resolver: zodResolver(updateSubscriptionPlanSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      price: "",
+      billingInterval: "monthly",
+      features: [],
+      maxCallCredits: 0,
+      maxInvitations: 0,
+      prioritySupport: false,
+      bestSeller: false,
+      isActive: true
     }
   });
 
@@ -153,8 +172,43 @@ export default function SuperAdminDashboard() {
     onSuccess: () => {
       toast({ title: "Success", description: "Subscription plan created successfully" });
       queryClient.invalidateQueries({ queryKey: ['/api/super-admin/subscription-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/subscription-plans'] });
       setIsCreatePlanOpen(false);
       createPlanForm.reset();
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const updatePlanMutation = useMutation({
+    mutationFn: async ({ id, updates }) => {
+      return await apiRequest(`/api/super-admin/subscription-plans/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates)
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Subscription plan updated successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/super-admin/subscription-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/subscription-plans'] });
+      setIsEditPlanOpen(false);
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const deletePlanMutation = useMutation({
+    mutationFn: async (id) => {
+      return await apiRequest(`/api/super-admin/subscription-plans/${id}`, {
+        method: 'DELETE'
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Subscription plan deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/super-admin/subscription-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/subscription-plans'] });
     },
     onError: (error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -197,6 +251,33 @@ export default function SuperAdminDashboard() {
 
   const onCreatePlanSubmit = (data) => {
     createPlanMutation.mutate(data);
+  };
+
+  const handleEditPlan = (plan) => {
+    setSelectedPlan(plan);
+    editPlanForm.reset({
+      name: plan.name,
+      description: plan.description,
+      price: plan.price,
+      billingInterval: plan.billingInterval,
+      features: plan.features,
+      maxCallCredits: plan.maxCallCredits,
+      maxInvitations: plan.maxInvitations,
+      prioritySupport: plan.prioritySupport,
+      bestSeller: plan.bestSeller,
+      isActive: plan.isActive
+    });
+    setIsEditPlanOpen(true);
+  };
+
+  const handleDeletePlan = (planId) => {
+    if (confirm("Are you sure you want to delete this subscription plan? This action cannot be undone.")) {
+      deletePlanMutation.mutate(planId);
+    }
+  };
+
+  const onEditPlanSubmit = (data) => {
+    updatePlanMutation.mutate({ id: selectedPlan.id, updates: data });
   };
 
   const getRoleColor = (role) => {
@@ -549,15 +630,24 @@ export default function SuperAdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {subscriptionPlans?.map((plan) => (
                     <Card key={plan.id} className="relative">
+                      {plan.bestSeller && (
+                        <div className="absolute -top-3 -right-3">
+                          <Badge className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs">
+                            Best Seller
+                          </Badge>
+                        </div>
+                      )}
                       <CardHeader>
                         <div className="flex justify-between items-start">
                           <div>
                             <CardTitle className="text-lg">{plan.name}</CardTitle>
                             <CardDescription>{plan.description}</CardDescription>
                           </div>
-                          <Badge className={plan.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                            {plan.isActive ? 'Active' : 'Inactive'}
-                          </Badge>
+                          <div className="flex gap-2">
+                            <Badge className={plan.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                              {plan.isActive ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </div>
                         </div>
                       </CardHeader>
                       <CardContent>
@@ -576,6 +666,30 @@ export default function SuperAdminDashboard() {
                               <span>Priority Support:</span>
                               <span>{plan.prioritySupport ? 'Yes' : 'No'}</span>
                             </div>
+                            <div className="flex justify-between text-sm">
+                              <span>Best Seller:</span>
+                              <span>{plan.bestSeller ? 'Yes' : 'No'}</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 pt-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditPlan(plan)}
+                              className="flex-1"
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeletePlan(plan.id)}
+                              className="flex-1 text-red-600 hover:text-red-800"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
                           </div>
                         </div>
                       </CardContent>

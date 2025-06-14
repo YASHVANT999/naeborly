@@ -250,24 +250,114 @@ export class SimpleMongoDBStorage implements IStorage {
   }
 
   async getSubscriptionPlan(id: string): Promise<any | undefined> {
-    const plans = await this.getAllSubscriptionPlans();
-    return plans.find(plan => plan.id === id);
+    try {
+      await connectToMongoDB();
+      const plan = await SubscriptionPlan.findById(id);
+      if (plan) {
+        return {
+          id: plan._id.toString(),
+          name: plan.name,
+          description: plan.description,
+          price: plan.price,
+          billingInterval: plan.billingInterval,
+          features: plan.features,
+          maxCallCredits: plan.maxCallCredits,
+          maxInvitations: plan.maxInvitations,
+          prioritySupport: plan.prioritySupport,
+          bestSeller: plan.bestSeller,
+          isActive: plan.isActive,
+          createdAt: plan.createdAt,
+          updatedAt: plan.updatedAt
+        };
+      }
+      return undefined;
+    } catch (error) {
+      console.error('Error getting subscription plan:', error);
+      return undefined;
+    }
   }
 
-  async createSubscriptionPlan(plan: any): Promise<any> {
-    // For now, return the plan with generated ID
-    return { ...plan, id: Date.now().toString() };
+  async createSubscriptionPlan(planData: any): Promise<any> {
+    try {
+      await connectToMongoDB();
+      
+      // If this plan is marked as best seller, remove best seller from all other plans
+      if (planData.bestSeller) {
+        await SubscriptionPlan.updateMany({}, { $set: { bestSeller: false } });
+      }
+      
+      const plan = new SubscriptionPlan(planData);
+      const savedPlan = await plan.save();
+      
+      return {
+        id: savedPlan._id.toString(),
+        name: savedPlan.name,
+        description: savedPlan.description,
+        price: savedPlan.price,
+        billingInterval: savedPlan.billingInterval,
+        features: savedPlan.features,
+        maxCallCredits: savedPlan.maxCallCredits,
+        maxInvitations: savedPlan.maxInvitations,
+        prioritySupport: savedPlan.prioritySupport,
+        bestSeller: savedPlan.bestSeller,
+        isActive: savedPlan.isActive,
+        createdAt: savedPlan.createdAt,
+        updatedAt: savedPlan.updatedAt
+      };
+    } catch (error) {
+      console.error('Error creating subscription plan:', error);
+      throw error;
+    }
   }
 
   async updateSubscriptionPlan(id: string, updates: any): Promise<any | undefined> {
-    // For now, return the updated plan
-    const plan = await this.getSubscriptionPlan(id);
-    return plan ? { ...plan, ...updates } : undefined;
+    try {
+      await connectToMongoDB();
+      
+      // If this plan is being marked as best seller, remove best seller from all other plans
+      if (updates.bestSeller === true) {
+        await SubscriptionPlan.updateMany({ _id: { $ne: id } }, { $set: { bestSeller: false } });
+      }
+      
+      const updatedPlan = await SubscriptionPlan.findByIdAndUpdate(
+        id,
+        { ...updates, updatedAt: new Date() },
+        { new: true }
+      );
+      
+      if (updatedPlan) {
+        return {
+          id: updatedPlan._id.toString(),
+          name: updatedPlan.name,
+          description: updatedPlan.description,
+          price: updatedPlan.price,
+          billingInterval: updatedPlan.billingInterval,
+          features: updatedPlan.features,
+          maxCallCredits: updatedPlan.maxCallCredits,
+          maxInvitations: updatedPlan.maxInvitations,
+          prioritySupport: updatedPlan.prioritySupport,
+          bestSeller: updatedPlan.bestSeller,
+          isActive: updatedPlan.isActive,
+          createdAt: updatedPlan.createdAt,
+          updatedAt: updatedPlan.updatedAt
+        };
+      }
+      return undefined;
+    } catch (error) {
+      console.error('Error updating subscription plan:', error);
+      throw error;
+    }
   }
 
   async deleteSubscriptionPlan(id: string): Promise<boolean> {
-    // For now, return true (in real system, would delete from database)
-    return true;
+    try {
+      await connectToMongoDB();
+      const result = await SubscriptionPlan.findByIdAndDelete(id);
+      return !!result;
+    } catch (error) {
+      console.error('Error deleting subscription plan:', error);
+      return false;
+    }
   }
 
   // Activity Log methods (using console for now, can be extended to database)
