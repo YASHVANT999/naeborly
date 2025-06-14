@@ -62,8 +62,12 @@ export default function Landing() {
 
   // Helper function to format plan data for display
   const formatPlanForDisplay = (plan) => {
-    const price = plan.price === 0 ? "Free" : `$${plan.price}`;
-    const period = plan.price > 0 ? "/month" : "";
+    // Extract numeric value from price string (e.g., "$0" -> 0, "$29" -> 29)
+    const numericPrice = typeof plan.price === 'string' ? 
+      parseFloat(plan.price.replace('$', '')) : plan.price;
+    
+    const price = numericPrice === 0 ? "Free" : plan.price;
+    const period = numericPrice > 0 ? "/month" : "";
     
     return {
       id: plan.id,
@@ -72,7 +76,7 @@ export default function Landing() {
       period: period,
       popular: plan.popular || false,
       features: plan.features || [],
-      buttonText: plan.price === 0 ? "Get Started" : 
+      buttonText: numericPrice === 0 ? "Get Started" : 
                   plan.name.toLowerCase().includes('team') ? "Contact Sales" : 
                   "Upgrade to " + plan.name,
       buttonVariant: plan.popular ? "default" : "outline"
