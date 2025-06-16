@@ -17,7 +17,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CalendarDemo from "@/components/CalendarDemo";
-import TrafficLightIndicator from "@/components/TrafficLightIndicator";
 
 export default function SalesDashboard() {
   const { user } = useAuth();
@@ -34,20 +33,6 @@ export default function SalesDashboard() {
   const { data: calls = [], isLoading: callsLoading } = useQuery({
     queryKey: ['/api/sales-rep/calls'],
     enabled: !!user?.id
-  });
-
-  // Fetch sales rep's flag status
-  const { data: salesRepFlag, isLoading: flagLoading } = useQuery({
-    queryKey: ['/api/user-flag', user?.id],
-    enabled: !!user?.id,
-    retry: false,
-  });
-
-  // Fetch decision makers' flag statuses
-  const { data: decisionMakerFlags = [], isLoading: dmFlagsLoading } = useQuery({
-    queryKey: ['/api/sales-rep', user?.id, 'decision-maker-flags'],
-    enabled: !!user?.id,
-    retry: false,
   });
 
   // Fetch sales rep's metrics
@@ -121,21 +106,6 @@ export default function SalesDashboard() {
               <p className="text-gray-600 mt-1">Welcome back, {user?.firstName}!</p>
             </div>
             <div className="flex items-center space-x-4">
-              {/* Suspension Risk Indicator */}
-              {salesRepFlag && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600">Status:</span>
-                  <TrafficLightIndicator
-                    flag={salesRepFlag.currentFlag}
-                    reason={salesRepFlag.flagReason}
-                    severity={salesRepFlag.flagSeverity}
-                    metrics={salesRepFlag.metrics || {}}
-                    userType="sales_rep"
-                    userName={`${user?.firstName} ${user?.lastName}`}
-                    compact={true}
-                  />
-                </div>
-              )}
               <Badge className="bg-green-100 text-green-800">{getPackageDisplayName(user?.packageType)}</Badge>
               <Badge className="bg-blue-100 text-blue-800">{metrics?.standing === 'good' ? 'Good Standing' : 'Standing: ' + metrics?.standing}</Badge>
               <Button variant="ghost" size="sm">
@@ -307,71 +277,6 @@ export default function SalesDashboard() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Flag System Status */}
-            {salesRepFlag && (
-              <TrafficLightIndicator
-                flag={salesRepFlag.currentFlag}
-                reason={salesRepFlag.flagReason}
-                severity={salesRepFlag.flagSeverity}
-                metrics={salesRepFlag.metrics || {}}
-                userType="sales_rep"
-                userName={`${user?.firstName} ${user?.lastName}`}
-                compact={false}
-                showDetails={true}
-              />
-            )}
-
-            {/* Decision Maker Risk Alerts */}
-            {decisionMakerFlags.length > 0 && (
-              <Card className="shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Users className="text-orange-500 mr-3" size={20} />
-                    Decision Maker Alerts
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {decisionMakerFlags.filter(dmf => dmf.flag?.currentFlag !== 'green').map((dmFlag, index) => (
-                      <div key={index} className="p-3 bg-orange-50 rounded-lg border border-orange-200">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-orange-900">
-                              {dmFlag.decisionMaker?.firstName} {dmFlag.decisionMaker?.lastName}
-                            </p>
-                            <p className="text-sm text-orange-700">
-                              {dmFlag.flag?.flagReason || 'Compliance issue detected'}
-                            </p>
-                          </div>
-                          <TrafficLightIndicator
-                            flag={dmFlag.flag?.currentFlag || 'amber'}
-                            reason={dmFlag.flag?.flagReason}
-                            severity={dmFlag.flag?.flagSeverity}
-                            metrics={dmFlag.flag?.metrics || {}}
-                            userType="decision_maker"
-                            userName={`${dmFlag.decisionMaker?.firstName} ${dmFlag.decisionMaker?.lastName}`}
-                            compact={true}
-                          />
-                        </div>
-                        {dmFlag.flag?.currentFlag === 'red' && (
-                          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
-                            <p className="text-xs text-red-800">
-                              ⚠️ This may affect your standing. Contact this decision maker immediately.
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    {decisionMakerFlags.filter(dmf => dmf.flag?.currentFlag !== 'green').length === 0 && (
-                      <div className="text-center py-4">
-                        <p className="text-sm text-gray-500">All decision makers in good standing</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             {/* Calendar Integration */}
             <CalendarDemo decisionMakers={invitations?.filter(inv => inv.status === 'accepted') || []} />
             
