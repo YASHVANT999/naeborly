@@ -1958,6 +1958,235 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== ACCOUNT SETTINGS ROUTES =====
+
+  // Get company settings and plan information
+  app.get("/api/company-settings", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+
+      // Get company users to find admin contact
+      const companyUsers = await storage.getUsersByCompanyDomain(companyDomain);
+      const adminUser = companyUsers.find(user => user.role === 'enterprise_admin') || enterpriseUser;
+
+      // Get company analytics for usage metrics
+      const [callLogs, companyDMs] = await Promise.all([
+        storage.getCallLogsByCompany(companyDomain),
+        storage.getCompanyDMs(companyDomain)
+      ]);
+
+      // Calculate usage metrics
+      const currentDate = new Date();
+      const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const currentMonthCalls = callLogs.filter(log => 
+        new Date(log.scheduledAt) >= currentMonthStart
+      ).length;
+
+      // Company information
+      const companySettings = {
+        company: {
+          name: companyDomain.split('.')[0].replace(/^\w/, c => c.toUpperCase()) + " Corp",
+          domain: companyDomain,
+          verifiedDomain: companyDomain,
+          adminContact: {
+            name: `${adminUser.firstName} ${adminUser.lastName}`,
+            email: adminUser.email,
+            role: adminUser.role,
+            joinedDate: adminUser.createdAt || currentDate
+          },
+          totalUsers: companyUsers.length,
+          salesReps: companyUsers.filter(user => user.role === 'sales_rep').length,
+          decisionMakers: companyDMs.length
+        },
+        plan: {
+          type: "Enterprise Pro",
+          status: "active",
+          billingCycle: "monthly",
+          currentPeriodStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+          currentPeriodEnd: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0),
+          renewalDate: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1),
+          features: [
+            "Unlimited sales reps",
+            "Advanced analytics dashboard",
+            "DM tracking and verification",
+            "Call activity monitoring",
+            "Performance analytics",
+            "CSV data export",
+            "Priority customer support",
+            "Team management tools",
+            "Credit usage monitoring"
+          ],
+          limits: {
+            monthlyCallCredits: 1000,
+            dmReferrals: 100,
+            analyticsRetention: "12 months",
+            supportLevel: "Priority"
+          },
+          pricing: {
+            basePrice: 199,
+            currency: "USD",
+            perUser: false
+          }
+        },
+        usage: {
+          currentMonth: {
+            calls: currentMonthCalls,
+            dmsReferred: companyDMs.filter(dm => 
+              new Date(dm.referralDate) >= currentMonthStart
+            ).length,
+            creditUsage: currentMonthCalls,
+            remainingCredits: Math.max(0, 1000 - currentMonthCalls)
+          },
+          billingHistory: [
+            {
+              date: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+              amount: 199,
+              status: "paid",
+              description: "Enterprise Pro - Monthly"
+            },
+            {
+              date: new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1),
+              amount: 199,
+              status: "paid", 
+              description: "Enterprise Pro - Monthly"
+            },
+            {
+              date: new Date(currentDate.getFullYear(), currentDate.getMonth() - 2, 1),
+              amount: 199,
+              status: "paid",
+              description: "Enterprise Pro - Monthly"
+            }
+          ]
+        },
+        support: {
+          contactEmail: "support@naeberly.com",
+          helpCenterUrl: "https://help.naeberly.com",
+          statusPageUrl: "https://status.naeberly.com",
+          prioritySupport: true,
+          accountManager: {
+            name: "Sarah Johnson",
+            email: "sarah.johnson@naeberly.com",
+            phone: "+1 (555) 123-4567"
+          }
+        }
+      };
+
+      res.json(companySettings);
+    } catch (error) {
+      console.error('Error getting company settings:', error);
+      res.status(500).json({ message: "Failed to get company settings" });
+    }
+  });
+
+  // Get Stripe billing portal link
+  app.get("/api/billing-portal-link", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      
+      // In a real implementation, you would:
+      // 1. Get the customer's Stripe customer ID from your database
+      // 2. Create a billing portal session using Stripe API
+      // 3. Return the portal URL
+      
+      // For demo purposes, we'll return a mock portal link
+      const portalLink = {
+        url: "https://billing.stripe.com/p/login/test_demo_portal",
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+        customerId: "cus_demo_customer_id"
+      };
+
+      // Log activity
+      await storage.createActivityLog({
+        action: 'ACCESS_BILLING_PORTAL',
+        performedBy: enterpriseUser.id,
+        details: 'Accessed Stripe billing portal',
+        companyDomain: enterpriseUser.companyDomain
+      });
+
+      res.json(portalLink);
+    } catch (error) {
+      console.error('Error creating billing portal link:', error);
+      res.status(500).json({ message: "Failed to create billing portal link" });
+    }
+  });
+
+  // Update company settings
+  app.patch("/api/company-settings", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const { companyName, adminContact } = req.body;
+
+      // In a real implementation, you would update the company record
+      // For now, we'll just log the activity and return success
+      
+      await storage.createActivityLog({
+        action: 'UPDATE_COMPANY_SETTINGS',
+        performedBy: enterpriseUser.id,
+        details: `Updated company settings: ${companyName ? 'company name, ' : ''}${adminContact ? 'admin contact' : ''}`,
+        companyDomain: enterpriseUser.companyDomain
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Company settings updated successfully" 
+      });
+    } catch (error) {
+      console.error('Error updating company settings:', error);
+      res.status(500).json({ message: "Failed to update company settings" });
+    }
+  });
+
+  // Contact support
+  app.post("/api/contact-support", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const { subject, message, priority, category } = req.body;
+
+      if (!subject || !message) {
+        return res.status(400).json({ message: "Subject and message are required" });
+      }
+
+      // In a real implementation, you would:
+      // 1. Create a support ticket in your helpdesk system
+      // 2. Send email notification to support team
+      // 3. Send confirmation email to user
+
+      const supportTicket = {
+        id: `TICKET-${Date.now()}`,
+        subject,
+        message,
+        priority: priority || 'medium',
+        category: category || 'general',
+        status: 'open',
+        submittedBy: {
+          name: `${enterpriseUser.firstName} ${enterpriseUser.lastName}`,
+          email: enterpriseUser.email,
+          company: enterpriseUser.companyDomain
+        },
+        submittedAt: new Date(),
+        estimatedResponse: priority === 'high' ? '2 hours' : priority === 'medium' ? '8 hours' : '24 hours'
+      };
+
+      // Log activity
+      await storage.createActivityLog({
+        action: 'CONTACT_SUPPORT',
+        performedBy: enterpriseUser.id,
+        details: `Submitted support ticket: ${subject}`,
+        companyDomain: enterpriseUser.companyDomain
+      });
+
+      res.status(201).json({ 
+        success: true, 
+        ticket: supportTicket,
+        message: "Support ticket submitted successfully" 
+      });
+    } catch (error) {
+      console.error('Error submitting support ticket:', error);
+      res.status(500).json({ message: "Failed to submit support ticket" });
+    }
+  });
+
   // ===== ENTERPRISE ADMIN ROUTES =====
 
   // Get enterprise analytics
