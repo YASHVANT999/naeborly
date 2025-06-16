@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
 // MongoDB connection string
 const MONGODB_URI = "mongodb+srv://yash6491:YASHVANT@cluster0.f3pmu6p.mongodb.net/biobridge?retryWrites=true&w=majority";
@@ -36,9 +37,24 @@ async function createEnterpriseAdmin() {
     await mongoose.connect(MONGODB_URI);
     console.log("Connected to MongoDB");
 
+    const email = "admin@techize.com";
+    const password = "EnterpriseAdmin123!";
+
+    // Check if enterprise admin already exists
+    const existingAdmin = await User.findOne({ email });
+    if (existingAdmin) {
+      // Delete existing user to recreate with proper hash
+      await User.deleteOne({ email });
+      console.log("Deleted existing enterprise admin");
+    }
+
+    // Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
     const enterpriseAdminData = {
-      email: "admin@techize.com",
-      password: "EnterpriseAdmin123!",
+      email,
+      password: hashedPassword,
       role: "enterprise_admin",
       firstName: "Enterprise",
       lastName: "Admin",
@@ -53,19 +69,12 @@ async function createEnterpriseAdmin() {
       standing: "excellent"
     };
 
-    // Check if enterprise admin already exists
-    const existingAdmin = await User.findOne({ email: enterpriseAdminData.email });
-    if (existingAdmin) {
-      console.log("Enterprise admin already exists:", enterpriseAdminData.email);
-      return;
-    }
-
     const enterpriseAdmin = new User(enterpriseAdminData);
     await enterpriseAdmin.save();
 
     console.log("Enterprise admin created successfully!");
-    console.log("Email:", enterpriseAdminData.email);
-    console.log("Password:", enterpriseAdminData.password);
+    console.log("Email:", email);
+    console.log("Password:", password);
     console.log("Company Domain:", enterpriseAdminData.companyDomain);
     console.log("Role:", enterpriseAdminData.role);
 
