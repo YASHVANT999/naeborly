@@ -20,7 +20,10 @@ export class SimpleMongoDBStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<any | undefined> {
     try {
+      await connectToMongoDB();
+      console.log('Looking for user with email:', email);
       const user = await User.findOne({ email });
+      console.log('Found user:', user ? 'YES' : 'NO');
       return user ? this.toPlainObject(user) : undefined;
     } catch (error) {
       console.error('Error getting user by email:', error);

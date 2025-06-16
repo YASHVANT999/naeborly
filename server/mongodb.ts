@@ -4,7 +4,7 @@ export async function connectToMongoDB() {
   try {
     const mongoUrl =
       process.env.MONGODB_URI ||
-      "mongodb+srv://yash6491:YASHVANT@cluster0.f3pmu6p.mongodb.net/test?retryWrites=true&w=majority";
+      "mongodb+srv://yash6491:YASHVANT@cluster0.f3pmu6p.mongodb.net/biobridge?retryWrites=true&w=majority";
     await mongoose.connect(mongoUrl);
     console.log("Connected to MongoDB Atlas successfully");
   } catch (error) {
@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       required: true,
-      enum: ["sales_rep", "decision_maker", "super_admin"],
+      enum: ["sales_rep", "decision_maker", "super_admin", "enterprise_admin"],
     },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
@@ -35,6 +35,12 @@ const userSchema = new mongoose.Schema(
     packageType: { type: String, default: "free" },
     isActive: { type: Boolean, default: true },
     standing: { type: String, default: "good" },
+    // Enterprise admin fields
+    companyDomain: { type: String },
+    domainVerified: { type: Boolean, default: false },
+    domainVerifiedAt: { type: Date },
+    department: { type: String },
+    requirePasswordChange: { type: Boolean, default: false },
     // Google Calendar integration
     googleCalendarTokens: {
       access_token: { type: String },
