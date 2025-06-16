@@ -37,6 +37,9 @@ export interface IStorage {
   getUserAnalytics(): Promise<any>;
   getCallAnalytics(): Promise<any>;
   getSubscriptionAnalytics(): Promise<any>;
+  
+  // Calendar integration methods
+  getCallById(id: string): Promise<any | undefined>;
 }
 
 // Import and use only MongoDB storage

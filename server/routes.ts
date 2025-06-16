@@ -440,6 +440,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Authentication middleware
+  const requireAuthentication = (req: any, res: any, next: any) => {
+    const userId = req.session?.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    next();
+  };
+
   // Super Admin middleware
   const requireSuperAdmin = (req: any, res: any, next: any) => {
     const userId = req.session?.userId;

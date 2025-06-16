@@ -490,6 +490,18 @@ export class SimpleMongoDBStorage implements IStorage {
     }
   }
 
+  // Calendar integration methods
+  async getCallById(id: string): Promise<any | undefined> {
+    try {
+      await connectToMongoDB();
+      const call = await Call.findById(id);
+      return call ? this.toPlainObject(call) : undefined;
+    } catch (error) {
+      console.error('Error getting call by ID:', error);
+      return undefined;
+    }
+  }
+
   private toPlainObject(mongooseDoc: any): any {
     const obj = mongooseDoc.toObject();
     // Convert MongoDB _id to id for consistency

@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import CalendarBooking from "@/components/CalendarBooking";
 
 export default function SalesDashboard() {
   const { user } = useAuth();
@@ -276,6 +277,9 @@ export default function SalesDashboard() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Calendar Integration */}
+            <CalendarBooking decisionMakers={invitations?.filter(inv => inv.status === 'accepted') || []} />
+            
             {/* Upcoming Calls */}
             <Card className="shadow-lg">
               <CardHeader>
@@ -285,10 +289,50 @@ export default function SalesDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <CalendarPlus className="text-gray-300 mx-auto mb-4" size={48} />
-                  <p className="text-gray-500">No calls scheduled yet</p>
-                </div>
+                {calls?.length > 0 ? (
+                  <div className="space-y-3">
+                    {calls.slice(0, 3).map((call) => (
+                      <div key={call.id} className="p-3 bg-blue-50 rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium text-blue-900">
+                              {call.decisionMakerName || 'Decision Maker'}
+                            </p>
+                            <p className="text-sm text-blue-700">
+                              {new Date(call.scheduledAt).toLocaleDateString()} at{' '}
+                              {new Date(call.scheduledAt).toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                            {call.meetingLink && (
+                              <a 
+                                href={call.meetingLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 hover:underline"
+                              >
+                                Join Meeting
+                              </a>
+                            )}
+                          </div>
+                          <Badge className={`${
+                            call.status === 'scheduled' ? 'bg-green-100 text-green-800' :
+                            call.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {call.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <CalendarPlus className="text-gray-300 mx-auto mb-4" size={48} />
+                    <p className="text-gray-500">No calls scheduled yet</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
