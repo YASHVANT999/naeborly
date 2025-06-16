@@ -41,6 +41,11 @@ const userSchema = new mongoose.Schema(
     domainVerifiedAt: { type: Date },
     department: { type: String },
     requirePasswordChange: { type: Boolean, default: false },
+    permissions: [{ type: String }], // Array of decision maker IDs
+    invitationStatus: { type: String, enum: ["invited", "accepted", "declined"], default: "accepted" },
+    invitedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    invitedAt: { type: Date },
+    lastLogin: { type: Date },
     // Google Calendar integration
     googleCalendarTokens: {
       access_token: { type: String },

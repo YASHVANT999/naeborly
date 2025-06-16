@@ -862,6 +862,215 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== TEAM MANAGEMENT ROUTES =====
+
+  // Get company users (sales reps)
+  app.get("/api/company-users", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+
+      // Get sales reps from the company domain
+      const salesReps = await storage.getUsersByCompanyDomain(companyDomain);
+      const filteredReps = salesReps.filter(user => user.role === 'sales_rep');
+
+      // Format response with team-specific data
+      const teamMembers = filteredReps.map(user => ({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        jobTitle: user.jobTitle,
+        department: user.department,
+        status: user.isActive ? 'active' : 'suspended',
+        permissions: user.permissions || [],
+        createdAt: user.createdAt,
+        lastLogin: user.lastLogin
+      }));
+
+      res.json(teamMembers);
+    } catch (error) {
+      console.error('Error getting company users:', error);
+      res.status(500).json({ message: "Failed to get company users" });
+    }
+  });
+
+  // Invite new sales rep
+  app.post("/api/company-users/invite", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+      const { email, firstName, lastName, jobTitle, department, permissions } = req.body;
+
+      // Verify email domain matches company domain
+      const emailDomain = email.split('@')[1];
+      if (emailDomain !== companyDomain) {
+        return res.status(400).json({ 
+          message: `Email domain must match company domain: ${companyDomain}` 
+        });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+
+      // Create invitation/user record
+      const userData = {
+        email,
+        firstName,
+        lastName,
+        role: 'sales_rep',
+        jobTitle: jobTitle || '',
+        department: department || '',
+        companyDomain,
+        domainVerified: true,
+        isActive: false, // Will be activated when they accept invitation
+        packageType: 'enterprise',
+        standing: 'good',
+        permissions: permissions || [],
+        password: 'TempPass123!', // Temporary password
+        requirePasswordChange: true,
+        invitationStatus: 'invited',
+        invitedBy: enterpriseUser.id,
+        invitedAt: new Date()
+      };
+
+      const newUser = await storage.createUser(userData);
+
+      // Log activity
+      await storage.createActivityLog({
+        action: 'INVITE_SALES_REP',
+        performedBy: enterpriseUser.id,
+        targetUser: newUser.id,
+        details: `Invited sales rep: ${email}`,
+        companyDomain
+      });
+
+      res.status(201).json({
+        id: newUser.id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        status: 'invited'
+      });
+    } catch (error) {
+      console.error('Error inviting sales rep:', error);
+      res.status(500).json({ message: "Failed to invite sales rep" });
+    }
+  });
+
+  // Update company user status or permissions
+  app.patch("/api/company-users/:userId", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const { userId } = req.params;
+      const { status, permissions } = req.body;
+
+      // Verify user belongs to same company domain
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser || targetUser.companyDomain !== enterpriseUser.companyDomain) {
+        return res.status(404).json({ message: "User not found or access denied" });
+      }
+
+      // Prepare updates
+      const updates: any = {};
+      if (status !== undefined) {
+        updates.isActive = status === 'active';
+        if (status === 'active') {
+          updates.invitationStatus = 'accepted';
+        }
+      }
+      if (permissions !== undefined) {
+        updates.permissions = permissions;
+      }
+
+      // Update user
+      const updatedUser = await storage.updateUser(userId, updates);
+
+      // Log activity
+      const action = status ? 'UPDATE_USER_STATUS' : 'UPDATE_USER_PERMISSIONS';
+      const details = status ? 
+        `${status === 'active' ? 'Activated' : 'Suspended'} user: ${targetUser.email}` :
+        `Updated permissions for: ${targetUser.email}`;
+
+      await storage.createActivityLog({
+        action,
+        performedBy: enterpriseUser.id,
+        targetUser: userId,
+        details,
+        companyDomain: enterpriseUser.companyDomain
+      });
+
+      res.json({ success: true, user: updatedUser });
+    } catch (error) {
+      console.error('Error updating company user:', error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  // Remove company user
+  app.delete("/api/company-users/:userId", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const { userId } = req.params;
+
+      // Verify user belongs to same company domain
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser || targetUser.companyDomain !== enterpriseUser.companyDomain) {
+        return res.status(404).json({ message: "User not found or access denied" });
+      }
+
+      // Remove user
+      const removed = await storage.deleteUser(userId);
+      if (!removed) {
+        return res.status(500).json({ message: "Failed to remove user" });
+      }
+
+      // Log activity
+      await storage.createActivityLog({
+        action: 'REMOVE_SALES_REP',
+        performedBy: enterpriseUser.id,
+        targetUser: userId,
+        details: `Removed sales rep: ${targetUser.email}`,
+        companyDomain: enterpriseUser.companyDomain
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error removing company user:', error);
+      res.status(500).json({ message: "Failed to remove user" });
+    }
+  });
+
+  // Get decision makers for permissions assignment
+  app.get("/api/enterprise-admin/decision-makers", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+
+      // Get decision makers from the company domain
+      const allUsers = await storage.getUsersByCompanyDomain(companyDomain);
+      const decisionMakers = allUsers.filter(user => user.role === 'decision_maker');
+
+      // Format response
+      const dms = decisionMakers.map(user => ({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        jobTitle: user.jobTitle,
+        company: user.company || companyDomain
+      }));
+
+      res.json(dms);
+    } catch (error) {
+      console.error('Error getting decision makers:', error);
+      res.status(500).json({ message: "Failed to get decision makers" });
+    }
+  });
+
   // ===== ENTERPRISE ADMIN ROUTES =====
 
   // Get enterprise analytics
