@@ -4,6 +4,7 @@ import TeamManagement from "@/components/TeamManagement";
 import CreditsOverview from "@/components/CreditsOverview";
 import DMTracking from "@/components/DMTracking";
 import CallActivityLog from "@/components/CallActivityLog";
+import PerformanceAnalytics from "@/components/PerformanceAnalytics";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -168,13 +169,14 @@ export default function EnterpriseAdmin() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="team">Team Management</TabsTrigger>
             <TabsTrigger value="credits">Credits</TabsTrigger>
             <TabsTrigger value="dms">DM Tracking</TabsTrigger>
             <TabsTrigger value="calls">Call Activity</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="domains">Domain Settings</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
@@ -451,6 +453,11 @@ export default function EnterpriseAdmin() {
           {/* Call Activity Log Tab */}
           <TabsContent value="calls">
             <CallActivityLog />
+          </TabsContent>
+
+          {/* Performance Analytics Tab */}
+          <TabsContent value="performance">
+            <PerformanceAnalytics />
           </TabsContent>
 
           {/* Domain Settings Tab */}

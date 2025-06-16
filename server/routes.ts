@@ -1682,6 +1682,282 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== PERFORMANCE ANALYTICS ROUTES =====
+
+  // Get comprehensive company analytics
+  app.get("/api/company-analytics", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+
+      // Get all data sources
+      const [callLogs, feedback, companyUsers, companyDMs] = await Promise.all([
+        storage.getCallLogsByCompany(companyDomain),
+        storage.getFeedbackByCompany(companyDomain),
+        storage.getUsersByCompanyDomain(companyDomain),
+        storage.getCompanyDMs(companyDomain)
+      ]);
+
+      const salesReps = companyUsers.filter(user => user.role === 'sales_rep');
+
+      // Calculate average rep feedback score
+      const repFeedbackScores = {};
+      feedback.forEach(fb => {
+        const repId = fb.salesRepId?.id || fb.salesRepId;
+        if (!repFeedbackScores[repId]) {
+          repFeedbackScores[repId] = { total: 0, count: 0 };
+        }
+        if (fb.rating) {
+          repFeedbackScores[repId].total += fb.rating;
+          repFeedbackScores[repId].count += 1;
+        }
+      });
+
+      const avgRepFeedbackScore = Object.values(repFeedbackScores).length > 0 ?
+        Object.values(repFeedbackScores).reduce((sum, rep) => 
+          sum + (rep.count > 0 ? rep.total / rep.count : 0), 0
+        ) / Object.values(repFeedbackScores).length : 0;
+
+      // Calculate average DM engagement score
+      const avgDMEngagementScore = companyDMs.length > 0 ?
+        companyDMs.reduce((sum, dm) => sum + (dm.engagementScore || 0), 0) / companyDMs.length : 0;
+
+      // Calculate no-show rate
+      const totalScheduledCalls = callLogs.filter(log => 
+        ['scheduled', 'completed', 'missed', 'cancelled'].includes(log.status)
+      ).length;
+      const noShowCalls = callLogs.filter(log => 
+        log.status === 'missed' || log.outcome === 'no_show'
+      ).length;
+      const noShowRate = totalScheduledCalls > 0 ? (noShowCalls / totalScheduledCalls) * 100 : 0;
+
+      // Calculate top performers
+      const repPerformance = salesReps.map(rep => {
+        const repId = rep.id;
+        const repCalls = callLogs.filter(log => 
+          (log.salesRepId?.id || log.salesRepId) === repId
+        );
+        const repFeedback = feedback.filter(fb => 
+          (fb.salesRepId?.id || fb.salesRepId) === repId
+        );
+        const repDMs = companyDMs.filter(dm => 
+          (dm.linkedRepId?.id || dm.linkedRepId) === repId
+        );
+
+        const completedCalls = repCalls.filter(call => call.status === 'completed').length;
+        const avgFeedback = repFeedback.length > 0 ?
+          repFeedback.filter(fb => fb.rating).reduce((sum, fb) => sum + fb.rating, 0) / 
+          repFeedback.filter(fb => fb.rating).length : 0;
+
+        return {
+          id: repId,
+          name: `${rep.firstName} ${rep.lastName}`,
+          email: rep.email,
+          totalCalls: repCalls.length,
+          completedCalls,
+          avgFeedback: avgFeedback || 0,
+          dmInvites: repDMs.length,
+          successRate: repCalls.length > 0 ? (completedCalls / repCalls.length) * 100 : 0
+        };
+      });
+
+      // Sort top performers by different metrics
+      const topPerformersByCalls = [...repPerformance]
+        .sort((a, b) => b.completedCalls - a.completedCalls)
+        .slice(0, 5);
+
+      const topPerformersByFeedback = [...repPerformance]
+        .sort((a, b) => b.avgFeedback - a.avgFeedback)
+        .slice(0, 5);
+
+      const topPerformersByDMInvites = [...repPerformance]
+        .sort((a, b) => b.dmInvites - a.dmInvites)
+        .slice(0, 5);
+
+      // Monthly performance trends (last 6 months)
+      const monthlyData = [];
+      for (let i = 5; i >= 0; i--) {
+        const monthStart = new Date();
+        monthStart.setMonth(monthStart.getMonth() - i);
+        monthStart.setDate(1);
+        monthStart.setHours(0, 0, 0, 0);
+
+        const monthEnd = new Date(monthStart);
+        monthEnd.setMonth(monthEnd.getMonth() + 1);
+        monthEnd.setDate(0);
+        monthEnd.setHours(23, 59, 59, 999);
+
+        const monthCalls = callLogs.filter(log => {
+          const callDate = new Date(log.scheduledAt);
+          return callDate >= monthStart && callDate <= monthEnd;
+        });
+
+        const monthFeedback = feedback.filter(fb => {
+          const fbDate = new Date(fb.createdAt);
+          return fbDate >= monthStart && fbDate <= monthEnd;
+        });
+
+        const avgRating = monthFeedback.length > 0 ?
+          monthFeedback.filter(fb => fb.rating).reduce((sum, fb) => sum + fb.rating, 0) / 
+          monthFeedback.filter(fb => fb.rating).length : 0;
+
+        monthlyData.push({
+          month: monthStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+          totalCalls: monthCalls.length,
+          completedCalls: monthCalls.filter(call => call.status === 'completed').length,
+          avgFeedback: avgRating || 0,
+          successRate: monthCalls.length > 0 ? 
+            (monthCalls.filter(call => call.status === 'completed').length / monthCalls.length) * 100 : 0
+        });
+      }
+
+      // Call outcome distribution
+      const outcomeDistribution = {
+        completed: callLogs.filter(log => log.status === 'completed').length,
+        missed: callLogs.filter(log => log.status === 'missed').length,
+        cancelled: callLogs.filter(log => log.status === 'cancelled').length,
+        scheduled: callLogs.filter(log => log.status === 'scheduled').length
+      };
+
+      // DM verification status distribution
+      const dmVerificationDistribution = {
+        verified: companyDMs.filter(dm => dm.verificationStatus === 'verified').length,
+        pending: companyDMs.filter(dm => dm.verificationStatus === 'pending').length,
+        rejected: companyDMs.filter(dm => dm.verificationStatus === 'rejected').length,
+        suspended: companyDMs.filter(dm => dm.verificationStatus === 'suspended').length
+      };
+
+      const analytics = {
+        overview: {
+          avgRepFeedbackScore: Number(avgRepFeedbackScore.toFixed(2)),
+          avgDMEngagementScore: Number(avgDMEngagementScore.toFixed(1)),
+          noShowRate: Number(noShowRate.toFixed(1)),
+          totalCalls: callLogs.length,
+          totalDMs: companyDMs.length,
+          totalReps: salesReps.length,
+          completionRate: totalScheduledCalls > 0 ? 
+            Number(((callLogs.filter(log => log.status === 'completed').length / totalScheduledCalls) * 100).toFixed(1)) : 0
+        },
+        topPerformers: {
+          byCalls: topPerformersByCalls,
+          byFeedback: topPerformersByFeedback,
+          byDMInvites: topPerformersByDMInvites
+        },
+        trends: {
+          monthly: monthlyData
+        },
+        distributions: {
+          callOutcomes: outcomeDistribution,
+          dmVerification: dmVerificationDistribution
+        },
+        repPerformance: repPerformance
+      };
+
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error getting company analytics:', error);
+      res.status(500).json({ message: "Failed to get company analytics" });
+    }
+  });
+
+  // Export analytics data as CSV
+  app.get("/api/company-analytics/export", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+      const { type = 'overview' } = req.query;
+
+      // Get all data sources
+      const [callLogs, feedback, companyUsers, companyDMs] = await Promise.all([
+        storage.getCallLogsByCompany(companyDomain),
+        storage.getFeedbackByCompany(companyDomain),
+        storage.getUsersByCompanyDomain(companyDomain),
+        storage.getCompanyDMs(companyDomain)
+      ]);
+
+      let csvData = '';
+      const timestamp = new Date().toISOString().split('T')[0];
+
+      if (type === 'rep_performance') {
+        // Export rep performance data
+        const salesReps = companyUsers.filter(user => user.role === 'sales_rep');
+        
+        csvData = 'Rep Name,Email,Total Calls,Completed Calls,Success Rate (%),Avg Feedback,DM Invites,Last Activity\n';
+        
+        salesReps.forEach(rep => {
+          const repId = rep.id;
+          const repCalls = callLogs.filter(log => 
+            (log.salesRepId?.id || log.salesRepId) === repId
+          );
+          const repFeedback = feedback.filter(fb => 
+            (fb.salesRepId?.id || fb.salesRepId) === repId
+          );
+          const repDMs = companyDMs.filter(dm => 
+            (dm.linkedRepId?.id || dm.linkedRepId) === repId
+          );
+
+          const completedCalls = repCalls.filter(call => call.status === 'completed').length;
+          const successRate = repCalls.length > 0 ? (completedCalls / repCalls.length) * 100 : 0;
+          const avgFeedback = repFeedback.length > 0 ?
+            repFeedback.filter(fb => fb.rating).reduce((sum, fb) => sum + fb.rating, 0) / 
+            repFeedback.filter(fb => fb.rating).length : 0;
+          
+          const lastActivity = repCalls.length > 0 ? 
+            new Date(Math.max(...repCalls.map(call => new Date(call.scheduledAt)))).toLocaleDateString() : 
+            'N/A';
+
+          csvData += `"${rep.firstName} ${rep.lastName}","${rep.email}",${repCalls.length},${completedCalls},${successRate.toFixed(1)},${avgFeedback.toFixed(1)},${repDMs.length},"${lastActivity}"\n`;
+        });
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="rep_performance_${timestamp}.csv"`);
+      } 
+      else if (type === 'call_logs') {
+        // Export call logs data
+        csvData = 'Date,Time,Sales Rep,Decision Maker,Duration (min),Status,Outcome,Rating,Feedback Summary\n';
+        
+        callLogs.forEach(log => {
+          const scheduledDate = new Date(log.scheduledAt);
+          const repName = log.salesRepId ? `${log.salesRepId.firstName} ${log.salesRepId.lastName}` : 'Unknown';
+          const dmName = log.decisionMakerId ? `${log.decisionMakerId.firstName} ${log.decisionMakerId.lastName}` : 'Unknown';
+          const rating = log.feedback?.rating || '';
+          const summary = (log.feedback?.summary || '').replace(/"/g, '""'); // Escape quotes in CSV
+
+          csvData += `"${scheduledDate.toLocaleDateString()}","${scheduledDate.toLocaleTimeString()}","${repName}","${dmName}",${log.duration || 0},"${log.status}","${log.outcome || ''}","${rating}","${summary}"\n`;
+        });
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="call_logs_${timestamp}.csv"`);
+      }
+      else {
+        // Export overview analytics
+        csvData = 'Metric,Value\n';
+        csvData += `Total Calls,${callLogs.length}\n`;
+        csvData += `Completed Calls,${callLogs.filter(log => log.status === 'completed').length}\n`;
+        csvData += `Missed Calls,${callLogs.filter(log => log.status === 'missed').length}\n`;
+        csvData += `Total Decision Makers,${companyDMs.length}\n`;
+        csvData += `Verified DMs,${companyDMs.filter(dm => dm.verificationStatus === 'verified').length}\n`;
+        csvData += `Total Sales Reps,${companyUsers.filter(user => user.role === 'sales_rep').length}\n`;
+        
+        const totalScheduled = callLogs.filter(log => 
+          ['scheduled', 'completed', 'missed', 'cancelled'].includes(log.status)
+        ).length;
+        const noShows = callLogs.filter(log => log.status === 'missed').length;
+        const noShowRate = totalScheduled > 0 ? (noShows / totalScheduled) * 100 : 0;
+        
+        csvData += `No-Show Rate (%),${noShowRate.toFixed(1)}\n`;
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="analytics_overview_${timestamp}.csv"`);
+      }
+
+      res.send(csvData);
+    } catch (error) {
+      console.error('Error exporting analytics:', error);
+      res.status(500).json({ message: "Failed to export analytics" });
+    }
+  });
+
   // ===== ENTERPRISE ADMIN ROUTES =====
 
   // Get enterprise analytics
