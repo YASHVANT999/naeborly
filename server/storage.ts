@@ -40,6 +40,15 @@ export interface IStorage {
   
   // Calendar integration methods
   getCallById(id: string): Promise<any | undefined>;
+  
+  // Flag system methods
+  getUserFlag(userId: string): Promise<any | undefined>;
+  updateUserFlag(userId: string, flagData: any): Promise<any>;
+  createFlagHistory(historyData: any): Promise<any>;
+  getFlagRules(userType?: string): Promise<any[]>;
+  calculateUserRisk(userId: string, userType: string): Promise<any>;
+  getFlagHistory(userId: string, limit?: number): Promise<any[]>;
+  initializeUserFlag(userId: string, userType: string): Promise<any>;
 }
 
 // Import and use only MongoDB storage
