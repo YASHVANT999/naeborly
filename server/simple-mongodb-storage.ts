@@ -502,6 +502,48 @@ export class SimpleMongoDBStorage implements IStorage {
     }
   }
 
+  // Enterprise admin methods
+  async getUsersByCompanyDomain(domain: string): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const users = await User.find({ 
+        $or: [
+          { companyDomain: domain },
+          { email: { $regex: `@${domain}$`, $options: 'i' } }
+        ]
+      });
+      return users.map(user => this.toPlainObject(user));
+    } catch (error) {
+      console.error('Error getting users by company domain:', error);
+      return [];
+    }
+  }
+
+  async getCompanyInvitationsCount(domain: string): Promise<number> {
+    try {
+      await connectToMongoDB();
+      // Get all users from the company domain
+      const companyUsers = await User.find({ 
+        $or: [
+          { companyDomain: domain },
+          { email: { $regex: `@${domain}$`, $options: 'i' } }
+        ]
+      });
+      
+      const userIds = companyUsers.map(user => user._id.toString());
+      
+      // Count invitations sent by company users
+      const invitationCount = await Invitation.countDocuments({
+        salesRepId: { $in: userIds }
+      });
+      
+      return invitationCount;
+    } catch (error) {
+      console.error('Error getting company invitations count:', error);
+      return 0;
+    }
+  }
+
   private toPlainObject(mongooseDoc: any): any {
     const obj = mongooseDoc.toObject();
     // Convert MongoDB _id to id for consistency
