@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CalendarDemo from "@/components/CalendarDemo";
+import TrafficLightIndicator from "@/components/TrafficLightIndicator";
 
 export default function SalesDashboard() {
   const { user } = useAuth();
@@ -33,6 +34,20 @@ export default function SalesDashboard() {
   const { data: calls = [], isLoading: callsLoading } = useQuery({
     queryKey: ['/api/sales-rep/calls'],
     enabled: !!user?.id
+  });
+
+  // Fetch sales rep's flag status
+  const { data: salesRepFlag, isLoading: flagLoading } = useQuery({
+    queryKey: ['/api/user-flag', user?.id],
+    enabled: !!user?.id,
+    retry: false,
+  });
+
+  // Fetch decision makers' flag statuses
+  const { data: decisionMakerFlags = [], isLoading: dmFlagsLoading } = useQuery({
+    queryKey: ['/api/sales-rep', user?.id, 'decision-maker-flags'],
+    enabled: !!user?.id,
+    retry: false,
   });
 
   // Fetch sales rep's metrics
@@ -106,6 +121,21 @@ export default function SalesDashboard() {
               <p className="text-gray-600 mt-1">Welcome back, {user?.firstName}!</p>
             </div>
             <div className="flex items-center space-x-4">
+              {/* Suspension Risk Indicator */}
+              {salesRepFlag && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">Status:</span>
+                  <TrafficLightIndicator
+                    flag={salesRepFlag.currentFlag}
+                    reason={salesRepFlag.flagReason}
+                    severity={salesRepFlag.flagSeverity}
+                    metrics={salesRepFlag.metrics || {}}
+                    userType="sales_rep"
+                    userName={`${user?.firstName} ${user?.lastName}`}
+                    compact={true}
+                  />
+                </div>
+              )}
               <Badge className="bg-green-100 text-green-800">{getPackageDisplayName(user?.packageType)}</Badge>
               <Badge className="bg-blue-100 text-blue-800">{metrics?.standing === 'good' ? 'Good Standing' : 'Standing: ' + metrics?.standing}</Badge>
               <Button variant="ghost" size="sm">

@@ -544,7 +544,7 @@ export class SimpleMongoDBStorage implements IStorage {
   async getFlagRules(userType?: string): Promise<any[]> {
     try {
       await connectToMongoDB();
-      const query = { isActive: true };
+      const query: any = { isActive: true };
       if (userType) query.userType = userType;
       
       const rules = await FlagRule.find(query);
