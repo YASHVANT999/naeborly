@@ -1,5 +1,7 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -15,6 +17,35 @@ import {
 } from "lucide-react";
 
 export default function Landing() {
+  const { user, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
+  
+  // Auto-redirect authenticated users to their dashboard
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      switch (user.role) {
+        case 'sales_rep':
+          setLocation('/sales-dashboard');
+          break;
+        case 'decision_maker':
+          setLocation('/decision-dashboard');
+          break;
+        case 'enterprise_admin':
+          setLocation('/enterprise-admin');
+          break;
+        case 'admin':
+          setLocation('/admin');
+          break;
+        case 'super_admin':
+          setLocation('/super-admin/dashboard');
+          break;
+        default:
+          // Stay on landing page for unknown roles
+          break;
+      }
+    }
+  }, [isAuthenticated, user, setLocation]);
+
   // Fetch subscription plans from public endpoint
   const { data: subscriptionPlans, isLoading: plansLoading, error: plansError } = useQuery({
     queryKey: ['/api/subscription-plans'],

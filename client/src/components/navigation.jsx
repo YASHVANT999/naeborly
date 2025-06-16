@@ -71,6 +71,17 @@ export default function Navigation() {
                     </Button>
                   </Link>
                 )}
+                
+                {user?.role === 'enterprise_admin' && (
+                  <Link href="/enterprise-admin">
+                    <Button
+                      variant={location === "/enterprise-admin" ? "default" : "ghost"}
+                      className={location === "/enterprise-admin" ? "bg-blue-600 hover:bg-blue-700" : "text-gray-600 hover:text-blue-600"}
+                    >
+                      Enterprise Admin
+                    </Button>
+                  </Link>
+                )}
 
                 {/* User dropdown menu */}
                 <DropdownMenu>
