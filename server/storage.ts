@@ -44,6 +44,23 @@ export interface IStorage {
   // Enterprise admin methods
   getUsersByCompanyDomain(domain: string): Promise<any[]>;
   getCompanyInvitationsCount(domain: string): Promise<number>;
+  
+  // Credit management methods
+  getCompanyCredits(companyDomain: string): Promise<any | undefined>;
+  updateCompanyCredits(companyDomain: string, updates: any): Promise<any | undefined>;
+  createCompanyCredits(creditsData: any): Promise<any>;
+  updateRepCreditUsage(companyDomain: string, repId: string, usage: any): Promise<any>;
+  
+  // Call logs methods
+  createCallLog(callData: any): Promise<any>;
+  getCallLogsByCompany(companyDomain: string): Promise<any[]>;
+  getCallLogsByRep(repId: string): Promise<any[]>;
+  updateCallLog(callId: string, updates: any): Promise<any | undefined>;
+  
+  // Feedback methods
+  createFeedback(feedbackData: any): Promise<any>;
+  getFeedbackByCompany(companyDomain: string): Promise<any[]>;
+  getFeedbackByRep(repId: string): Promise<any[]>;
 }
 
 // Import and use only MongoDB storage

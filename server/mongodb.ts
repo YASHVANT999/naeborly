@@ -148,6 +148,73 @@ export const Invitation = mongoose.model("Invitation", invitationSchema);
 export const Call = mongoose.model("Call", callSchema);
 export const SubscriptionPlan = mongoose.model("SubscriptionPlan", subscriptionPlanSchema);
 
+// Company Credits Schema
+const companyCreditsSchema = new mongoose.Schema({
+  companyDomain: { type: String, required: true, unique: true },
+  planType: { type: String, required: true },
+  monthlyCredits: { type: Number, required: true, default: 500 },
+  usedCredits: { type: Number, default: 0 },
+  remainingCredits: { type: Number, default: 500 },
+  currentPeriodStart: { type: Date, default: Date.now },
+  currentPeriodEnd: { type: Date, required: true },
+  perRepLimits: {
+    maxCallsPerMonth: { type: Number, default: null }, // null = unlimited
+    maxDMsPerMonth: { type: Number, default: null }
+  },
+  repUsage: [{
+    repId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    repEmail: { type: String },
+    callsBooked: { type: Number, default: 0 },
+    dmsUnlocked: { type: Number, default: 0 },
+    creditsUsed: { type: Number, default: 0 },
+    feedbacksReceived: { type: Number, default: 0 },
+    flagsReceived: { type: Number, default: 0 },
+    lastUpdated: { type: Date, default: Date.now }
+  }]
+}, {
+  timestamps: true
+});
+
+// Call Logs Schema
+const callLogSchema = new mongoose.Schema({
+  salesRepId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  decisionMakerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  companyDomain: { type: String, required: true },
+  callType: { type: String, enum: ["intro", "follow_up", "demo"], default: "intro" },
+  status: { type: String, enum: ["scheduled", "completed", "cancelled", "no_show"], required: true },
+  scheduledAt: { type: Date, required: true },
+  duration: { type: Number }, // in minutes
+  creditsUsed: { type: Number, default: 1 },
+  feedback: {
+    rating: { type: Number, min: 1, max: 5 },
+    comments: { type: String },
+    flags: [{ type: String }] // "inappropriate", "unprepared", "technical_issues"
+  },
+  meetingUrl: { type: String },
+  recordingUrl: { type: String }
+}, {
+  timestamps: true
+});
+
+// Feedback Schema
+const feedbackSchema = new mongoose.Schema({
+  callLogId: { type: mongoose.Schema.Types.ObjectId, ref: "CallLog", required: true },
+  salesRepId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  decisionMakerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  companyDomain: { type: String, required: true },
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  comments: { type: String },
+  flags: [{ type: String }], // "inappropriate", "unprepared", "technical_issues", "excellent"
+  submittedBy: { type: String, enum: ["decision_maker", "sales_rep"], required: true },
+  visibility: { type: String, enum: ["private", "team", "public"], default: "team" }
+}, {
+  timestamps: true
+});
+
+export const CompanyCredits = mongoose.model("CompanyCredits", companyCreditsSchema);
+export const CallLog = mongoose.model("CallLog", callLogSchema);
+export const Feedback = mongoose.model("Feedback", feedbackSchema);
+
 export type UserDocument = mongoose.Document & {
   _id: mongoose.Types.ObjectId;
   email: string;

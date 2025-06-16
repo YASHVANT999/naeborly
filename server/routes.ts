@@ -1071,6 +1071,206 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== CREDIT MANAGEMENT ROUTES =====
+
+  // Get company credits summary
+  app.get("/api/company-credits/summary", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+
+      // Get or create company credits
+      let credits = await storage.getCompanyCredits(companyDomain);
+      
+      if (!credits) {
+        // Create initial credits record for the company
+        const currentDate = new Date();
+        const periodEnd = new Date(currentDate);
+        periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+        const creditsData = {
+          companyDomain,
+          planType: 'enterprise',
+          monthlyCredits: 1000,
+          usedCredits: 0,
+          remainingCredits: 1000,
+          currentPeriodStart: currentDate,
+          currentPeriodEnd: periodEnd,
+          perRepLimits: {
+            maxCallsPerMonth: null,
+            maxDMsPerMonth: null
+          },
+          repUsage: []
+        };
+
+        credits = await storage.createCompanyCredits(creditsData);
+      }
+
+      // Get all sales reps and populate their usage
+      const salesReps = await storage.getUsersByCompanyDomain(companyDomain);
+      const activeSalesReps = salesReps.filter(user => user.role === 'sales_rep' && user.isActive);
+
+      // Get call logs and feedback for usage calculation
+      const callLogs = await storage.getCallLogsByCompany(companyDomain);
+      const feedbacks = await storage.getFeedbackByCompany(companyDomain);
+
+      // Calculate per-rep usage
+      const repUsageMap = new Map();
+      
+      // Initialize all active reps
+      activeSalesReps.forEach(rep => {
+        repUsageMap.set(rep.id, {
+          repId: rep.id,
+          repEmail: rep.email,
+          repName: `${rep.firstName} ${rep.lastName}`,
+          callsBooked: 0,
+          dmsUnlocked: 0,
+          creditsUsed: 0,
+          feedbacksReceived: 0,
+          flagsReceived: 0,
+          averageRating: 0
+        });
+      });
+
+      // Calculate usage from call logs
+      callLogs.forEach(log => {
+        const repId = log.salesRepId?._id || log.salesRepId;
+        if (repUsageMap.has(repId)) {
+          const usage = repUsageMap.get(repId);
+          usage.callsBooked += 1;
+          usage.creditsUsed += log.creditsUsed || 1;
+          
+          if (log.status === 'completed') {
+            usage.dmsUnlocked += 1;
+          }
+        }
+      });
+
+      // Calculate feedback statistics
+      const repFeedbackStats = new Map();
+      feedbacks.forEach(feedback => {
+        const repId = feedback.salesRepId?._id || feedback.salesRepId;
+        if (!repFeedbackStats.has(repId)) {
+          repFeedbackStats.set(repId, { total: 0, sum: 0, flags: 0 });
+        }
+        const stats = repFeedbackStats.get(repId);
+        stats.total += 1;
+        stats.sum += feedback.rating;
+        if (feedback.flags && feedback.flags.length > 0) {
+          stats.flags += feedback.flags.length;
+        }
+      });
+
+      // Update rep usage with feedback stats
+      repFeedbackStats.forEach((stats, repId) => {
+        if (repUsageMap.has(repId)) {
+          const usage = repUsageMap.get(repId);
+          usage.feedbacksReceived = stats.total;
+          usage.flagsReceived = stats.flags;
+          usage.averageRating = stats.total > 0 ? (stats.sum / stats.total) : 0;
+        }
+      });
+
+      const repUsageArray = Array.from(repUsageMap.values());
+
+      // Calculate totals
+      const totalCreditsUsed = repUsageArray.reduce((sum, rep) => sum + rep.creditsUsed, 0);
+      const totalCallsBooked = repUsageArray.reduce((sum, rep) => sum + rep.callsBooked, 0);
+      const totalDMsUnlocked = repUsageArray.reduce((sum, rep) => sum + rep.dmsUnlocked, 0);
+
+      const summary = {
+        planType: credits.planType,
+        monthlyCredits: credits.monthlyCredits,
+        usedCredits: totalCreditsUsed,
+        remainingCredits: credits.monthlyCredits - totalCreditsUsed,
+        utilizationRate: credits.monthlyCredits > 0 ? ((totalCreditsUsed / credits.monthlyCredits) * 100) : 0,
+        currentPeriodStart: credits.currentPeriodStart,
+        currentPeriodEnd: credits.currentPeriodEnd,
+        perRepLimits: credits.perRepLimits,
+        totalCallsBooked,
+        totalDMsUnlocked,
+        activeReps: activeSalesReps.length,
+        repUsage: repUsageArray
+      };
+
+      res.json(summary);
+    } catch (error) {
+      console.error('Error getting company credits summary:', error);
+      res.status(500).json({ message: "Failed to get credits summary" });
+    }
+  });
+
+  // Update per-rep credit limits
+  app.patch("/api/company-credits/rep-limit", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+      const { maxCallsPerMonth, maxDMsPerMonth } = req.body;
+
+      const updates = {
+        'perRepLimits.maxCallsPerMonth': maxCallsPerMonth || null,
+        'perRepLimits.maxDMsPerMonth': maxDMsPerMonth || null
+      };
+
+      const updatedCredits = await storage.updateCompanyCredits(companyDomain, updates);
+
+      if (!updatedCredits) {
+        return res.status(404).json({ message: "Company credits not found" });
+      }
+
+      // Log activity
+      await storage.createActivityLog({
+        action: 'UPDATE_CREDIT_LIMITS',
+        performedBy: enterpriseUser.id,
+        details: `Updated per-rep limits: ${maxCallsPerMonth} calls, ${maxDMsPerMonth} DMs`,
+        companyDomain
+      });
+
+      res.json({ 
+        success: true, 
+        perRepLimits: updatedCredits.perRepLimits 
+      });
+    } catch (error) {
+      console.error('Error updating rep credit limits:', error);
+      res.status(500).json({ message: "Failed to update credit limits" });
+    }
+  });
+
+  // Reset monthly credits (for testing or manual reset)
+  app.post("/api/company-credits/reset", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+
+      const currentDate = new Date();
+      const periodEnd = new Date(currentDate);
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+      const updates = {
+        usedCredits: 0,
+        remainingCredits: 1000,
+        currentPeriodStart: currentDate,
+        currentPeriodEnd: periodEnd,
+        repUsage: []
+      };
+
+      const updatedCredits = await storage.updateCompanyCredits(companyDomain, updates);
+
+      // Log activity
+      await storage.createActivityLog({
+        action: 'RESET_CREDITS',
+        performedBy: enterpriseUser.id,
+        details: 'Reset monthly credits and usage statistics',
+        companyDomain
+      });
+
+      res.json({ success: true, credits: updatedCredits });
+    } catch (error) {
+      console.error('Error resetting credits:', error);
+      res.status(500).json({ message: "Failed to reset credits" });
+    }
+  });
+
   // ===== ENTERPRISE ADMIN ROUTES =====
 
   // Get enterprise analytics

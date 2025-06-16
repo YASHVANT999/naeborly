@@ -1,4 +1,4 @@
-import { User, Invitation, Call, SubscriptionPlan, connectToMongoDB } from './mongodb';
+import { User, Invitation, Call, SubscriptionPlan, CompanyCredits, CallLog, Feedback, connectToMongoDB } from './mongodb';
 import type { IStorage } from './storage';
 import bcrypt from 'bcrypt';
 
@@ -544,6 +544,183 @@ export class SimpleMongoDBStorage implements IStorage {
     } catch (error) {
       console.error('Error getting company invitations count:', error);
       return 0;
+    }
+  }
+
+  // Credit management methods
+  async getCompanyCredits(companyDomain: string): Promise<any | undefined> {
+    try {
+      await connectToMongoDB();
+      const credits = await CompanyCredits.findOne({ companyDomain });
+      return credits ? this.toPlainObject(credits) : undefined;
+    } catch (error) {
+      console.error('Error getting company credits:', error);
+      return undefined;
+    }
+  }
+
+  async updateCompanyCredits(companyDomain: string, updates: any): Promise<any | undefined> {
+    try {
+      await connectToMongoDB();
+      const credits = await CompanyCredits.findOneAndUpdate(
+        { companyDomain },
+        { $set: updates },
+        { new: true }
+      );
+      return credits ? this.toPlainObject(credits) : undefined;
+    } catch (error) {
+      console.error('Error updating company credits:', error);
+      return undefined;
+    }
+  }
+
+  async createCompanyCredits(creditsData: any): Promise<any> {
+    try {
+      await connectToMongoDB();
+      const credits = new CompanyCredits(creditsData);
+      const savedCredits = await credits.save();
+      return this.toPlainObject(savedCredits);
+    } catch (error) {
+      console.error('Error creating company credits:', error);
+      throw error;
+    }
+  }
+
+  async updateRepCreditUsage(companyDomain: string, repId: string, usage: any): Promise<any> {
+    try {
+      await connectToMongoDB();
+      const credits = await CompanyCredits.findOneAndUpdate(
+        { 
+          companyDomain,
+          'repUsage.repId': repId 
+        },
+        { 
+          $set: {
+            'repUsage.$.callsBooked': usage.callsBooked,
+            'repUsage.$.dmsUnlocked': usage.dmsUnlocked,
+            'repUsage.$.creditsUsed': usage.creditsUsed,
+            'repUsage.$.feedbacksReceived': usage.feedbacksReceived,
+            'repUsage.$.flagsReceived': usage.flagsReceived,
+            'repUsage.$.lastUpdated': new Date()
+          }
+        },
+        { new: true }
+      );
+
+      if (!credits) {
+        // Add new rep usage if not found
+        const updatedCredits = await CompanyCredits.findOneAndUpdate(
+          { companyDomain },
+          { 
+            $push: { 
+              repUsage: {
+                repId,
+                repEmail: usage.repEmail,
+                ...usage,
+                lastUpdated: new Date()
+              }
+            }
+          },
+          { new: true }
+        );
+        return updatedCredits ? this.toPlainObject(updatedCredits) : undefined;
+      }
+
+      return this.toPlainObject(credits);
+    } catch (error) {
+      console.error('Error updating rep credit usage:', error);
+      throw error;
+    }
+  }
+
+  // Call logs methods
+  async createCallLog(callData: any): Promise<any> {
+    try {
+      await connectToMongoDB();
+      const callLog = new CallLog(callData);
+      const savedLog = await callLog.save();
+      return this.toPlainObject(savedLog);
+    } catch (error) {
+      console.error('Error creating call log:', error);
+      throw error;
+    }
+  }
+
+  async getCallLogsByCompany(companyDomain: string): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const logs = await CallLog.find({ companyDomain })
+        .populate('salesRepId', 'firstName lastName email')
+        .populate('decisionMakerId', 'firstName lastName email')
+        .sort({ createdAt: -1 });
+      return logs.map(log => this.toPlainObject(log));
+    } catch (error) {
+      console.error('Error getting call logs by company:', error);
+      return [];
+    }
+  }
+
+  async getCallLogsByRep(repId: string): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const logs = await CallLog.find({ salesRepId: repId })
+        .populate('decisionMakerId', 'firstName lastName email')
+        .sort({ createdAt: -1 });
+      return logs.map(log => this.toPlainObject(log));
+    } catch (error) {
+      console.error('Error getting call logs by rep:', error);
+      return [];
+    }
+  }
+
+  async updateCallLog(callId: string, updates: any): Promise<any | undefined> {
+    try {
+      await connectToMongoDB();
+      const log = await CallLog.findByIdAndUpdate(callId, updates, { new: true });
+      return log ? this.toPlainObject(log) : undefined;
+    } catch (error) {
+      console.error('Error updating call log:', error);
+      return undefined;
+    }
+  }
+
+  // Feedback methods
+  async createFeedback(feedbackData: any): Promise<any> {
+    try {
+      await connectToMongoDB();
+      const feedback = new Feedback(feedbackData);
+      const savedFeedback = await feedback.save();
+      return this.toPlainObject(savedFeedback);
+    } catch (error) {
+      console.error('Error creating feedback:', error);
+      throw error;
+    }
+  }
+
+  async getFeedbackByCompany(companyDomain: string): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const feedback = await Feedback.find({ companyDomain })
+        .populate('salesRepId', 'firstName lastName email')
+        .populate('decisionMakerId', 'firstName lastName email')
+        .sort({ createdAt: -1 });
+      return feedback.map(f => this.toPlainObject(f));
+    } catch (error) {
+      console.error('Error getting feedback by company:', error);
+      return [];
+    }
+  }
+
+  async getFeedbackByRep(repId: string): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const feedback = await Feedback.find({ salesRepId: repId })
+        .populate('decisionMakerId', 'firstName lastName email')
+        .sort({ createdAt: -1 });
+      return feedback.map(f => this.toPlainObject(f));
+    } catch (error) {
+      console.error('Error getting feedback by rep:', error);
+      return [];
     }
   }
 
