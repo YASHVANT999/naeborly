@@ -1490,6 +1490,198 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== CALL ACTIVITY LOG ROUTES =====
+
+  // Get company call logs with filtering
+  app.get("/api/company-calls", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+      const { rep, dm, outcome, startDate, endDate, search } = req.query;
+
+      let callLogs = await storage.getCallLogsByCompany(companyDomain);
+
+      // Apply filters
+      if (rep) {
+        callLogs = callLogs.filter(log => 
+          (log.salesRepId?.id || log.salesRepId?.toString()) === rep ||
+          (log.salesRepId?.email && log.salesRepId.email.includes(rep as string))
+        );
+      }
+
+      if (dm) {
+        callLogs = callLogs.filter(log => 
+          (log.decisionMakerId?.id || log.decisionMakerId?.toString()) === dm ||
+          (log.decisionMakerId?.email && log.decisionMakerId.email.includes(dm as string))
+        );
+      }
+
+      if (outcome) {
+        callLogs = callLogs.filter(log => log.status === outcome);
+      }
+
+      if (startDate) {
+        const start = new Date(startDate as string);
+        callLogs = callLogs.filter(log => new Date(log.scheduledAt) >= start);
+      }
+
+      if (endDate) {
+        const end = new Date(endDate as string);
+        end.setHours(23, 59, 59, 999); // End of day
+        callLogs = callLogs.filter(log => new Date(log.scheduledAt) <= end);
+      }
+
+      if (search) {
+        const searchTerm = (search as string).toLowerCase();
+        callLogs = callLogs.filter(log => 
+          (log.salesRepId?.firstName && log.salesRepId.firstName.toLowerCase().includes(searchTerm)) ||
+          (log.salesRepId?.lastName && log.salesRepId.lastName.toLowerCase().includes(searchTerm)) ||
+          (log.salesRepId?.email && log.salesRepId.email.toLowerCase().includes(searchTerm)) ||
+          (log.decisionMakerId?.firstName && log.decisionMakerId.firstName.toLowerCase().includes(searchTerm)) ||
+          (log.decisionMakerId?.lastName && log.decisionMakerId.lastName.toLowerCase().includes(searchTerm)) ||
+          (log.decisionMakerId?.email && log.decisionMakerId.email.toLowerCase().includes(searchTerm)) ||
+          (log.feedback?.summary && log.feedback.summary.toLowerCase().includes(searchTerm)) ||
+          (log.notes && log.notes.toLowerCase().includes(searchTerm))
+        );
+      }
+
+      // Enrich call logs with additional data
+      const enrichedCallLogs = callLogs.map(log => {
+        const repName = log.salesRepId ? 
+          `${log.salesRepId.firstName} ${log.salesRepId.lastName}` : 
+          'Unknown Rep';
+        const dmName = log.decisionMakerId ? 
+          `${log.decisionMakerId.firstName} ${log.decisionMakerId.lastName}` : 
+          'Unknown DM';
+
+        return {
+          id: log.id,
+          repToDM: `${repName} ↔ ${dmName}`,
+          repDetails: {
+            id: log.salesRepId?.id || log.salesRepId,
+            name: repName,
+            email: log.salesRepId?.email || 'N/A',
+            company: log.salesRepId?.company || companyDomain
+          },
+          dmDetails: {
+            id: log.decisionMakerId?.id || log.decisionMakerId,
+            name: dmName,
+            email: log.decisionMakerId?.email || 'N/A',
+            title: log.decisionMakerId?.jobTitle || 'N/A',
+            company: log.decisionMakerId?.company || 'N/A'
+          },
+          scheduledAt: log.scheduledAt,
+          completedAt: log.completedAt,
+          duration: log.duration,
+          status: log.status,
+          outcome: log.outcome || log.status,
+          feedback: {
+            rating: log.feedback?.rating,
+            summary: log.feedback?.summary || log.feedback?.notes || 'No feedback provided',
+            nextSteps: log.feedback?.nextSteps,
+            followUpRequired: log.feedback?.followUpRequired
+          },
+          notes: log.notes,
+          flagged: log.flagged || false,
+          flagReason: log.flagReason,
+          meetingUrl: log.meetingUrl,
+          recordingUrl: log.recordingUrl
+        };
+      });
+
+      // Sort by scheduled date (most recent first)
+      enrichedCallLogs.sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+
+      res.json(enrichedCallLogs);
+    } catch (error) {
+      console.error('Error getting company call logs:', error);
+      res.status(500).json({ message: "Failed to get company call logs" });
+    }
+  });
+
+  // Get call analytics for dashboard
+  app.get("/api/company-calls/analytics", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+
+      const callLogs = await storage.getCallLogsByCompany(companyDomain);
+
+      const analytics = {
+        totalCalls: callLogs.length,
+        completedCalls: callLogs.filter(log => log.status === 'completed').length,
+        missedCalls: callLogs.filter(log => log.status === 'missed' || log.status === 'cancelled').length,
+        flaggedCalls: callLogs.filter(log => log.flagged).length,
+        averageRating: 0,
+        callsByOutcome: {
+          completed: callLogs.filter(log => log.status === 'completed').length,
+          missed: callLogs.filter(log => log.status === 'missed').length,
+          cancelled: callLogs.filter(log => log.status === 'cancelled').length,
+          scheduled: callLogs.filter(log => log.status === 'scheduled').length
+        },
+        recentActivity: callLogs
+          .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime())
+          .slice(0, 5)
+          .map(log => ({
+            rep: log.salesRepId ? `${log.salesRepId.firstName} ${log.salesRepId.lastName}` : 'Unknown',
+            dm: log.decisionMakerId ? `${log.decisionMakerId.firstName} ${log.decisionMakerId.lastName}` : 'Unknown',
+            status: log.status,
+            scheduledAt: log.scheduledAt
+          }))
+      };
+
+      // Calculate average rating
+      const ratedCalls = callLogs.filter(log => log.feedback?.rating);
+      if (ratedCalls.length > 0) {
+        analytics.averageRating = ratedCalls.reduce((sum, log) => sum + log.feedback.rating, 0) / ratedCalls.length;
+      }
+
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error getting call analytics:', error);
+      res.status(500).json({ message: "Failed to get call analytics" });
+    }
+  });
+
+  // Flag a call for review
+  app.post("/api/company-calls/:callId/flag", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const { callId } = req.params;
+      const { reason, severity } = req.body;
+
+      if (!reason) {
+        return res.status(400).json({ message: "Flag reason is required" });
+      }
+
+      const result = await storage.updateCallLog(callId, {
+        flagged: true,
+        flagReason: reason,
+        flagSeverity: severity || 'medium',
+        flaggedBy: enterpriseUser.id,
+        flaggedAt: new Date()
+      });
+
+      if (!result) {
+        return res.status(404).json({ message: "Call not found" });
+      }
+
+      // Log activity
+      await storage.createActivityLog({
+        action: 'FLAG_CALL',
+        performedBy: enterpriseUser.id,
+        targetUser: result.salesRepId?.id || result.salesRepId,
+        details: `Flagged call for review: ${reason}`,
+        companyDomain: enterpriseUser.companyDomain
+      });
+
+      res.json({ success: true, call: result });
+    } catch (error) {
+      console.error('Error flagging call:', error);
+      res.status(500).json({ message: "Failed to flag call" });
+    }
+  });
+
   // ===== ENTERPRISE ADMIN ROUTES =====
 
   // Get enterprise analytics
