@@ -35,6 +35,16 @@ const userSchema = new mongoose.Schema(
     packageType: { type: String, default: "free" },
     isActive: { type: Boolean, default: true },
     standing: { type: String, default: "good" },
+    // Google Calendar integration
+    googleCalendarTokens: {
+      access_token: { type: String },
+      refresh_token: { type: String },
+      scope: { type: String },
+      token_type: { type: String },
+      expiry_date: { type: Number }
+    },
+    googleCalendarId: { type: String },
+    calendarIntegrationEnabled: { type: Boolean, default: false },
   },
   {
     timestamps: true,
@@ -76,6 +86,7 @@ const callSchema = new mongoose.Schema(
       required: true,
     },
     scheduledAt: { type: Date, required: true },
+    endTime: { type: Date },
     status: {
       type: String,
       default: "scheduled",
@@ -85,6 +96,12 @@ const callSchema = new mongoose.Schema(
     feedback: { type: String },
     company: { type: String },
     pitch: { type: String },
+    // Google Calendar integration
+    googleEventId: { type: String },
+    salesRepCalendarId: { type: String },
+    decisionMakerCalendarId: { type: String },
+    meetingLink: { type: String },
+    timeZone: { type: String, default: "UTC" },
   },
   {
     timestamps: true,

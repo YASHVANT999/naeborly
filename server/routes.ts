@@ -3,6 +3,16 @@ import { createServer, type Server } from "http";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { 
+  getAuthUrl, 
+  setCredentials, 
+  oauth2Client,
+  getCalendarEvents,
+  createCalendarEvent,
+  getAvailableSlots,
+  updateCalendarEvent,
+  deleteCalendarEvent
+} from "./google-calendar";
+import { 
   insertInvitationSchema, 
   insertCallSchema, 
   salesRepPersonalInfoSchema, 
@@ -652,6 +662,168 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error getting activity logs:', error);
       res.status(500).json({ message: "Failed to get activity logs" });
+    }
+  });
+
+  // ===== GOOGLE CALENDAR INTEGRATION ROUTES =====
+
+  // Initiate Google Calendar OAuth
+  app.get("/api/auth/google/connect", requireAuthentication, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const authUrl = getAuthUrl(userId);
+      res.json({ authUrl });
+    } catch (error) {
+      console.error('Error generating Google auth URL:', error);
+      res.status(500).json({ message: "Failed to generate authorization URL" });
+    }
+  });
+
+  // Google Calendar OAuth callback
+  app.get("/api/auth/google/callback", async (req, res) => {
+    try {
+      const { code, state: userId } = req.query;
+
+      if (!code || !userId) {
+        return res.status(400).json({ message: "Missing authorization code or user ID" });
+      }
+
+      // Exchange code for tokens
+      const { tokens } = await oauth2Client.getToken(code as string);
+      
+      // Store tokens in user record
+      await storage.updateUser(userId as string, {
+        googleCalendarTokens: tokens,
+        calendarIntegrationEnabled: true
+      });
+
+      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5000'}/sales-dashboard?calendar=connected`);
+    } catch (error) {
+      console.error('Error in Google Calendar callback:', error);
+      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5000'}/sales-dashboard?calendar=error`);
+    }
+  });
+
+  // Get calendar integration status
+  app.get("/api/calendar/status", requireAuthentication, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      
+      res.json({
+        connected: user?.calendarIntegrationEnabled || false,
+        hasTokens: !!(user?.googleCalendarTokens?.access_token)
+      });
+    } catch (error) {
+      console.error('Error getting calendar status:', error);
+      res.status(500).json({ message: "Failed to get calendar status" });
+    }
+  });
+
+  // Get available time slots for a decision maker
+  app.get("/api/calendar/availability/:decisionMakerId", requireAuthentication, async (req, res) => {
+    try {
+      const { decisionMakerId } = req.params;
+      const { startDate, endDate, duration = 30 } = req.query;
+
+      // Get decision maker's calendar tokens
+      const decisionMaker = await storage.getUser(decisionMakerId);
+      if (!decisionMaker?.googleCalendarTokens?.access_token) {
+        return res.status(400).json({ message: "Decision maker calendar not connected" });
+      }
+
+      // Set credentials for the decision maker
+      setCredentials(decisionMaker.googleCalendarTokens);
+
+      // Get available slots
+      const availableSlots = await getAvailableSlots(
+        'primary',
+        startDate as string,
+        endDate as string,
+        parseInt(duration as string)
+      );
+
+      res.json({ availableSlots });
+    } catch (error) {
+      console.error('Error getting availability:', error);
+      res.status(500).json({ message: "Failed to get availability" });
+    }
+  });
+
+  // Schedule a meeting
+  app.post("/api/calendar/schedule", requireAuthentication, async (req, res) => {
+    try {
+      const salesRepId = (req.session as any).userId;
+      const { 
+        decisionMakerId, 
+        startTime, 
+        endTime, 
+        title, 
+        description,
+        timeZone = 'UTC'
+      } = req.body;
+
+      // Get both users
+      const salesRep = await storage.getUser(salesRepId);
+      const decisionMaker = await storage.getUser(decisionMakerId);
+
+      if (!salesRep || !decisionMaker) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (!decisionMaker.googleCalendarTokens?.access_token) {
+        return res.status(400).json({ message: "Decision maker calendar not connected" });
+      }
+
+      // Set credentials for the decision maker (event will be created in their calendar)
+      setCredentials(decisionMaker.googleCalendarTokens);
+
+      // Create calendar event
+      const eventData = {
+        summary: title || `Meeting with ${salesRep.firstName} ${salesRep.lastName}`,
+        description: description || `Sales meeting scheduled through Naeberly platform.`,
+        start: { dateTime: startTime, timeZone },
+        end: { dateTime: endTime, timeZone },
+        attendees: [
+          { 
+            email: salesRep.email, 
+            displayName: `${salesRep.firstName} ${salesRep.lastName}` 
+          },
+          { 
+            email: decisionMaker.email, 
+            displayName: `${decisionMaker.firstName} ${decisionMaker.lastName}` 
+          }
+        ]
+      };
+
+      const calendarEvent = await createCalendarEvent(eventData);
+
+      // Store call in database
+      const callData = {
+        salesRepId,
+        decisionMakerId,
+        scheduledAt: new Date(startTime),
+        endTime: new Date(endTime),
+        googleEventId: calendarEvent.id,
+        meetingLink: calendarEvent.hangoutLink,
+        timeZone,
+        status: 'scheduled'
+      };
+
+      const call = await storage.createCall(callData);
+
+      res.json({ 
+        success: true, 
+        call,
+        calendarEvent: {
+          id: calendarEvent.id,
+          link: calendarEvent.htmlLink,
+          meetingLink: calendarEvent.hangoutLink
+        }
+      });
+    } catch (error) {
+      console.error('Error scheduling meeting:', error);
+      res.status(500).json({ message: "Failed to schedule meeting" });
     }
   });
 
