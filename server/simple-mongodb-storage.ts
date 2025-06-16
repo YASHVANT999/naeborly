@@ -1,4 +1,4 @@
-import { User, Invitation, Call, SubscriptionPlan, CompanyCredits, CallLog, Feedback, connectToMongoDB } from './mongodb';
+import { User, Invitation, Call, SubscriptionPlan, CompanyCredits, CallLog, Feedback, CompanyDMs, DMFlags, connectToMongoDB } from './mongodb';
 import type { IStorage } from './storage';
 import bcrypt from 'bcrypt';
 
@@ -721,6 +721,200 @@ export class SimpleMongoDBStorage implements IStorage {
     } catch (error) {
       console.error('Error getting feedback by rep:', error);
       return [];
+    }
+  }
+
+  // DM tracking methods
+  async getCompanyDMs(companyDomain: string): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const companyDMs = await CompanyDMs.find({ companyDomain, status: { $ne: 'removed' } })
+        .populate('dmId', 'firstName lastName email jobTitle company linkedinUrl')
+        .populate('linkedRepId', 'firstName lastName email')
+        .populate('replacementDMId', 'firstName lastName email')
+        .sort({ createdAt: -1 });
+      return companyDMs.map(dm => this.toPlainObject(dm));
+    } catch (error) {
+      console.error('Error getting company DMs:', error);
+      return [];
+    }
+  }
+
+  async createCompanyDM(dmData: any): Promise<any> {
+    try {
+      await connectToMongoDB();
+      const companyDM = new CompanyDMs(dmData);
+      const savedDM = await companyDM.save();
+      return this.toPlainObject(savedDM);
+    } catch (error) {
+      console.error('Error creating company DM:', error);
+      throw error;
+    }
+  }
+
+  async updateCompanyDM(dmId: string, updates: any): Promise<any | undefined> {
+    try {
+      await connectToMongoDB();
+      const dm = await CompanyDMs.findOneAndUpdate(
+        { dmId },
+        { $set: updates },
+        { new: true }
+      );
+      return dm ? this.toPlainObject(dm) : undefined;
+    } catch (error) {
+      console.error('Error updating company DM:', error);
+      return undefined;
+    }
+  }
+
+  async requestDMRemoval(dmId: string, reason: string, requestedBy: string): Promise<any> {
+    try {
+      await connectToMongoDB();
+      const dm = await CompanyDMs.findOneAndUpdate(
+        { dmId },
+        { 
+          $set: {
+            removalRequested: true,
+            removalReason: reason,
+            status: 'inactive'
+          }
+        },
+        { new: true }
+      );
+      
+      if (dm) {
+        // Create activity log
+        await this.createActivityLog({
+          action: 'REQUEST_DM_REMOVAL',
+          performedBy: requestedBy,
+          targetUser: dmId,
+          details: `Requested removal of DM: ${reason}`,
+          companyDomain: dm.companyDomain
+        });
+      }
+      
+      return dm ? this.toPlainObject(dm) : undefined;
+    } catch (error) {
+      console.error('Error requesting DM removal:', error);
+      throw error;
+    }
+  }
+
+  async replaceDM(originalDMId: string, replacementDMId: string, replacedBy: string): Promise<any> {
+    try {
+      await connectToMongoDB();
+      
+      // Update original DM record
+      const originalDM = await CompanyDMs.findOneAndUpdate(
+        { dmId: originalDMId },
+        { 
+          $set: {
+            status: 'removed',
+            replacementDMId,
+            removalRequested: false
+          }
+        },
+        { new: true }
+      );
+
+      if (originalDM) {
+        // Create new DM record for replacement
+        const replacementData = {
+          companyDomain: originalDM.companyDomain,
+          dmId: replacementDMId,
+          linkedRepId: originalDM.linkedRepId,
+          verificationStatus: 'pending',
+          engagementScore: 0,
+          flagCount: 0,
+          totalInteractions: 0,
+          referralDate: new Date(),
+          status: 'active'
+        };
+
+        const replacementDM = await this.createCompanyDM(replacementData);
+
+        // Create activity log
+        await this.createActivityLog({
+          action: 'REPLACE_DM',
+          performedBy: replacedBy,
+          targetUser: originalDMId,
+          details: `Replaced DM with new DM: ${replacementDMId}`,
+          companyDomain: originalDM.companyDomain
+        });
+
+        return { original: this.toPlainObject(originalDM), replacement: replacementDM };
+      }
+      
+      return undefined;
+    } catch (error) {
+      console.error('Error replacing DM:', error);
+      throw error;
+    }
+  }
+
+  // DM flags methods
+  async createDMFlag(flagData: any): Promise<any> {
+    try {
+      await connectToMongoDB();
+      const flag = new DMFlags(flagData);
+      const savedFlag = await flag.save();
+
+      // Update flag count in CompanyDMs
+      await CompanyDMs.findOneAndUpdate(
+        { dmId: flagData.dmId },
+        { $inc: { flagCount: 1 } }
+      );
+
+      return this.toPlainObject(savedFlag);
+    } catch (error) {
+      console.error('Error creating DM flag:', error);
+      throw error;
+    }
+  }
+
+  async getDMFlags(dmId: string): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const flags = await DMFlags.find({ dmId })
+        .populate('flaggedBy', 'firstName lastName email')
+        .populate('resolvedBy', 'firstName lastName email')
+        .sort({ createdAt: -1 });
+      return flags.map(flag => this.toPlainObject(flag));
+    } catch (error) {
+      console.error('Error getting DM flags:', error);
+      return [];
+    }
+  }
+
+  async getFlagsByCompany(companyDomain: string): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const flags = await DMFlags.find({ companyDomain })
+        .populate('dmId', 'firstName lastName email')
+        .populate('flaggedBy', 'firstName lastName email')
+        .populate('resolvedBy', 'firstName lastName email')
+        .sort({ createdAt: -1 });
+      return flags.map(flag => this.toPlainObject(flag));
+    } catch (error) {
+      console.error('Error getting flags by company:', error);
+      return [];
+    }
+  }
+
+  async updateFlagStatus(flagId: string, status: string, resolution?: string, resolvedBy?: string): Promise<any> {
+    try {
+      await connectToMongoDB();
+      const updates: any = { status };
+      
+      if (resolution) updates.resolution = resolution;
+      if (resolvedBy) updates.resolvedBy = resolvedBy;
+      if (status === 'resolved') updates.resolvedAt = new Date();
+
+      const flag = await DMFlags.findByIdAndUpdate(flagId, updates, { new: true });
+      return flag ? this.toPlainObject(flag) : undefined;
+    } catch (error) {
+      console.error('Error updating flag status:', error);
+      return undefined;
     }
   }
 

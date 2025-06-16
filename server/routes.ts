@@ -1271,6 +1271,225 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== DM TRACKING ROUTES =====
+
+  // Get company DMs
+  app.get("/api/company-dms", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+
+      const companyDMs = await storage.getCompanyDMs(companyDomain);
+      
+      // Calculate engagement scores and additional metrics
+      const enrichedDMs = await Promise.all(companyDMs.map(async (dm) => {
+        const flags = await storage.getDMFlags(dm.dmId.id || dm.dmId);
+        const callLogs = await storage.getCallLogsByCompany(companyDomain);
+        const dmCallLogs = callLogs.filter(log => 
+          (log.decisionMakerId?.id || log.decisionMakerId) === (dm.dmId.id || dm.dmId)
+        );
+
+        // Calculate engagement score based on interactions
+        let engagementScore = 0;
+        if (dmCallLogs.length > 0) {
+          const completedCalls = dmCallLogs.filter(log => log.status === 'completed').length;
+          const totalCalls = dmCallLogs.length;
+          const completionRate = completedCalls / totalCalls;
+          const avgRating = dmCallLogs
+            .filter(log => log.feedback?.rating)
+            .reduce((sum, log) => sum + log.feedback.rating, 0) / dmCallLogs.length || 0;
+          
+          engagementScore = Math.round((completionRate * 40) + (avgRating * 12) + (Math.min(completedCalls, 5) * 10));
+        }
+
+        return {
+          id: dm.id,
+          dmId: dm.dmId.id || dm.dmId,
+          name: `${dm.dmId.firstName} ${dm.dmId.lastName}`,
+          email: dm.dmId.email,
+          title: dm.dmId.jobTitle || 'N/A',
+          company: dm.dmId.company || companyDomain,
+          linkedinUrl: dm.dmId.linkedinUrl,
+          verificationStatus: dm.verificationStatus,
+          flagCount: flags.filter(f => f.status === 'open').length,
+          totalFlags: flags.length,
+          engagementScore,
+          totalInteractions: dmCallLogs.length,
+          lastInteraction: dm.lastInteraction,
+          linkedRep: {
+            id: dm.linkedRepId.id || dm.linkedRepId,
+            name: `${dm.linkedRepId.firstName} ${dm.linkedRepId.lastName}`,
+            email: dm.linkedRepId.email
+          },
+          referralDate: dm.referralDate,
+          removalRequested: dm.removalRequested,
+          removalReason: dm.removalReason,
+          status: dm.status,
+          flags: flags.slice(0, 3) // Recent flags
+        };
+      }));
+
+      res.json(enrichedDMs);
+    } catch (error) {
+      console.error('Error getting company DMs:', error);
+      res.status(500).json({ message: "Failed to get company DMs" });
+    }
+  });
+
+  // Request DM removal
+  app.post("/api/company-dms/remove", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const { dmId, reason } = req.body;
+
+      if (!dmId || !reason) {
+        return res.status(400).json({ message: "DM ID and reason are required" });
+      }
+
+      const result = await storage.requestDMRemoval(dmId, reason, enterpriseUser.id);
+
+      if (!result) {
+        return res.status(404).json({ message: "DM not found" });
+      }
+
+      // Log activity
+      await storage.createActivityLog({
+        action: 'REQUEST_DM_REMOVAL',
+        performedBy: enterpriseUser.id,
+        targetUser: dmId,
+        details: `Requested DM removal: ${reason}`,
+        companyDomain: enterpriseUser.companyDomain
+      });
+
+      res.json({ success: true, dm: result });
+    } catch (error) {
+      console.error('Error requesting DM removal:', error);
+      res.status(500).json({ message: "Failed to request DM removal" });
+    }
+  });
+
+  // Replace suspended DM
+  app.post("/api/company-dms/replace", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const { originalDMId, replacementDMId } = req.body;
+
+      if (!originalDMId || !replacementDMId) {
+        return res.status(400).json({ message: "Original and replacement DM IDs are required" });
+      }
+
+      // Verify replacement DM exists and is available
+      const replacementDM = await storage.getUser(replacementDMId);
+      if (!replacementDM || replacementDM.role !== 'decision_maker') {
+        return res.status(400).json({ message: "Invalid replacement DM" });
+      }
+
+      const result = await storage.replaceDM(originalDMId, replacementDMId, enterpriseUser.id);
+
+      if (!result) {
+        return res.status(404).json({ message: "Original DM not found" });
+      }
+
+      // Log activity
+      await storage.createActivityLog({
+        action: 'REPLACE_DM',
+        performedBy: enterpriseUser.id,
+        targetUser: originalDMId,
+        details: `Replaced DM with ${replacementDM.email}`,
+        companyDomain: enterpriseUser.companyDomain
+      });
+
+      res.json({ success: true, result });
+    } catch (error) {
+      console.error('Error replacing DM:', error);
+      res.status(500).json({ message: "Failed to replace DM" });
+    }
+  });
+
+  // Flag a DM for quality issues
+  app.post("/api/company-dms/flag", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const { dmId, flagType, description, severity } = req.body;
+
+      if (!dmId || !flagType || !description) {
+        return res.status(400).json({ message: "DM ID, flag type, and description are required" });
+      }
+
+      const flagData = {
+        dmId,
+        flaggedBy: enterpriseUser.id,
+        companyDomain: enterpriseUser.companyDomain,
+        flagType,
+        description,
+        severity: severity || 'medium',
+        status: 'open'
+      };
+
+      const flag = await storage.createDMFlag(flagData);
+
+      // Log activity
+      await storage.createActivityLog({
+        action: 'FLAG_DM',
+        performedBy: enterpriseUser.id,
+        targetUser: dmId,
+        details: `Flagged DM for: ${flagType} - ${description}`,
+        companyDomain: enterpriseUser.companyDomain
+      });
+
+      res.status(201).json({ success: true, flag });
+    } catch (error) {
+      console.error('Error flagging DM:', error);
+      res.status(500).json({ message: "Failed to flag DM" });
+    }
+  });
+
+  // Update DM verification status
+  app.patch("/api/company-dms/:dmId/verification", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = (req as any).enterpriseUser;
+      const { dmId } = req.params;
+      const { verificationStatus } = req.body;
+
+      const validStatuses = ['pending', 'verified', 'rejected', 'suspended'];
+      if (!validStatuses.includes(verificationStatus)) {
+        return res.status(400).json({ message: "Invalid verification status" });
+      }
+
+      const result = await storage.updateCompanyDM(dmId, { verificationStatus });
+
+      if (!result) {
+        return res.status(404).json({ message: "DM not found" });
+      }
+
+      // Log activity
+      await storage.createActivityLog({
+        action: 'UPDATE_DM_VERIFICATION',
+        performedBy: enterpriseUser.id,
+        targetUser: dmId,
+        details: `Updated DM verification status to: ${verificationStatus}`,
+        companyDomain: enterpriseUser.companyDomain
+      });
+
+      res.json({ success: true, dm: result });
+    } catch (error) {
+      console.error('Error updating DM verification:', error);
+      res.status(500).json({ message: "Failed to update DM verification" });
+    }
+  });
+
+  // Get DM flags
+  app.get("/api/company-dms/:dmId/flags", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const { dmId } = req.params;
+      const flags = await storage.getDMFlags(dmId);
+      res.json(flags);
+    } catch (error) {
+      console.error('Error getting DM flags:', error);
+      res.status(500).json({ message: "Failed to get DM flags" });
+    }
+  });
+
   // ===== ENTERPRISE ADMIN ROUTES =====
 
   // Get enterprise analytics

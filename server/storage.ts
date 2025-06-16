@@ -61,6 +61,19 @@ export interface IStorage {
   createFeedback(feedbackData: any): Promise<any>;
   getFeedbackByCompany(companyDomain: string): Promise<any[]>;
   getFeedbackByRep(repId: string): Promise<any[]>;
+  
+  // DM tracking methods
+  getCompanyDMs(companyDomain: string): Promise<any[]>;
+  createCompanyDM(dmData: any): Promise<any>;
+  updateCompanyDM(dmId: string, updates: any): Promise<any | undefined>;
+  requestDMRemoval(dmId: string, reason: string, requestedBy: string): Promise<any>;
+  replaceDM(originalDMId: string, replacementDMId: string, replacedBy: string): Promise<any>;
+  
+  // DM flags methods
+  createDMFlag(flagData: any): Promise<any>;
+  getDMFlags(dmId: string): Promise<any[]>;
+  getFlagsByCompany(companyDomain: string): Promise<any[]>;
+  updateFlagStatus(flagId: string, status: string, resolution?: string, resolvedBy?: string): Promise<any>;
 }
 
 // Import and use only MongoDB storage

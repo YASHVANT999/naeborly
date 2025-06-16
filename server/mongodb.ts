@@ -215,6 +215,48 @@ export const CompanyCredits = mongoose.model("CompanyCredits", companyCreditsSch
 export const CallLog = mongoose.model("CallLog", callLogSchema);
 export const Feedback = mongoose.model("Feedback", feedbackSchema);
 
+// Company DMs Schema - Tracks DMs referred by company sales reps
+const companyDMsSchema = new mongoose.Schema({
+  companyDomain: { type: String, required: true },
+  dmId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  linkedRepId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  verificationStatus: { type: String, enum: ["pending", "verified", "rejected", "suspended"], default: "pending" },
+  engagementScore: { type: Number, default: 0, min: 0, max: 100 },
+  flagCount: { type: Number, default: 0 },
+  totalInteractions: { type: Number, default: 0 },
+  lastInteraction: { type: Date },
+  referralDate: { type: Date, default: Date.now },
+  removalRequested: { type: Boolean, default: false },
+  removalReason: { type: String },
+  replacementDMId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  status: { type: String, enum: ["active", "inactive", "removed"], default: "active" }
+}, {
+  timestamps: true
+});
+
+// DM Flags Schema - Tracks quality and behavior flags
+const dmFlagsSchema = new mongoose.Schema({
+  dmId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  flaggedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  companyDomain: { type: String, required: true },
+  flagType: { 
+    type: String, 
+    enum: ["inappropriate_behavior", "unresponsive", "fake_profile", "low_engagement", "scheduling_issues", "quality_concern"],
+    required: true 
+  },
+  description: { type: String, required: true },
+  severity: { type: String, enum: ["low", "medium", "high", "critical"], default: "medium" },
+  status: { type: String, enum: ["open", "investigating", "resolved", "dismissed"], default: "open" },
+  resolution: { type: String },
+  resolvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  resolvedAt: { type: Date }
+}, {
+  timestamps: true
+});
+
+export const CompanyDMs = mongoose.model("CompanyDMs", companyDMsSchema);
+export const DMFlags = mongoose.model("DMFlags", dmFlagsSchema);
+
 export type UserDocument = mongoose.Document & {
   _id: mongoose.Types.ObjectId;
   email: string;
