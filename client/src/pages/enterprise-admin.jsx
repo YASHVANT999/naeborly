@@ -170,18 +170,20 @@ export default function EnterpriseAdmin() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-10">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="users">User Management</TabsTrigger>
-            <TabsTrigger value="team">Team Management</TabsTrigger>
-            <TabsTrigger value="credits">Credits</TabsTrigger>
-            <TabsTrigger value="dms">DM Tracking</TabsTrigger>
-            <TabsTrigger value="calls">Call Activity</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-            <TabsTrigger value="domains">Domain Settings</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto">
+            <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground min-w-full lg:min-w-0">
+              <TabsTrigger value="overview" className="whitespace-nowrap">Overview</TabsTrigger>
+              <TabsTrigger value="users" className="whitespace-nowrap">Users</TabsTrigger>
+              <TabsTrigger value="team" className="whitespace-nowrap">Team</TabsTrigger>
+              <TabsTrigger value="credits" className="whitespace-nowrap">Credits</TabsTrigger>
+              <TabsTrigger value="dms" className="whitespace-nowrap">DM Tracking</TabsTrigger>
+              <TabsTrigger value="calls" className="whitespace-nowrap">Call Activity</TabsTrigger>
+              <TabsTrigger value="performance" className="whitespace-nowrap">Performance</TabsTrigger>
+              <TabsTrigger value="settings" className="whitespace-nowrap">Settings</TabsTrigger>
+              <TabsTrigger value="domains" className="whitespace-nowrap">Domains</TabsTrigger>
+              <TabsTrigger value="analytics" className="whitespace-nowrap">Analytics</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
