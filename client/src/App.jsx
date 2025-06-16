@@ -14,6 +14,8 @@ import CallFeedback from "@/pages/call-feedback";
 import AdminPanel from "@/pages/admin-panel";
 import SuperAdminLogin from "@/pages/super-admin-login";
 import SuperAdminDashboard from "@/pages/super-admin-dashboard";
+import EnterpriseAdmin from "@/pages/enterprise-admin";
+import EnterpriseProtectedRoute from "@/components/EnterpriseProtectedRoute";
 import PersonalInfo from "@/pages/signup/personal-info";
 import ProfessionalBackground from "@/pages/signup/professional-background";
 import AvailabilityPreferences from "@/pages/signup/availability-preferences";
@@ -56,6 +58,11 @@ function Router() {
         <ProtectedRoute requiredRole="super_admin">
           <SuperAdminDashboard />
         </ProtectedRoute>
+      </Route>
+      <Route path="/enterprise-admin">
+        <EnterpriseProtectedRoute>
+          <EnterpriseAdmin />
+        </EnterpriseProtectedRoute>
       </Route>
       <Route path="/evaluation/rep" component={PostCallEvaluation} />
       <Route path="/evaluation/dm" component={CallFeedback} />

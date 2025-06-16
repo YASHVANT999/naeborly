@@ -40,6 +40,10 @@ export interface IStorage {
   
   // Calendar integration methods
   getCallById(id: string): Promise<any | undefined>;
+  
+  // Enterprise admin methods
+  getUsersByCompanyDomain(domain: string): Promise<any[]>;
+  getCompanyInvitationsCount(domain: string): Promise<number>;
 }
 
 // Import and use only MongoDB storage

@@ -463,6 +463,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   };
 
+  // Enterprise Admin middleware
+  const requireEnterpriseAdmin = async (req: any, res: any, next: any) => {
+    const userId = req.session?.userId;
+    const userRole = req.session?.userRole;
+    
+    if (!userId || userRole !== 'enterprise_admin') {
+      return res.status(403).json({ message: "Enterprise admin access required" });
+    }
+
+    // Verify domain access
+    try {
+      const user = await storage.getUser(userId);
+      if (!user?.companyDomain || !user?.domainVerified) {
+        return res.status(403).json({ message: "Domain verification required for enterprise access" });
+      }
+      
+      // Add user info to request for use in handlers
+      req.enterpriseUser = user;
+      next();
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to verify enterprise access" });
+    }
+  };
+
   // User Management Routes
   app.get("/api/super-admin/users", requireSuperAdmin, async (req, res) => {
     try {
@@ -835,6 +859,210 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error scheduling meeting:', error);
       res.status(500).json({ message: "Failed to schedule meeting" });
+    }
+  });
+
+  // ===== ENTERPRISE ADMIN ROUTES =====
+
+  // Get enterprise analytics
+  app.get("/api/enterprise-admin/analytics", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = req.enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+
+      // Get company users analytics
+      const companyUsers = await storage.getUsersByCompanyDomain(companyDomain);
+      const totalUsers = companyUsers.length;
+      const salesReps = companyUsers.filter(u => u.role === 'sales_rep').length;
+      const decisionMakers = companyUsers.filter(u => u.role === 'decision_maker').length;
+      const activeUsers = companyUsers.filter(u => u.isActive).length;
+
+      // Get current month data
+      const currentMonth = new Date();
+      currentMonth.setDate(1);
+      const newUsersThisMonth = companyUsers.filter(u => 
+        new Date(u.createdAt) >= currentMonth
+      ).length;
+
+      // Get meeting analytics for company
+      const companyUserIds = companyUsers.map(u => u.id);
+      const allCalls = await storage.getAllCalls();
+      const companyCalls = allCalls.filter(call => 
+        companyUserIds.includes(call.salesRepId) || companyUserIds.includes(call.decisionMakerId)
+      );
+
+      const monthlyMeetings = companyCalls.filter(call => 
+        new Date(call.createdAt) >= currentMonth
+      ).length;
+
+      const scheduledMeetings = companyCalls.filter(call => call.status === 'scheduled').length;
+      const completedMeetings = companyCalls.filter(call => call.status === 'completed').length;
+      const completionRate = companyCalls.length > 0 ? 
+        Math.round((completedMeetings / companyCalls.length) * 100) : 0;
+
+      res.json({
+        totalUsers,
+        salesReps,
+        decisionMakers,
+        activeUsers,
+        activeSalesReps: salesReps,
+        newUsersThisMonth,
+        monthlyMeetings,
+        scheduledMeetings,
+        totalInvitations: await storage.getCompanyInvitationsCount(companyDomain),
+        meetingTrend: 15, // Mock trend data
+        salesRepGrowth: 8,
+        completionRate
+      });
+    } catch (error) {
+      console.error('Error getting enterprise analytics:', error);
+      res.status(500).json({ message: "Failed to get analytics" });
+    }
+  });
+
+  // Get company users
+  app.get("/api/enterprise-admin/users", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = req.enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+
+      const users = await storage.getUsersByCompanyDomain(companyDomain);
+      
+      // Filter out sensitive information
+      const filteredUsers = users.map(user => ({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        jobTitle: user.jobTitle,
+        department: user.department,
+        isActive: user.isActive,
+        createdAt: user.createdAt,
+        lastLogin: user.lastLogin
+      }));
+
+      res.json(filteredUsers);
+    } catch (error) {
+      console.error('Error getting company users:', error);
+      res.status(500).json({ message: "Failed to get users" });
+    }
+  });
+
+  // Create enterprise user
+  app.post("/api/enterprise-admin/create-user", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = req.enterpriseUser;
+      const companyDomain = enterpriseUser.companyDomain;
+      const { email, firstName, lastName, role, jobTitle, department } = req.body;
+
+      // Verify email domain matches company domain
+      const emailDomain = email.split('@')[1];
+      if (emailDomain !== companyDomain) {
+        return res.status(400).json({ 
+          message: `Email domain must match company domain: ${companyDomain}` 
+        });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+
+      // Create user with enterprise settings
+      const userData = {
+        email,
+        firstName,
+        lastName,
+        role,
+        jobTitle: jobTitle || '',
+        department: department || '',
+        companyDomain,
+        domainVerified: true,
+        isActive: true,
+        packageType: 'enterprise',
+        standing: 'excellent',
+        password: 'TempPass123!', // Temporary password - should be changed on first login
+        requirePasswordChange: true
+      };
+
+      const newUser = await storage.createUser(userData);
+
+      // Log enterprise activity
+      await storage.createActivityLog({
+        action: 'CREATE_ENTERPRISE_USER',
+        performedBy: enterpriseUser.id,
+        targetUser: newUser.id,
+        details: `Created enterprise user: ${email}`,
+        companyDomain
+      });
+
+      res.status(201).json({
+        id: newUser.id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        role: newUser.role,
+        temporaryPassword: 'TempPass123!' // Return temp password for setup
+      });
+    } catch (error) {
+      console.error('Error creating enterprise user:', error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  // Update user status
+  app.patch("/api/enterprise-admin/users/:userId/status", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = req.enterpriseUser;
+      const { userId } = req.params;
+      const { isActive } = req.body;
+
+      // Verify user belongs to same company domain
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser || targetUser.companyDomain !== enterpriseUser.companyDomain) {
+        return res.status(404).json({ message: "User not found or access denied" });
+      }
+
+      // Update user status
+      const updatedUser = await storage.updateUser(userId, { isActive });
+
+      // Log enterprise activity
+      await storage.createActivityLog({
+        action: 'UPDATE_USER_STATUS',
+        performedBy: enterpriseUser.id,
+        targetUser: userId,
+        details: `${isActive ? 'Activated' : 'Deactivated'} user: ${targetUser.email}`,
+        companyDomain: enterpriseUser.companyDomain
+      });
+
+      res.json({ success: true, user: updatedUser });
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      res.status(500).json({ message: "Failed to update user status" });
+    }
+  });
+
+  // Get domain settings
+  app.get("/api/enterprise-admin/domain-settings", requireEnterpriseAdmin, async (req, res) => {
+    try {
+      const enterpriseUser = req.enterpriseUser;
+      
+      res.json({
+        verifiedDomain: enterpriseUser.companyDomain,
+        autoApproveUsers: true,
+        domainRestrictions: true,
+        verificationDate: enterpriseUser.domainVerifiedAt || new Date(),
+        settings: {
+          requireMFA: false,
+          sessionTimeout: 8, // hours
+          allowGuestAccess: false
+        }
+      });
+    } catch (error) {
+      console.error('Error getting domain settings:', error);
+      res.status(500).json({ message: "Failed to get domain settings" });
     }
   });
 
