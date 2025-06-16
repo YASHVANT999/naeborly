@@ -60,9 +60,9 @@ import {
 export default function CallActivityLog() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRep, setSelectedRep] = useState("");
-  const [selectedDM, setSelectedDM] = useState("");
-  const [selectedOutcome, setSelectedOutcome] = useState("");
+  const [selectedRep, setSelectedRep] = useState("all_reps");
+  const [selectedDM, setSelectedDM] = useState("all_dms");
+  const [selectedOutcome, setSelectedOutcome] = useState("all_outcomes");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedCall, setSelectedCall] = useState(null);
@@ -75,9 +75,9 @@ export default function CallActivityLog() {
   // Build query params for filtering
   const queryParams = useMemo(() => {
     const params = new URLSearchParams();
-    if (selectedRep) params.append('rep', selectedRep);
-    if (selectedDM) params.append('dm', selectedDM);
-    if (selectedOutcome) params.append('outcome', selectedOutcome);
+    if (selectedRep && selectedRep !== "all_reps") params.append('rep', selectedRep);
+    if (selectedDM && selectedDM !== "all_dms") params.append('dm', selectedDM);
+    if (selectedOutcome && selectedOutcome !== "all_outcomes") params.append('outcome', selectedOutcome);
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     if (searchTerm) params.append('search', searchTerm);
@@ -195,9 +195,9 @@ export default function CallActivityLog() {
 
   const clearFilters = () => {
     setSearchTerm("");
-    setSelectedRep("");
-    setSelectedDM("");
-    setSelectedOutcome("");
+    setSelectedRep("all_reps");
+    setSelectedDM("all_dms");
+    setSelectedOutcome("all_outcomes");
     setStartDate("");
     setEndDate("");
   };
@@ -356,7 +356,7 @@ export default function CallActivityLog() {
                   <SelectValue placeholder="All reps" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All reps</SelectItem>
+                  <SelectItem value="all_reps">All reps</SelectItem>
                   {uniqueReps.map(rep => (
                     <SelectItem key={rep} value={rep}>{rep}</SelectItem>
                   ))}
@@ -371,7 +371,7 @@ export default function CallActivityLog() {
                   <SelectValue placeholder="All DMs" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All DMs</SelectItem>
+                  <SelectItem value="all_dms">All DMs</SelectItem>
                   {uniqueDMs.map(dm => (
                     <SelectItem key={dm} value={dm}>{dm}</SelectItem>
                   ))}
@@ -386,7 +386,7 @@ export default function CallActivityLog() {
                   <SelectValue placeholder="All outcomes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All outcomes</SelectItem>
+                  <SelectItem value="all_outcomes">All outcomes</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="missed">Missed</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
