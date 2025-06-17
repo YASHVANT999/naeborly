@@ -11,7 +11,9 @@ import {
   TrendingUp,
   Lock,
   CalendarPlus,
-  Loader2
+  Loader2,
+  User,
+  Clock
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";

@@ -3372,6 +3372,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // =============================================================================
+  // FLAGS MANAGEMENT ENDPOINTS
+  // =============================================================================
+
+  // Get flags based on user role
+  app.get("/api/flags", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      let flags = [];
+
+      if (user.role === 'sales_rep') {
+        // Sales reps can see flags they created
+        flags = await storage.getFlagsByRep(userId);
+      } else if (user.role === 'decision_maker') {
+        // Decision makers can see flags against them
+        flags = await storage.getDMFlags(userId);
+      } else if (user.role === 'enterprise_admin') {
+        // Enterprise admins can see flags for their company
+        const userDomain = user.email.split('@')[1];
+        flags = await storage.getFlagsByCompany(userDomain);
+      } else if (user.role === 'super_admin') {
+        // Super admins can see all flags
+        flags = await storage.getAllFlags();
+      }
+
+      res.json(flags);
+    } catch (error: any) {
+      console.error("Error fetching flags:", error);
+      res.status(500).json({ message: "Failed to fetch flags" });
+    }
+  });
+
+  // Create a new flag
+  app.post("/api/flags", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Only sales reps can create flags
+      if (user.role !== 'sales_rep') {
+        return res.status(403).json({ message: "Only sales representatives can create flags" });
+      }
+
+      const { dmId, reason, description, priority, flagType } = req.body;
+
+      if (!dmId || !reason || !description) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const flagData = {
+        dmId,
+        flaggedBy: userId,
+        flaggedByRole: user.role,
+        reason,
+        description,
+        priority: priority || 'medium',
+        flagType: flagType || 'behavior',
+        status: 'open',
+        reportedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const flag = await storage.createDMFlag(flagData);
+      res.json({ success: true, flag });
+    } catch (error: any) {
+      console.error("Error creating flag:", error);
+      res.status(500).json({ message: "Failed to create flag" });
+    }
+  });
+
+  // Update flag status
+  app.put("/api/flags/:flagId", async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Only admins can update flag status
+      if (!['enterprise_admin', 'super_admin'].includes(user.role)) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const { flagId } = req.params;
+      const { status, resolution } = req.body;
+
+      const updateData: any = {
+        status,
+        updatedAt: new Date()
+      };
+
+      if (status === 'resolved') {
+        updateData.resolvedAt = new Date();
+        updateData.resolvedBy = user.email;
+        if (resolution) {
+          updateData.resolution = resolution;
+        }
+      }
+
+      const updatedFlag = await storage.updateFlagStatus(flagId, status, resolution, user.email);
+      res.json({ success: true, flag: updatedFlag });
+    } catch (error: any) {
+      console.error("Error updating flag:", error);
+      res.status(500).json({ message: "Failed to update flag" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
