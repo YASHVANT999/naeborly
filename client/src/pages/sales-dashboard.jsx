@@ -280,57 +280,213 @@ export default function SalesDashboard() {
             {/* Calendar Booking System */}
             <CalendarBooking />
             
-            {/* Upcoming Calls */}
+            {/* Upcoming Calls Calendar View */}
             <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="text-blue-500 mr-3" size={20} />
-                  Upcoming Calls
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center">
+                    <Calendar className="text-blue-500 mr-3" size={20} />
+                    Upcoming Calls
+                  </CardTitle>
+                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                    View All
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {calls?.length > 0 ? (
-                  <div className="space-y-3">
-                    {calls.slice(0, 3).map((call) => (
-                      <div key={call.id} className="p-3 bg-blue-50 rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium text-blue-900">
-                              {call.decisionMakerName || 'Decision Maker'}
-                            </p>
-                            <p className="text-sm text-blue-700">
-                              {new Date(call.scheduledAt).toLocaleDateString()} at{' '}
-                              {new Date(call.scheduledAt).toLocaleTimeString('en-US', {
-                                hour: 'numeric',
-                                minute: '2-digit'
-                              })}
-                            </p>
-                            {call.meetingLink && (
-                              <a 
-                                href={call.meetingLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-blue-600 hover:underline"
-                              >
-                                Join Meeting
-                              </a>
-                            )}
+                  <div className="space-y-4">
+                    {/* Today's Calls */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                        Today
+                      </h4>
+                      <div className="space-y-2">
+                        {calls.filter(call => {
+                          const today = new Date().toDateString();
+                          const callDate = new Date(call.scheduledAt).toDateString();
+                          return today === callDate;
+                        }).map((call) => (
+                          <div key={call.id} className="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                            <div className="flex-shrink-0 mr-3">
+                              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <User className="w-5 h-5 text-green-600" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-green-900 truncate">
+                                {call.decisionMakerName || 'Decision Maker'}
+                              </p>
+                              <div className="flex items-center text-sm text-green-700">
+                                <Clock className="w-3 h-3 mr-1" />
+                                {new Date(call.scheduledAt).toLocaleTimeString('en-US', {
+                                  hour: 'numeric',
+                                  minute: '2-digit'
+                                })}
+                              </div>
+                              {call.agenda && (
+                                <p className="text-xs text-green-600 truncate mt-1">
+                                  {call.agenda}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex-shrink-0 ml-2">
+                              {call.meetingLink ? (
+                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white h-8 px-3">
+                                  Join
+                                </Button>
+                              ) : (
+                                <Badge className="bg-green-100 text-green-800">
+                                  {call.status}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <Badge className={`${
-                            call.status === 'scheduled' ? 'bg-green-100 text-green-800' :
-                            call.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {call.status}
-                          </Badge>
-                        </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+
+                    {/* Tomorrow's Calls */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                        Tomorrow
+                      </h4>
+                      <div className="space-y-2">
+                        {calls.filter(call => {
+                          const tomorrow = new Date();
+                          tomorrow.setDate(tomorrow.getDate() + 1);
+                          const tomorrowDate = tomorrow.toDateString();
+                          const callDate = new Date(call.scheduledAt).toDateString();
+                          return tomorrowDate === callDate;
+                        }).map((call) => (
+                          <div key={call.id} className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
+                            <div className="flex-shrink-0 mr-3">
+                              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <User className="w-5 h-5 text-blue-600" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-blue-900 truncate">
+                                {call.decisionMakerName || 'Decision Maker'}
+                              </p>
+                              <div className="flex items-center text-sm text-blue-700">
+                                <Clock className="w-3 h-3 mr-1" />
+                                {new Date(call.scheduledAt).toLocaleTimeString('en-US', {
+                                  hour: 'numeric',
+                                  minute: '2-digit'
+                                })}
+                              </div>
+                              {call.agenda && (
+                                <p className="text-xs text-blue-600 truncate mt-1">
+                                  {call.agenda}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex-shrink-0 ml-2">
+                              <Badge className="bg-blue-100 text-blue-800">
+                                {call.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* This Week's Calls */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                        This Week
+                      </h4>
+                      <div className="space-y-2">
+                        {calls.filter(call => {
+                          const today = new Date();
+                          const tomorrow = new Date();
+                          tomorrow.setDate(tomorrow.getDate() + 1);
+                          const weekEnd = new Date();
+                          weekEnd.setDate(weekEnd.getDate() + 7);
+                          
+                          const callDate = new Date(call.scheduledAt);
+                          const todayStr = today.toDateString();
+                          const tomorrowStr = tomorrow.toDateString();
+                          const callStr = callDate.toDateString();
+                          
+                          return callDate > tomorrow && callDate <= weekEnd && 
+                                 callStr !== todayStr && callStr !== tomorrowStr;
+                        }).map((call) => (
+                          <div key={call.id} className="flex items-center p-3 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+                            <div className="flex-shrink-0 mr-3">
+                              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                <User className="w-5 h-5 text-purple-600" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-purple-900 truncate">
+                                {call.decisionMakerName || 'Decision Maker'}
+                              </p>
+                              <div className="flex items-center text-sm text-purple-700">
+                                <Calendar className="w-3 h-3 mr-1" />
+                                {new Date(call.scheduledAt).toLocaleDateString('en-US', {
+                                  weekday: 'short',
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                                <Clock className="w-3 h-3 ml-2 mr-1" />
+                                {new Date(call.scheduledAt).toLocaleTimeString('en-US', {
+                                  hour: 'numeric',
+                                  minute: '2-digit'
+                                })}
+                              </div>
+                              {call.agenda && (
+                                <p className="text-xs text-purple-600 truncate mt-1">
+                                  {call.agenda}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex-shrink-0 ml-2">
+                              <Badge className="bg-purple-100 text-purple-800">
+                                {call.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="pt-3 border-t border-gray-200">
+                      <div className="flex space-x-2">
+                        <Button size="sm" variant="outline" className="flex-1">
+                          <CalendarPlus className="w-4 h-4 mr-2" />
+                          Schedule Call
+                        </Button>
+                        <Button size="sm" variant="outline" className="flex-1">
+                          <Calendar className="w-4 h-4 mr-2" />
+                          View Calendar
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <CalendarPlus className="text-gray-300 mx-auto mb-4" size={48} />
-                    <p className="text-gray-500">No calls scheduled yet</p>
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CalendarPlus className="text-gray-400" size={24} />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No calls scheduled</h3>
+                    <p className="text-gray-500 mb-6 text-sm">
+                      Start booking meetings with decision makers to see your schedule here.
+                    </p>
+                    <div className="space-y-2">
+                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Book Your First Call
+                      </Button>
+                      <div className="text-xs text-gray-400">
+                        Use the calendar booking system to schedule meetings
+                      </div>
+                    </div>
                   </div>
                 )}
               </CardContent>
