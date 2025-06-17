@@ -2274,7 +2274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('All DMs found:', allDMs.length);
         console.log('Sample DM:', allDMs[0] ? { id: allDMs[0].id, role: allDMs[0].role, isActive: allDMs[0].isActive, invitationStatus: allDMs[0].invitationStatus } : 'None');
         
-        availableDMs = allDMs.filter(dm => dm.isActive && dm.invitationStatus === 'accepted');
+        availableDMs = allDMs.filter(dm => dm.isActive);
         console.log('Filtered available DMs:', availableDMs.length);
       } else {
         // Enterprise admins can see all DMs in their company
