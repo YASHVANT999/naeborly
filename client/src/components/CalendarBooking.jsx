@@ -15,6 +15,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -45,6 +46,7 @@ export default function CalendarBooking() {
   const [viewType, setViewType] = useState('week'); // 'week' or 'month'
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
+  const [isDMSelectionOpen, setIsDMSelectionOpen] = useState(false);
   const [bookingForm, setBookingForm] = useState({
     agenda: '',
     notes: ''
@@ -267,49 +269,133 @@ export default function CalendarBooking() {
         </div>
       </div>
 
-      {/* DM Selection */}
+      {/* DM Selection Button */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <User className="text-blue-600 mr-2" size={20} />
-            Select Decision Maker
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center">
+              <User className="text-blue-600 mr-2" size={20} />
+              Decision Maker Selection
+            </div>
+            <Dialog open={isDMSelectionOpen} onOpenChange={setIsDMSelectionOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="ml-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Select Decision Maker
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[80vh]">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center">
+                    <User className="text-blue-600 mr-2" size={20} />
+                    Select Decision Maker
+                  </DialogTitle>
+                  <DialogDescription>
+                    Choose a decision maker to view their availability and schedule a meeting.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="py-4 max-h-[60vh] overflow-y-auto">
+                  {dmsLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+                      <span className="ml-3">Loading decision makers...</span>
+                    </div>
+                  ) : availableDMs.length > 0 ? (
+                    <div className="space-y-3">
+                      {availableDMs.map((dm) => (
+                        <div
+                          key={dm.id}
+                          onClick={() => {
+                            setSelectedDM(dm);
+                            setIsDMSelectionOpen(false);
+                          }}
+                          className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                            selectedDM?.id === dm.id
+                              ? 'border-blue-500 bg-blue-50 shadow-sm'
+                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
+                              <User className="h-6 w-6 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900">{dm.name}</h4>
+                              <p className="text-sm text-gray-600">{dm.title}</p>
+                              <p className="text-xs text-gray-500">{dm.company}</p>
+                              {dm.industry && (
+                                <Badge variant="secondary" className="mt-1 text-xs">
+                                  {dm.industry}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-end space-y-1">
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                Available
+                              </Badge>
+                              {selectedDM?.id === dm.id && (
+                                <CheckCircle className="h-5 w-5 text-blue-600" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <User className="text-gray-400" size={32} />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No decision makers available</h3>
+                      <p className="text-gray-500 text-sm">
+                        There are currently no decision makers available for booking. Please check back later.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {dmsLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="animate-spin h-6 w-6 text-blue-600" />
-              <span className="ml-2">Loading decision makers...</span>
-            </div>
-          ) : availableDMs.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {availableDMs.map((dm) => (
-                <div
-                  key={dm.id}
-                  onClick={() => setSelectedDM(dm)}
-                  className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                    selectedDM?.id === dm.id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                      <User className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium">{dm.name}</h4>
-                      <p className="text-sm text-gray-600">{dm.title}</p>
-                      <p className="text-xs text-gray-500">{dm.company}</p>
-                    </div>
-                  </div>
+          {selectedDM ? (
+            <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                  <User className="h-5 w-5 text-white" />
                 </div>
-              ))}
+                <div>
+                  <h4 className="font-medium text-blue-900">{selectedDM.name}</h4>
+                  <p className="text-sm text-blue-700">{selectedDM.title}</p>
+                  <p className="text-xs text-blue-600">{selectedDM.company}</p>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setIsDMSelectionOpen(true)}
+                className="text-blue-600 border-blue-300 hover:bg-blue-100"
+              >
+                Change
+              </Button>
             </div>
           ) : (
             <div className="text-center py-8">
-              <User className="text-gray-300 mx-auto mb-4" size={48} />
-              <p className="text-gray-500">No decision makers available</p>
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <User className="text-gray-400" size={32} />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Decision Maker Selected</h3>
+              <p className="text-gray-500 mb-4 text-sm">
+                Please select a decision maker to view their availability and schedule meetings.
+              </p>
+              <Button 
+                onClick={() => setIsDMSelectionOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Select Decision Maker
+              </Button>
             </div>
           )}
         </CardContent>
