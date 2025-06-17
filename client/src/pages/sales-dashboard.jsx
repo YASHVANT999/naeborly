@@ -101,31 +101,37 @@ export default function SalesDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Dashboard Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Sales Rep Dashboard</h1>
-              <p className="text-gray-600 mt-1">Welcome back, {user?.firstName}!</p>
+        {/* Responsive Dashboard Header */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Sales Rep Dashboard</h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">Welcome back, {user?.firstName}!</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <Badge className="bg-green-100 text-green-800">{getPackageDisplayName(user?.packageType)}</Badge>
-              <Badge className="bg-blue-100 text-blue-800">{metrics?.standing === 'good' ? 'Good Standing' : 'Standing: ' + metrics?.standing}</Badge>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+              <Badge className="bg-green-100 text-green-800 text-xs sm:text-sm">
+                {getPackageDisplayName(user?.packageType)}
+              </Badge>
+              <Badge className="bg-blue-100 text-blue-800 text-xs sm:text-sm">
+                {metrics?.standing === 'good' ? 'Good Standing' : 'Standing: ' + metrics?.standing}
+              </Badge>
               <FlagsBadge />
-              <Button variant="ghost" size="sm">
-                <TrendingUp className="mr-2" size={16} />
-                Analytics
-              </Button>
-              <Button variant="ghost" size="sm">
-                <Users className="mr-2" size={16} />
-                Profile
-              </Button>
+              <div className="hidden sm:flex items-center space-x-2">
+                <Button variant="ghost" size="sm">
+                  <TrendingUp className="mr-2" size={16} />
+                  Analytics
+                </Button>
+                <Button variant="ghost" size="sm">
+                  <Users className="mr-2" size={16} />
+                  Profile
+                </Button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        {/* Responsive Metrics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -188,9 +194,9 @@ export default function SalesDashboard() {
           </Card>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Database Access Section */}
-          <div className="lg:col-span-2">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          {/* Responsive Database Access Section */}
+          <div className="lg:col-span-2 order-2 lg:order-1">
             {!databaseUnlocked ? (
               <Card className="shadow-lg">
                 <CardHeader>
@@ -279,8 +285,8 @@ export default function SalesDashboard() {
             )}
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
+          {/* Responsive Sidebar */}
+          <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
             {/* Calendar Booking System */}
             <CalendarBooking />
             

@@ -472,7 +472,6 @@ export default function CalendarBooking() {
 
                 {/* Responsive Calendar Views */}
                 {viewType === 'agenda' ? (
-                  /* Agenda View - Mobile Optimized */
                   <div className="space-y-3">
                     {weekDays.map((day) => (
                       <Card key={day.toISOString()} className="border border-gray-200">
@@ -505,31 +504,25 @@ export default function CalendarBooking() {
                     ))}
                   </div>
                 ) : (
-                  /* Week/Month View - Desktop Optimized */
                   <div className="border rounded-lg overflow-hidden">
                     <div className="overflow-x-auto">
                       <div className="min-w-[640px] lg:min-w-0">
                         <div className={`grid ${isMobileView ? 'grid-cols-3' : 'grid-cols-6'} gap-0`}>
-                          {/* Time column header */}
                           <div className="p-2 sm:p-3 bg-gray-50 border-b font-medium text-xs sm:text-sm text-center">
                             Time
                           </div>
-                          {/* Day headers - responsive columns */}
                           {(isMobileView ? weekDays.slice(0, 2) : weekDays).map((day) => (
                             <div key={day.toISOString()} className="p-2 sm:p-3 bg-gray-50 border-b border-l font-medium text-xs sm:text-sm text-center">
-                              <div>{day.toLocaleDateString('en-US', { weekday: isMobileView ? 'short' : 'short' })}</div>
+                              <div>{day.toLocaleDateString('en-US', { weekday: 'short' })}</div>
                               <div className="text-sm sm:text-lg font-bold">{day.getDate()}</div>
                             </div>
                           ))}
                           
-                          {/* Time slots */}
                           {timeSlots.map((time) => (
                             <div key={time} className="contents">
-                              {/* Time label */}
                               <div className="p-1 sm:p-2 border-b border-r bg-gray-50 text-xs sm:text-sm font-medium text-center">
                                 {time}
                               </div>
-                              {/* Day slots */}
                               {(isMobileView ? weekDays.slice(0, 2) : weekDays).map((day) => {
                                 const slot = getSlotForDateTime(day, time);
                                 return (
@@ -555,9 +548,9 @@ export default function CalendarBooking() {
         </Card>
       )}
 
-      {/* Booking Confirmation Dialog */}
+      {/* Responsive Booking Confirmation Dialog */}
       <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[95vw] max-w-md sm:max-w-lg mx-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center">
               <Plus className="text-blue-600 mr-2" size={20} />
