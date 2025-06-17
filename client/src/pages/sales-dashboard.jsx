@@ -13,7 +13,8 @@ import {
   CalendarPlus,
   Loader2,
   User,
-  Clock
+  Clock,
+  Menu
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
@@ -124,6 +125,12 @@ export default function SalesDashboard() {
                 <Button variant="ghost" size="sm">
                   <Users className="mr-2" size={16} />
                   Profile
+                </Button>
+              </div>
+              {/* Mobile Menu Button */}
+              <div className="sm:hidden">
+                <Button variant="ghost" size="sm">
+                  <Menu size={20} />
                 </Button>
               </div>
             </div>
