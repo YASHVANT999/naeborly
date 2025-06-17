@@ -43,7 +43,8 @@ export default function CalendarBooking() {
   const { toast } = useToast();
   const [selectedDM, setSelectedDM] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewType, setViewType] = useState('week'); // 'week' or 'month'
+  const [viewType, setViewType] = useState('week'); // 'week', 'month', or 'agenda'
+  const [isMobileView, setIsMobileView] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
   const [isDMSelectionOpen, setIsDMSelectionOpen] = useState(false);
@@ -51,6 +52,22 @@ export default function CalendarBooking() {
     agenda: '',
     notes: ''
   });
+
+  // Responsive screen size detection
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const isMobile = window.innerWidth < 768;
+      setIsMobileView(isMobile);
+      // Auto-switch to agenda view on mobile for better UX
+      if (isMobile && viewType === 'week') {
+        setViewType('agenda');
+      }
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, [viewType]);
 
   // Get available DMs
   const { data: availableDMs = [], isLoading: dmsLoading } = useQuery({
@@ -245,23 +262,24 @@ export default function CalendarBooking() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-            <CalendarIcon className="text-blue-600 mr-3" size={28} />
-            Meeting Calendar
+      {/* Responsive Header */}
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+            <CalendarIcon className="text-blue-600 mr-2 sm:mr-3 flex-shrink-0" size={isMobileView ? 20 : 28} />
+            <span className="truncate">Meeting Calendar</span>
           </h2>
-          <p className="text-gray-600 mt-1">
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Book meetings with decision makers
           </p>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <Select value={viewType} onValueChange={setViewType}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-full sm:w-32 min-w-[120px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="agenda">Agenda View</SelectItem>
               <SelectItem value="week">Week View</SelectItem>
               <SelectItem value="month">Month View</SelectItem>
             </SelectContent>
@@ -269,33 +287,33 @@ export default function CalendarBooking() {
         </div>
       </div>
 
-      {/* DM Selection Button */}
+      {/* Responsive DM Selection */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center">
-              <User className="text-blue-600 mr-2" size={20} />
-              Decision Maker Selection
+          <CardTitle className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+            <div className="flex items-center min-w-0">
+              <User className="text-blue-600 mr-2 flex-shrink-0" size={20} />
+              <span className="truncate">Decision Maker Selection</span>
             </div>
             <Dialog open={isDMSelectionOpen} onOpenChange={setIsDMSelectionOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="ml-auto">
+                <Button variant="outline" className="w-full sm:w-auto sm:ml-auto">
                   <Plus className="h-4 w-4 mr-2" />
                   Select Decision Maker
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh]">
+              <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] sm:max-h-[80vh]">
                 <DialogHeader>
-                  <DialogTitle className="flex items-center">
-                    <User className="text-blue-600 mr-2" size={20} />
-                    Select Decision Maker
+                  <DialogTitle className="flex items-center text-base sm:text-lg">
+                    <User className="text-blue-600 mr-2 flex-shrink-0" size={20} />
+                    <span className="truncate">Select Decision Maker</span>
                   </DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription className="text-sm">
                     Choose a decision maker to view their availability and schedule a meeting.
                   </DialogDescription>
                 </DialogHeader>
                 
-                <div className="py-4 max-h-[60vh] overflow-y-auto">
+                <div className="py-4 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
                   {dmsLoading ? (
                     <div className="flex items-center justify-center py-12">
                       <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
@@ -405,23 +423,25 @@ export default function CalendarBooking() {
       {selectedDM && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center">
-                <Calendar className="text-blue-600 mr-2" size={20} />
-                Availability for {selectedDM.name}
+            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+              <CardTitle className="flex items-center min-w-0">
+                <Calendar className="text-blue-600 mr-2 flex-shrink-0" size={20} />
+                <span className="truncate">Availability for {selectedDM.name}</span>
               </CardTitle>
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm" onClick={() => navigateDate('prev')}>
+              <div className="flex items-center justify-between sm:justify-end space-x-2">
+                <Button variant="outline" size="sm" onClick={() => navigateDate('prev')} className="flex-shrink-0">
                   <ChevronLeft className="h-4 w-4" />
+                  <span className="sr-only">Previous</span>
                 </Button>
-                <span className="font-medium min-w-[200px] text-center">
-                  {viewType === 'week' 
-                    ? `Week of ${currentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+                <span className="font-medium text-sm sm:text-base text-center min-w-0 flex-1 sm:min-w-[200px] sm:flex-none px-2">
+                  {viewType === 'week' || viewType === 'agenda'
+                    ? `Week of ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
                     : currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
                   }
                 </span>
-                <Button variant="outline" size="sm" onClick={() => navigateDate('next')}>
+                <Button variant="outline" size="sm" onClick={() => navigateDate('next')} className="flex-shrink-0">
                   <ChevronRight className="h-4 w-4" />
+                  <span className="sr-only">Next</span>
                 </Button>
               </div>
             </div>
@@ -434,61 +454,101 @@ export default function CalendarBooking() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Legend */}
-                <div className="flex items-center space-x-6 text-sm">
+                {/* Responsive Legend */}
+                <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs sm:text-sm">
                   <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-100 border border-green-300 rounded"></div>
                     <span>Available</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-red-100 border border-red-300 rounded"></div>
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-red-100 border border-red-300 rounded"></div>
                     <span>Booked</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded"></div>
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-100 border border-gray-300 rounded"></div>
                     <span>Unavailable</span>
                   </div>
                 </div>
 
-                {/* Week View Calendar */}
-                <div className="border rounded-lg overflow-hidden">
-                  <div className="grid grid-cols-6 gap-0">
-                    {/* Time column header */}
-                    <div className="p-3 bg-gray-50 border-b font-medium text-sm text-center">
-                      Time
-                    </div>
-                    {/* Day headers */}
+                {/* Responsive Calendar Views */}
+                {viewType === 'agenda' ? (
+                  /* Agenda View - Mobile Optimized */
+                  <div className="space-y-3">
                     {weekDays.map((day) => (
-                      <div key={day.toISOString()} className="p-3 bg-gray-50 border-b border-l font-medium text-sm text-center">
-                        <div>{day.toLocaleDateString('en-US', { weekday: 'short' })}</div>
-                        <div className="text-lg font-bold">{day.getDate()}</div>
-                      </div>
-                    ))}
-                    
-                    {/* Time slots */}
-                    {timeSlots.map((time) => (
-                      <div key={time} className="contents">
-                        {/* Time label */}
-                        <div className="p-2 border-b border-r bg-gray-50 text-sm font-medium text-center">
-                          {time}
-                        </div>
-                        {/* Day slots */}
-                        {weekDays.map((day) => {
-                          const slot = getSlotForDateTime(day, time);
-                          return (
-                            <div
-                              key={`${day.toISOString()}-${time}`}
-                              onClick={() => handleSlotClick(slot)}
-                              className={`p-2 border-b border-l h-12 flex items-center justify-center text-sm font-medium transition-colors ${getSlotClassName(slot)}`}
-                            >
-                              {getSlotContent(slot)}
-                            </div>
-                          );
-                        })}
-                      </div>
+                      <Card key={day.toISOString()} className="border border-gray-200">
+                        <CardHeader className="pb-3">
+                          <h3 className="text-base font-semibold text-gray-900">
+                            {day.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                          </h3>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                            {timeSlots.map((time) => {
+                              const slot = getSlotForDateTime(day, time);
+                              return (
+                                <button
+                                  key={`${day.toISOString()}-${time}`}
+                                  onClick={() => handleSlotClick(slot)}
+                                  disabled={!slot || !slot.available}
+                                  className={`p-3 rounded-lg text-sm font-medium transition-all duration-200 min-h-[48px] flex items-center justify-center ${getSlotClassName(slot)} ${slot && slot.available ? 'hover:scale-105 active:scale-95' : ''}`}
+                                >
+                                  <div className="text-center">
+                                    <div className="text-xs">{time}</div>
+                                    <div className="text-lg">{getSlotContent(slot)}</div>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
-                </div>
+                ) : (
+                  /* Week/Month View - Desktop Optimized */
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <div className="min-w-[640px] lg:min-w-0">
+                        <div className={`grid ${isMobileView ? 'grid-cols-3' : 'grid-cols-6'} gap-0`}>
+                          {/* Time column header */}
+                          <div className="p-2 sm:p-3 bg-gray-50 border-b font-medium text-xs sm:text-sm text-center">
+                            Time
+                          </div>
+                          {/* Day headers - responsive columns */}
+                          {(isMobileView ? weekDays.slice(0, 2) : weekDays).map((day) => (
+                            <div key={day.toISOString()} className="p-2 sm:p-3 bg-gray-50 border-b border-l font-medium text-xs sm:text-sm text-center">
+                              <div>{day.toLocaleDateString('en-US', { weekday: isMobileView ? 'short' : 'short' })}</div>
+                              <div className="text-sm sm:text-lg font-bold">{day.getDate()}</div>
+                            </div>
+                          ))}
+                          
+                          {/* Time slots */}
+                          {timeSlots.map((time) => (
+                            <div key={time} className="contents">
+                              {/* Time label */}
+                              <div className="p-1 sm:p-2 border-b border-r bg-gray-50 text-xs sm:text-sm font-medium text-center">
+                                {time}
+                              </div>
+                              {/* Day slots */}
+                              {(isMobileView ? weekDays.slice(0, 2) : weekDays).map((day) => {
+                                const slot = getSlotForDateTime(day, time);
+                                return (
+                                  <div
+                                    key={`${day.toISOString()}-${time}`}
+                                    onClick={() => handleSlotClick(slot)}
+                                    className={`p-1 sm:p-2 border-b border-l h-10 sm:h-12 flex items-center justify-center text-xs sm:text-sm font-medium transition-all duration-200 ${getSlotClassName(slot)} ${slot && slot.available ? 'hover:scale-105 active:scale-95' : ''}`}
+                                  >
+                                    {getSlotContent(slot)}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
