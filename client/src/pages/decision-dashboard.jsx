@@ -21,6 +21,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import FlagsBadge from "@/components/FlagsBadge";
 
 export default function DecisionDashboard() {
   const { user } = useAuth();
@@ -125,6 +126,7 @@ export default function DecisionDashboard() {
               <Badge className="bg-green-100 text-green-800">
                 {metrics?.standing === 'good' ? 'Excellent Standing' : 'Standing: ' + metrics?.standing}
               </Badge>
+              <FlagsBadge />
               <Button variant="ghost" size="sm">
                 <Settings className="mr-2" size={16} />
                 Settings

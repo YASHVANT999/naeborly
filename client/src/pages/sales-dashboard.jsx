@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CalendarBooking from "@/components/CalendarBooking";
+import FlagsBadge from "@/components/FlagsBadge";
 
 export default function SalesDashboard() {
   const { user } = useAuth();
@@ -108,6 +109,7 @@ export default function SalesDashboard() {
             <div className="flex items-center space-x-4">
               <Badge className="bg-green-100 text-green-800">{getPackageDisplayName(user?.packageType)}</Badge>
               <Badge className="bg-blue-100 text-blue-800">{metrics?.standing === 'good' ? 'Good Standing' : 'Standing: ' + metrics?.standing}</Badge>
+              <FlagsBadge />
               <Button variant="ghost" size="sm">
                 <TrendingUp className="mr-2" size={16} />
                 Analytics

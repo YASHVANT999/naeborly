@@ -2416,6 +2416,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's flag count
+  app.get("/api/user/flags-count", async (req, res) => {
+    if (!req.session || !(req.session as any).userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    try {
+      const currentUser = await storage.getUserById((req.session as any).userId);
+      
+      let flagCount = 0;
+      if (currentUser.role === 'decision_maker') {
+        // Get flags raised against this DM
+        const flags = await storage.getDMFlags(currentUser.id);
+        flagCount = flags.filter(flag => flag.status === 'open' || flag.status === 'pending').length;
+      } else if (currentUser.role === 'sales_rep') {
+        // Get flags raised against this sales rep (could be from performance issues, complaints, etc.)
+        const flags = await storage.getFlagsByCompany(currentUser.companyDomain || currentUser.company);
+        flagCount = flags.filter(flag => 
+          flag.flaggedUserId === currentUser.id && 
+          (flag.status === 'open' || flag.status === 'pending')
+        ).length;
+      }
+      
+      res.json({ flags: flagCount });
+    } catch (error) {
+      console.error('Error getting user flag count:', error);
+      res.status(500).json({ message: "Failed to get flag count" });
+    }
+  });
+
   // Get user's upcoming meetings
   app.get("/api/calendar/my-meetings", async (req, res) => {
     if (!req.session || !(req.session as any).userId) {
