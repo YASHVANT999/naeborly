@@ -31,6 +31,7 @@ import DecisionMakerAvailability from "@/pages/signup/decision-maker/availabilit
 import DecisionMakerNominate from "@/pages/signup/decision-maker/nominate";
 import DecisionMakerChoosePackage from "@/pages/signup/decision-maker/package";
 import TestSignup from "@/pages/test-signup";
+import FlagsManagement from "@/pages/flags-management";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -66,6 +67,11 @@ function Router() {
       </Route>
       <Route path="/evaluation/rep" component={PostCallEvaluation} />
       <Route path="/evaluation/dm" component={CallFeedback} />
+      <Route path="/flags">
+        <ProtectedRoute>
+          <FlagsManagement />
+        </ProtectedRoute>
+      </Route>
       <Route path="/signup/personal" component={PersonalInfo} />
       <Route path="/signup/professional" component={ProfessionalBackground} />
       <Route path="/signup/availability" component={AvailabilityPreferences} />

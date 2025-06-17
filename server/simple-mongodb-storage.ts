@@ -988,6 +988,30 @@ export class SimpleMongoDBStorage implements IStorage {
     return calls.map(call => this.toPlainObject(call));
   }
 
+  async getFlagsByRep(repId: string): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const { DMFlags } = await import('./mongodb');
+      const flags = await DMFlags.find({ flaggedBy: repId }).sort({ createdAt: -1 });
+      return flags.map(flag => this.toPlainObject(flag));
+    } catch (error) {
+      console.error('Error fetching flags by rep:', error);
+      return [];
+    }
+  }
+
+  async getAllFlags(): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const { DMFlags } = await import('./mongodb');
+      const flags = await DMFlags.find({}).sort({ createdAt: -1 });
+      return flags.map(flag => this.toPlainObject(flag));
+    } catch (error) {
+      console.error('Error fetching all flags:', error);
+      return [];
+    }
+  }
+
   private toPlainObject(mongooseDoc: any): any {
     const obj = mongooseDoc.toObject();
     // Convert MongoDB _id to id for consistency
