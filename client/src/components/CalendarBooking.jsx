@@ -1,375 +1,488 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Users, Video, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  User,
+  Building,
+  Phone,
+  CheckCircle,
+  XCircle,
+  Calendar as CalendarIcon,
+  Loader2,
+  Plus
+} from "lucide-react";
 
-export default function CalendarBooking({ decisionMakers = [] }) {
+export default function CalendarBooking() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [selectedDecisionMaker, setSelectedDecisionMaker] = useState(null);
+  const [selectedDM, setSelectedDM] = useState(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewType, setViewType] = useState('week'); // 'week' or 'month'
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [isBookingOpen, setIsBookingOpen] = useState(false);
-  const [meetingDetails, setMeetingDetails] = useState({
-    title: "",
-    description: "",
-    duration: 30
+  const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
+  const [bookingForm, setBookingForm] = useState({
+    agenda: '',
+    notes: ''
   });
 
-  // Get current date and next 7 days for availability checking
-  const startDate = new Date().toISOString();
-  const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-  // Check calendar integration status
-  const { data: calendarStatus } = useQuery({
-    queryKey: ['/api/calendar/status'],
+  // Get available DMs
+  const { data: availableDMs = [], isLoading: dmsLoading } = useQuery({
+    queryKey: ['/api/calendar/available-dms'],
     retry: false,
   });
 
-  // Get available slots for selected decision maker
-  const { data: availabilityData, isLoading: loadingAvailability } = useQuery({
-    queryKey: ['/api/calendar/availability', selectedDecisionMaker?.id, startDate, endDate],
-    enabled: !!selectedDecisionMaker,
+  // Get DM availability for selected DM and date range
+  const { data: availability = {}, isLoading: availabilityLoading, refetch: refetchAvailability } = useQuery({
+    queryKey: ['/api/calendar/dm-availability', selectedDM?.id, getDateRange()],
+    enabled: !!selectedDM,
+    queryFn: async () => {
+      const { startDate, endDate } = getDateRange();
+      return await apiRequest(`/api/calendar/dm-availability/${selectedDM.id}?startDate=${startDate}&endDate=${endDate}`);
+    },
     retry: false,
   });
 
-  // Connect to Google Calendar
-  const connectCalendarMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('/api/auth/google/connect');
-      return response;
+  // Get user's meetings
+  const { data: myMeetings = [], refetch: refetchMeetings } = useQuery({
+    queryKey: ['/api/calendar/my-meetings', getDateRange()],
+    queryFn: async () => {
+      const { startDate, endDate } = getDateRange();
+      return await apiRequest(`/api/calendar/my-meetings?startDate=${startDate}&endDate=${endDate}`);
     },
-    onSuccess: (data) => {
-      if (data.authUrl) {
-        window.location.href = data.authUrl;
-      }
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to connect to Google Calendar",
-        variant: "destructive",
-      });
-    }
+    retry: false,
   });
 
-  // Schedule meeting mutation
-  const scheduleMeetingMutation = useMutation({
-    mutationFn: async (meetingData) => {
-      return await apiRequest('/api/calendar/schedule', {
+  // Book meeting mutation
+  const bookMeetingMutation = useMutation({
+    mutationFn: async (bookingData) => {
+      return await apiRequest('/api/calendar/book-slot', {
         method: 'POST',
-        body: JSON.stringify(meetingData)
+        body: JSON.stringify(bookingData),
       });
     },
     onSuccess: (data) => {
       toast({
-        title: "Meeting Scheduled",
-        description: "Your meeting has been scheduled successfully!",
+        title: "Meeting Booked Successfully",
+        description: `Meeting with ${selectedSlot.dmName} scheduled for ${formatDateTime(selectedSlot.startTime)}`,
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/sales-rep/calls'] });
-      setIsBookingOpen(false);
+      setIsBookingDialogOpen(false);
       setSelectedSlot(null);
-      setMeetingDetails({ title: "", description: "", duration: 30 });
+      setBookingForm({ agenda: '', notes: '' });
+      refetchAvailability();
+      refetchMeetings();
     },
     onError: (error) => {
       toast({
-        title: "Scheduling Failed",
-        description: error.message || "Failed to schedule meeting",
+        title: "Booking Failed",
+        description: error.message || "Failed to book the meeting slot",
         variant: "destructive",
       });
-    }
+    },
   });
 
-  const handleScheduleMeeting = () => {
-    if (!selectedSlot || !selectedDecisionMaker) return;
+  function getDateRange() {
+    const start = new Date(currentDate);
+    const end = new Date(currentDate);
 
-    const startTime = selectedSlot.start.toISOString();
-    const endTime = selectedSlot.end.toISOString();
+    if (viewType === 'week') {
+      // Get start of week (Monday)
+      const dayOfWeek = start.getDay();
+      const diff = start.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      start.setDate(diff);
+      start.setHours(0, 0, 0, 0);
+      
+      // Get end of week (Sunday)
+      end.setDate(start.getDate() + 6);
+      end.setHours(23, 59, 59, 999);
+    } else {
+      // Get start of month
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+      
+      // Get end of month
+      end.setMonth(end.getMonth() + 1, 0);
+      end.setHours(23, 59, 59, 999);
+    }
 
-    scheduleMeetingMutation.mutate({
-      decisionMakerId: selectedDecisionMaker.id,
-      startTime,
-      endTime,
-      title: meetingDetails.title || `Meeting with ${selectedDecisionMaker.firstName} ${selectedDecisionMaker.lastName}`,
-      description: meetingDetails.description,
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    });
-  };
-
-  const formatTimeSlot = (slot) => {
-    const start = new Date(slot.start);
-    const end = new Date(slot.end);
-    const day = start.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-    const timeRange = `${start.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit' 
-    })} - ${end.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit' 
-    })}`;
-    
-    return { day, timeRange };
-  };
-
-  const groupSlotsByDay = (slots) => {
-    if (!slots) return {};
-    
-    return slots.reduce((groups, slot) => {
-      const date = new Date(slot.start).toDateString();
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(slot);
-      return groups;
-    }, {});
-  };
-
-  // Show connection prompt if calendar not connected
-  if (!calendarStatus?.connected) {
-    return (
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Calendar className="text-blue-500 mr-3" size={20} />
-            Calendar Integration
-          </CardTitle>
-          <CardDescription>
-            Connect your Google Calendar to view availability and schedule meetings
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-6">
-            <AlertCircle className="text-orange-500 mx-auto mb-4" size={48} />
-            <p className="text-gray-600 mb-4">
-              Connect your Google Calendar to enable real-time scheduling
-            </p>
-            <Button 
-              onClick={() => connectCalendarMutation.mutate()}
-              disabled={connectCalendarMutation.isPending}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {connectCalendarMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Connect Google Calendar
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return {
+      startDate: start.toISOString(),
+      endDate: end.toISOString()
+    };
   }
+
+  function navigateDate(direction) {
+    const newDate = new Date(currentDate);
+    if (viewType === 'week') {
+      newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
+    } else {
+      newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
+    }
+    setCurrentDate(newDate);
+  }
+
+  function formatDateTime(dateString) {
+    return new Date(dateString).toLocaleString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
+  function formatTime(dateString) {
+    return new Date(dateString).toLocaleString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
+  function getWeekDays() {
+    const start = new Date(currentDate);
+    const dayOfWeek = start.getDay();
+    const diff = start.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+    start.setDate(diff);
+
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(start);
+      day.setDate(start.getDate() + i);
+      days.push(day);
+    }
+    return days;
+  }
+
+  function getTimeSlots() {
+    const slots = [];
+    for (let hour = 9; hour < 17; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(time);
+      }
+    }
+    return slots;
+  }
+
+  function getSlotForDateTime(date, time) {
+    if (!availability.availabilitySlots) return null;
+    
+    const [hour, minute] = time.split(':').map(Number);
+    const slotDateTime = new Date(date);
+    slotDateTime.setHours(hour, minute, 0, 0);
+    
+    return availability.availabilitySlots.find(slot => {
+      const slotTime = new Date(slot.startTime);
+      return Math.abs(slotTime.getTime() - slotDateTime.getTime()) < 60000; // 1 minute tolerance
+    });
+  }
+
+  function handleSlotClick(slot) {
+    if (!slot || !slot.available) return;
+    
+    setSelectedSlot(slot);
+    setIsBookingDialogOpen(true);
+  }
+
+  function handleBookingSubmit() {
+    if (!selectedSlot) return;
+
+    bookMeetingMutation.mutate({
+      dmId: selectedSlot.dmId,
+      startTime: selectedSlot.startTime,
+      endTime: selectedSlot.endTime,
+      agenda: bookingForm.agenda || 'Business Meeting',
+      notes: bookingForm.notes
+    });
+  }
+
+  function getSlotClassName(slot) {
+    if (!slot) return "bg-gray-100 cursor-not-allowed";
+    if (slot.available) return "bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer border-green-300";
+    if (slot.booked) return "bg-red-100 text-red-800 cursor-not-allowed border-red-300";
+    return "bg-gray-100 cursor-not-allowed";
+  }
+
+  function getSlotContent(slot) {
+    if (!slot) return "";
+    if (slot.available) return "✅";
+    if (slot.booked) return "❌";
+    return "";
+  }
+
+  // Skip weekends
+  const weekDays = getWeekDays().filter(day => day.getDay() !== 0 && day.getDay() !== 6);
+  const timeSlots = getTimeSlots();
 
   return (
     <div className="space-y-6">
-      {/* Calendar Status */}
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Calendar className="text-green-500 mr-3" size={20} />
-              Calendar Integration
-            </div>
-            <Badge className="bg-green-100 text-green-800">
-              <CheckCircle className="mr-1 h-3 w-3" />
-              Connected
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-      </Card>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+            <CalendarIcon className="text-blue-600 mr-3" size={28} />
+            Meeting Calendar
+          </h2>
+          <p className="text-gray-600 mt-1">
+            Book meetings with decision makers
+          </p>
+        </div>
+        <div className="flex items-center space-x-4">
+          <Select value={viewType} onValueChange={setViewType}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="week">Week View</SelectItem>
+              <SelectItem value="month">Month View</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-      {/* Decision Maker Selection */}
-      <Card className="shadow-lg">
+      {/* DM Selection */}
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Users className="text-purple-500 mr-3" size={20} />
-            Schedule Meeting
+            <User className="text-blue-600 mr-2" size={20} />
+            Select Decision Maker
           </CardTitle>
-          <CardDescription>
-            Select a decision maker to view their availability
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="decision-maker">Decision Maker</Label>
-              <Select onValueChange={(value) => {
-                const dm = decisionMakers.find(dm => dm.id === value);
-                setSelectedDecisionMaker(dm);
-                setSelectedSlot(null);
-              }}>
-                <SelectTrigger id="decision-maker">
-                  <SelectValue placeholder="Select a decision maker" />
-                </SelectTrigger>
-                <SelectContent>
-                  {decisionMakers.map((dm) => (
-                    <SelectItem key={dm.id} value={dm.id}>
-                      {dm.firstName} {dm.lastName} - {dm.company}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {dmsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="animate-spin h-6 w-6 text-blue-600" />
+              <span className="ml-2">Loading decision makers...</span>
             </div>
-
-            {selectedDecisionMaker && (
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-blue-900">
-                  {selectedDecisionMaker.firstName} {selectedDecisionMaker.lastName}
-                </h4>
-                <p className="text-sm text-blue-700">
-                  {selectedDecisionMaker.jobTitle} at {selectedDecisionMaker.company}
-                </p>
-              </div>
-            )}
-          </div>
+          ) : availableDMs.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {availableDMs.map((dm) => (
+                <div
+                  key={dm.id}
+                  onClick={() => setSelectedDM(dm)}
+                  className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                    selectedDM?.id === dm.id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                      <User className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium">{dm.name}</h4>
+                      <p className="text-sm text-gray-600">{dm.title}</p>
+                      <p className="text-xs text-gray-500">{dm.company}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <User className="text-gray-300 mx-auto mb-4" size={48} />
+              <p className="text-gray-500">No decision makers available</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Available Time Slots */}
-      {selectedDecisionMaker && (
-        <Card className="shadow-lg">
+      {/* Calendar View */}
+      {selectedDM && (
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Clock className="text-blue-500 mr-3" size={20} />
-              Available Times
-            </CardTitle>
-            <CardDescription>
-              Select an available time slot for your meeting
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center">
+                <Calendar className="text-blue-600 mr-2" size={20} />
+                Availability for {selectedDM.name}
+              </CardTitle>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" onClick={() => navigateDate('prev')}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="font-medium min-w-[200px] text-center">
+                  {viewType === 'week' 
+                    ? `Week of ${currentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+                    : currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                  }
+                </span>
+                <Button variant="outline" size="sm" onClick={() => navigateDate('next')}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            {loadingAvailability ? (
-              <div className="text-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-                <p className="text-gray-600">Loading availability...</p>
-              </div>
-            ) : availabilityData?.availableSlots?.length > 0 ? (
-              <div className="space-y-4">
-                {Object.entries(groupSlotsByDay(availabilityData.availableSlots)).map(([date, slots]) => (
-                  <div key={date} className="space-y-2">
-                    <h4 className="font-medium text-gray-900">
-                      {new Date(date).toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}
-                    </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {slots.map((slot, index) => {
-                        const { timeRange } = formatTimeSlot(slot);
-                        const isSelected = selectedSlot === slot;
-                        
-                        return (
-                          <Button
-                            key={index}
-                            variant={isSelected ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setSelectedSlot(slot)}
-                            className={`text-xs ${isSelected ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                          >
-                            {timeRange}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-                
-                {selectedSlot && (
-                  <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="w-full bg-green-600 hover:bg-green-700">
-                        <Video className="mr-2 h-4 w-4" />
-                        Book Selected Time
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Schedule Meeting</DialogTitle>
-                        <DialogDescription>
-                          Confirm your meeting details
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <p className="font-medium">
-                            {selectedDecisionMaker.firstName} {selectedDecisionMaker.lastName}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {formatTimeSlot(selectedSlot).day} at {formatTimeSlot(selectedSlot).timeRange}
-                          </p>
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="meeting-title">Meeting Title</Label>
-                          <Input
-                            id="meeting-title"
-                            value={meetingDetails.title}
-                            onChange={(e) => setMeetingDetails(prev => ({ ...prev, title: e.target.value }))}
-                            placeholder="Sales Discussion"
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="meeting-description">Description (Optional)</Label>
-                          <Input
-                            id="meeting-description"
-                            value={meetingDetails.description}
-                            onChange={(e) => setMeetingDetails(prev => ({ ...prev, description: e.target.value }))}
-                            placeholder="Discuss partnership opportunities..."
-                          />
-                        </div>
-                        
-                        <Button 
-                          onClick={handleScheduleMeeting}
-                          disabled={scheduleMeetingMutation.isPending}
-                          className="w-full"
-                        >
-                          {scheduleMeetingMutation.isPending ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Scheduling...
-                            </>
-                          ) : (
-                            "Confirm Meeting"
-                          )}
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                )}
+            {availabilityLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+                <span className="ml-2">Loading availability...</span>
               </div>
             ) : (
-              <div className="text-center py-8">
-                <Clock className="text-gray-300 mx-auto mb-4" size={48} />
-                <p className="text-gray-500">
-                  No available time slots found for the next 7 days
-                </p>
-                <p className="text-sm text-gray-400 mt-2">
-                  The decision maker may not have connected their calendar or has no availability
-                </p>
+              <div className="space-y-4">
+                {/* Legend */}
+                <div className="flex items-center space-x-6 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
+                    <span>Available</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-red-100 border border-red-300 rounded"></div>
+                    <span>Booked</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded"></div>
+                    <span>Unavailable</span>
+                  </div>
+                </div>
+
+                {/* Week View Calendar */}
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="grid grid-cols-6 gap-0">
+                    {/* Time column header */}
+                    <div className="p-3 bg-gray-50 border-b font-medium text-sm text-center">
+                      Time
+                    </div>
+                    {/* Day headers */}
+                    {weekDays.map((day) => (
+                      <div key={day.toISOString()} className="p-3 bg-gray-50 border-b border-l font-medium text-sm text-center">
+                        <div>{day.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                        <div className="text-lg font-bold">{day.getDate()}</div>
+                      </div>
+                    ))}
+                    
+                    {/* Time slots */}
+                    {timeSlots.map((time) => (
+                      <div key={time} className="contents">
+                        {/* Time label */}
+                        <div className="p-2 border-b border-r bg-gray-50 text-sm font-medium text-center">
+                          {time}
+                        </div>
+                        {/* Day slots */}
+                        {weekDays.map((day) => {
+                          const slot = getSlotForDateTime(day, time);
+                          return (
+                            <div
+                              key={`${day.toISOString()}-${time}`}
+                              onClick={() => handleSlotClick(slot)}
+                              className={`p-2 border-b border-l h-12 flex items-center justify-center text-sm font-medium transition-colors ${getSlotClassName(slot)}`}
+                            >
+                              {getSlotContent(slot)}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
       )}
+
+      {/* Booking Confirmation Dialog */}
+      <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Plus className="text-blue-600 mr-2" size={20} />
+              Book Meeting Slot
+            </DialogTitle>
+            <DialogDescription>
+              Confirm your meeting details with {selectedSlot?.dmName}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedSlot && (
+            <div className="space-y-4 py-4">
+              <div className="bg-blue-50 p-4 rounded-lg space-y-2">
+                <div className="flex items-center text-sm">
+                  <User className="h-4 w-4 mr-2 text-blue-600" />
+                  <span className="font-medium">{selectedSlot.dmName}</span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <Clock className="h-4 w-4 mr-2 text-blue-600" />
+                  <span>{formatDateTime(selectedSlot.startTime)}</span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <Calendar className="h-4 w-4 mr-2 text-blue-600" />
+                  <span>30 minutes</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="agenda">Meeting Agenda</Label>
+                  <Input
+                    id="agenda"
+                    placeholder="e.g., Product Demo, Partnership Discussion"
+                    value={bookingForm.agenda}
+                    onChange={(e) => setBookingForm(prev => ({ ...prev, agenda: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="notes">Additional Notes (Optional)</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Any additional information or preparation notes"
+                    rows={3}
+                    value={bookingForm.notes}
+                    onChange={(e) => setBookingForm(prev => ({ ...prev, notes: e.target.value }))}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBookingDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleBookingSubmit}
+              disabled={bookMeetingMutation.isPending}
+            >
+              {bookMeetingMutation.isPending ? (
+                <>
+                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                  Booking...
+                </>
+              ) : (
+                'Confirm Booking'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

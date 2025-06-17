@@ -2187,6 +2187,298 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== CALENDAR & BOOKING ROUTES =====
+
+  // Get DM availability for calendar view
+  app.get("/api/calendar/dm-availability/:dmId", async (req, res) => {
+    if (!req.session || !req.session.userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    try {
+      const { dmId } = req.params;
+      const { startDate, endDate } = req.query;
+      
+      // Get DM availability slots
+      const dm = await storage.getUserById(dmId);
+      if (!dm || dm.role !== 'decision_maker') {
+        return res.status(404).json({ message: "Decision maker not found" });
+      }
+
+      // Generate availability slots for the date range
+      const start = new Date(startDate as string);
+      const end = new Date(endDate as string);
+      const availabilitySlots = [];
+      const bookedSlots = await storage.getCallsByDateRange(dmId, start, end);
+
+      // Generate time slots for each day (9 AM to 5 PM, 30-minute intervals)
+      for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+        // Skip weekends for business meetings
+        if (date.getDay() === 0 || date.getDay() === 6) continue;
+
+        for (let hour = 9; hour < 17; hour++) {
+          for (let minute = 0; minute < 60; minute += 30) {
+            const slotStart = new Date(date);
+            slotStart.setHours(hour, minute, 0, 0);
+            
+            const slotEnd = new Date(slotStart);
+            slotEnd.setMinutes(slotEnd.getMinutes() + 30);
+
+            // Check if slot is already booked
+            const isBooked = bookedSlots.some(booking => {
+              const bookingStart = new Date(booking.scheduledAt);
+              return Math.abs(bookingStart.getTime() - slotStart.getTime()) < 30 * 60 * 1000;
+            });
+
+            availabilitySlots.push({
+              id: `${dmId}-${slotStart.getTime()}`,
+              dmId,
+              dmName: `${dm.firstName} ${dm.lastName}`,
+              startTime: slotStart.toISOString(),
+              endTime: slotEnd.toISOString(),
+              available: !isBooked,
+              booked: isBooked,
+              bookingId: isBooked ? bookedSlots.find(b => 
+                Math.abs(new Date(b.scheduledAt).getTime() - slotStart.getTime()) < 30 * 60 * 1000
+              )?.id : null
+            });
+          }
+        }
+      }
+
+      res.json({
+        dmId,
+        dmName: `${dm.firstName} ${dm.lastName}`,
+        dmTitle: dm.jobTitle,
+        dmCompany: dm.company,
+        availabilitySlots
+      });
+    } catch (error) {
+      console.error('Error getting DM availability:', error);
+      res.status(500).json({ message: "Failed to get DM availability" });
+    }
+  });
+
+  // Get all available DMs for calendar selection
+  app.get("/api/calendar/available-dms", async (req, res) => {
+    if (!req.session || !(req.session as any).userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    try {
+      const currentUser = await storage.getUserById((req.session as any).userId);
+      
+      let availableDMs;
+      if (currentUser.role === 'sales_rep') {
+        // Sales reps can only see DMs from invitations or same company
+        const invitations = await storage.getInvitationsByUserId(currentUser.id);
+        const acceptedInvitations = invitations.filter(inv => inv.status === 'accepted');
+        
+        const dmIds = acceptedInvitations.map(inv => inv.decisionMakerId);
+        availableDMs = await Promise.all(
+          dmIds.map(id => storage.getUserById(id))
+        );
+      } else {
+        // Enterprise admins can see all DMs in their company
+        availableDMs = await storage.getUsersByRole('decision_maker');
+        if (currentUser.companyDomain) {
+          availableDMs = availableDMs.filter(dm => dm.companyDomain === currentUser.companyDomain);
+        }
+      }
+
+      const dmsWithDetails = availableDMs.filter(dm => dm).map(dm => ({
+        id: dm.id,
+        name: `${dm.firstName} ${dm.lastName}`,
+        email: dm.email,
+        title: dm.jobTitle,
+        company: dm.company,
+        department: dm.department,
+        profileImage: dm.profileImageUrl || null
+      }));
+
+      res.json(dmsWithDetails);
+    } catch (error) {
+      console.error('Error getting available DMs:', error);
+      res.status(500).json({ message: "Failed to get available DMs" });
+    }
+  });
+
+  // Book a meeting slot
+  app.post("/api/calendar/book-slot", async (req, res) => {
+    if (!req.session || !(req.session as any).userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    try {
+      const currentUser = await storage.getUserById((req.session as any).userId);
+      const { dmId, startTime, endTime, agenda, notes } = req.body;
+
+      // Validate DM exists and is available
+      const dm = await storage.getUserById(dmId);
+      if (!dm || dm.role !== 'decision_maker') {
+        return res.status(404).json({ message: "Decision maker not found" });
+      }
+
+      // Check if slot is still available
+      const existingBooking = await storage.getCallByTime(dmId, new Date(startTime));
+      if (existingBooking) {
+        return res.status(409).json({ message: "This time slot is no longer available" });
+      }
+
+      // Create the meeting booking
+      const booking = await storage.createCall({
+        salesRepId: currentUser.id,
+        decisionMakerId: dmId,
+        scheduledAt: new Date(startTime),
+        endTime: new Date(endTime),
+        status: 'scheduled',
+        agenda: agenda || 'Business discussion',
+        notes: notes || '',
+        company: dm.company,
+        platform: 'calendar_booking'
+      });
+
+      // Log the booking activity
+      await storage.createActivityLog({
+        userId: currentUser.id,
+        action: 'BOOK_MEETING',
+        entityType: 'call',
+        entityId: booking.id,
+        details: `Booked meeting with ${dm.firstName} ${dm.lastName} for ${startTime}`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      res.status(201).json({
+        success: true,
+        booking: {
+          id: booking.id,
+          dmName: `${dm.firstName} ${dm.lastName}`,
+          startTime,
+          endTime,
+          status: 'scheduled',
+          agenda,
+          confirmationCode: `MTG-${booking.id.slice(-6).toUpperCase()}`
+        },
+        message: "Meeting booked successfully"
+      });
+    } catch (error) {
+      console.error('Error booking meeting slot:', error);
+      res.status(500).json({ message: "Failed to book meeting slot" });
+    }
+  });
+
+  // Cancel a booked meeting
+  app.delete("/api/calendar/cancel-booking/:bookingId", async (req, res) => {
+    if (!req.session || !(req.session as any).userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    try {
+      const { bookingId } = req.params;
+      const { reason } = req.body;
+      const currentUser = await storage.getUserById((req.session as any).userId);
+
+      const booking = await storage.getCallById(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      // Verify user can cancel this booking
+      if (booking.salesRepId !== currentUser.id && currentUser.role !== 'enterprise_admin') {
+        return res.status(403).json({ message: "You don't have permission to cancel this booking" });
+      }
+
+      // Update booking status
+      await storage.updateCall(bookingId, {
+        status: 'cancelled',
+        cancellationReason: reason || 'Cancelled by user',
+        cancelledAt: new Date(),
+        cancelledBy: currentUser.id
+      });
+
+      // Log the cancellation
+      await storage.createActivityLog({
+        userId: currentUser.id,
+        action: 'CANCEL_MEETING',
+        entityType: 'call',
+        entityId: bookingId,
+        details: `Cancelled meeting: ${reason || 'No reason provided'}`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      res.json({
+        success: true,
+        message: "Meeting cancelled successfully"
+      });
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+      res.status(500).json({ message: "Failed to cancel booking" });
+    }
+  });
+
+  // Get user's upcoming meetings
+  app.get("/api/calendar/my-meetings", requireAuth, async (req, res) => {
+    try {
+      const currentUser = await storage.getUserById((req as any).session.userId);
+      const { startDate, endDate } = req.query;
+
+      let meetings;
+      if (currentUser.role === 'sales_rep') {
+        meetings = await storage.getCallsByUserId(currentUser.id);
+      } else if (currentUser.role === 'decision_maker') {
+        meetings = await storage.getCallsByDMId(currentUser.id);
+      } else {
+        // Enterprise admin can see all company meetings
+        meetings = await storage.getCallsByCompany(currentUser.companyDomain);
+      }
+
+      // Filter by date range if provided
+      if (startDate && endDate) {
+        const start = new Date(startDate as string);
+        const end = new Date(endDate as string);
+        meetings = meetings.filter(meeting => {
+          const meetingDate = new Date(meeting.scheduledAt);
+          return meetingDate >= start && meetingDate <= end;
+        });
+      }
+
+      // Enhance meetings with participant details
+      const enhancedMeetings = await Promise.all(
+        meetings.map(async (meeting) => {
+          const [salesRep, dm] = await Promise.all([
+            storage.getUserById(meeting.salesRepId),
+            storage.getUserById(meeting.decisionMakerId)
+          ]);
+
+          return {
+            id: meeting.id,
+            title: meeting.agenda || 'Business Meeting',
+            startTime: meeting.scheduledAt,
+            endTime: meeting.endTime,
+            status: meeting.status,
+            salesRep: salesRep ? {
+              id: salesRep.id,
+              name: `${salesRep.firstName} ${salesRep.lastName}`,
+              email: salesRep.email
+            } : null,
+            decisionMaker: dm ? {
+              id: dm.id,
+              name: `${dm.firstName} ${dm.lastName}`,
+              email: dm.email,
+              title: dm.jobTitle
+            } : null,
+            notes: meeting.notes,
+            platform: meeting.platform || 'in-person',
+            confirmationCode: `MTG-${meeting.id.slice(-6).toUpperCase()}`
+          };
+        })
+      );
+
+      res.json(enhancedMeetings);
+    } catch (error) {
+      console.error('Error getting user meetings:', error);
+      res.status(500).json({ message: "Failed to get meetings" });
+    }
+  });
+
   // ===== ENTERPRISE ADMIN ROUTES =====
 
   // Get enterprise analytics

@@ -918,6 +918,76 @@ export class SimpleMongoDBStorage implements IStorage {
     }
   }
 
+  // Calendar and booking methods
+  async getUserById(id: string): Promise<any | undefined> {
+    await connectToMongoDB();
+    const user = await User.findById(id);
+    return user ? this.toPlainObject(user) : undefined;
+  }
+
+  async getCallsByDateRange(dmId: string, startDate: Date, endDate: Date): Promise<any[]> {
+    await connectToMongoDB();
+    const calls = await CallLog.find({
+      decisionMakerId: dmId,
+      scheduledAt: {
+        $gte: startDate,
+        $lte: endDate
+      },
+      status: { $in: ['scheduled', 'completed'] }
+    }).sort({ scheduledAt: 1 });
+    
+    return calls.map(call => this.toPlainObject(call));
+  }
+
+  async getCallByTime(dmId: string, scheduledAt: Date): Promise<any | undefined> {
+    await connectToMongoDB();
+    const startWindow = new Date(scheduledAt.getTime() - 15 * 60 * 1000);
+    const endWindow = new Date(scheduledAt.getTime() + 15 * 60 * 1000);
+    
+    const existingCall = await CallLog.findOne({
+      decisionMakerId: dmId,
+      scheduledAt: {
+        $gte: startWindow,
+        $lte: endWindow
+      },
+      status: { $in: ['scheduled', 'completed'] }
+    });
+    
+    return existingCall ? this.toPlainObject(existingCall) : undefined;
+  }
+
+  async getCallsByDMId(dmId: string): Promise<any[]> {
+    await connectToMongoDB();
+    const calls = await CallLog.find({
+      decisionMakerId: dmId,
+      status: { $in: ['scheduled', 'completed'] }
+    }).sort({ scheduledAt: 1 });
+    
+    return calls.map(call => this.toPlainObject(call));
+  }
+
+  async getCallsByCompany(companyDomain: string): Promise<any[]> {
+    await connectToMongoDB();
+    const companyUsers = await User.find({ 
+      $or: [
+        { companyDomain: companyDomain },
+        { company: companyDomain.split('.')[0] }
+      ]
+    });
+    
+    const userIds = companyUsers.map(user => user._id.toString());
+    
+    const calls = await CallLog.find({
+      $or: [
+        { salesRepId: { $in: userIds } },
+        { decisionMakerId: { $in: userIds } }
+      ],
+      status: { $in: ['scheduled', 'completed'] }
+    }).sort({ scheduledAt: 1 });
+    
+    return calls.map(call => this.toPlainObject(call));
+  }
+
   private toPlainObject(mongooseDoc: any): any {
     const obj = mongooseDoc.toObject();
     // Convert MongoDB _id to id for consistency

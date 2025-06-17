@@ -74,6 +74,13 @@ export interface IStorage {
   getDMFlags(dmId: string): Promise<any[]>;
   getFlagsByCompany(companyDomain: string): Promise<any[]>;
   updateFlagStatus(flagId: string, status: string, resolution?: string, resolvedBy?: string): Promise<any>;
+  
+  // Calendar and booking methods
+  getUserById(id: string): Promise<any | undefined>;
+  getCallsByDateRange(dmId: string, startDate: Date, endDate: Date): Promise<any[]>;
+  getCallByTime(dmId: string, scheduledAt: Date): Promise<any | undefined>;
+  getCallsByDMId(dmId: string): Promise<any[]>;
+  getCallsByCompany(companyDomain: string): Promise<any[]>;
 }
 
 // Import and use only MongoDB storage
