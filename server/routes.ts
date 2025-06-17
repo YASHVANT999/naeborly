@@ -2415,9 +2415,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's upcoming meetings
-  app.get("/api/calendar/my-meetings", requireAuth, async (req, res) => {
+  app.get("/api/calendar/my-meetings", async (req, res) => {
+    if (!req.session || !(req.session as any).userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
     try {
-      const currentUser = await storage.getUserById((req as any).session.userId);
+      const currentUser = await storage.getUserById((req.session as any).userId);
       const { startDate, endDate } = req.query;
 
       let meetings;
@@ -2427,7 +2430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         meetings = await storage.getCallsByDMId(currentUser.id);
       } else {
         // Enterprise admin can see all company meetings
-        meetings = await storage.getCallsByCompany(currentUser.companyDomain);
+        meetings = await storage.getCallLogsByCompany(currentUser.companyDomain);
       }
 
       // Filter by date range if provided

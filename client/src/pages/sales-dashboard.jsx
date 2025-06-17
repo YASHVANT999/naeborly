@@ -16,7 +16,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import CalendarDemo from "@/components/CalendarDemo";
+import CalendarBooking from "@/components/CalendarBooking";
 
 export default function SalesDashboard() {
   const { user } = useAuth();
@@ -277,8 +277,8 @@ export default function SalesDashboard() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Calendar Integration */}
-            <CalendarDemo decisionMakers={invitations?.filter(inv => inv.status === 'accepted') || []} />
+            {/* Calendar Booking System */}
+            <CalendarBooking />
             
             {/* Upcoming Calls */}
             <Card className="shadow-lg">
