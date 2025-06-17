@@ -2265,17 +2265,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const currentUser = await storage.getUserById((req.session as any).userId);
+      console.log('Current user role:', currentUser.role);
       
       let availableDMs;
       if (currentUser.role === 'sales_rep') {
-        // Sales reps can only see DMs from invitations or same company
-        const invitations = await storage.getInvitationsByUserId(currentUser.id);
-        const acceptedInvitations = invitations.filter(inv => inv.status === 'accepted');
+        // Sales reps can see all active decision makers for calendar booking
+        const allDMs = await storage.getUsersByRole('decision_maker');
+        console.log('All DMs found:', allDMs.length);
+        console.log('Sample DM:', allDMs[0] ? { id: allDMs[0].id, role: allDMs[0].role, isActive: allDMs[0].isActive, invitationStatus: allDMs[0].invitationStatus } : 'None');
         
-        const dmIds = acceptedInvitations.map(inv => inv.decisionMakerId);
-        availableDMs = await Promise.all(
-          dmIds.map(id => storage.getUserById(id))
-        );
+        availableDMs = allDMs.filter(dm => dm.isActive && dm.invitationStatus === 'accepted');
+        console.log('Filtered available DMs:', availableDMs.length);
       } else {
         // Enterprise admins can see all DMs in their company
         availableDMs = await storage.getUsersByRole('decision_maker');
@@ -2285,15 +2285,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const dmsWithDetails = availableDMs.filter(dm => dm).map(dm => ({
-        id: dm.id,
+        id: dm.id || dm._id,
         name: `${dm.firstName} ${dm.lastName}`,
         email: dm.email,
         title: dm.jobTitle,
         company: dm.company,
+        industry: dm.industry,
         department: dm.department,
         profileImage: dm.profileImageUrl || null
       }));
 
+      console.log('Final DMs with details:', dmsWithDetails.length);
       res.json(dmsWithDetails);
     } catch (error) {
       console.error('Error getting available DMs:', error);
