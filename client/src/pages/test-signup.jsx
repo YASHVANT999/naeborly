@@ -81,7 +81,7 @@ export default function TestSignup() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50 p-8">
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardContent className="p-8">
@@ -89,7 +89,7 @@ export default function TestSignup() {
             
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${step > 1 ? 'bg-green-500' : step === 1 ? 'bg-purple-500' : 'bg-gray-300'}`}>
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${step > 1 ? 'bg-green-500' : step === 1 ? 'bg-blue-500' : 'bg-gray-300'}`}>
                   1
                 </span>
                 <span>Personal Information</span>
@@ -101,7 +101,7 @@ export default function TestSignup() {
               </div>
 
               <div className="flex items-center gap-4">
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${step > 2 ? 'bg-green-500' : step === 2 ? 'bg-purple-500' : 'bg-gray-300'}`}>
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${step > 2 ? 'bg-green-500' : step === 2 ? 'bg-blue-500' : 'bg-gray-300'}`}>
                   2
                 </span>
                 <span>Professional Background</span>
@@ -113,7 +113,7 @@ export default function TestSignup() {
               </div>
 
               <div className="flex items-center gap-4">
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${step > 3 ? 'bg-green-500' : step === 3 ? 'bg-purple-500' : 'bg-gray-300'}`}>
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${step > 3 ? 'bg-green-500' : step === 3 ? 'bg-blue-500' : 'bg-gray-300'}`}>
                   3
                 </span>
                 <span>Invite Decision Makers</span>
@@ -125,7 +125,7 @@ export default function TestSignup() {
               </div>
 
               <div className="flex items-center gap-4">
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${step > 4 ? 'bg-green-500' : step === 4 ? 'bg-purple-500' : 'bg-gray-300'}`}>
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${step > 4 ? 'bg-green-500' : step === 4 ? 'bg-blue-500' : 'bg-gray-300'}`}>
                   4
                 </span>
                 <span>Choose Package</span>

@@ -30,7 +30,7 @@ export default function ChoosePackage() {
         "Direct rep connections",
         "Individual analytics"
       ],
-      color: "purple",
+      color: "blue",
       selected: selectedPackage === "individual"
     },
     {
@@ -52,7 +52,7 @@ export default function ChoosePackage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Progress Header */}
         <div className="mb-8">
@@ -78,7 +78,7 @@ export default function ChoosePackage() {
                 key={pkg.id}
                 className={`relative cursor-pointer transition-all ${
                   pkg.selected
-                    ? `border-2 ${pkg.color === 'purple' ? 'border-purple-600' : 'border-blue-600'} shadow-xl`
+                    ? `border-2 border-blue-600 shadow-xl`
                     : "border border-gray-200 shadow-lg hover:shadow-xl"
                 }`}
                 onClick={() => setSelectedPackage(pkg.id)}
@@ -93,11 +93,9 @@ export default function ChoosePackage() {
                 )}
                 <CardContent className="p-8">
                   <div className="text-center mb-6">
-                    <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${
-                      pkg.color === 'purple' ? 'bg-purple-100' : 'bg-blue-100'
-                    }`}>
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-blue-100">
                       <IconComponent 
-                        className={pkg.color === 'purple' ? 'text-purple-600' : 'text-blue-600'} 
+                        className="text-blue-600" 
                         size={32} 
                       />
                     </div>
@@ -116,11 +114,7 @@ export default function ChoosePackage() {
 
                   {pkg.selected && (
                     <div className="mt-6 text-center">
-                      <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
-                        pkg.color === 'purple' 
-                          ? 'bg-purple-100 text-purple-700' 
-                          : 'bg-blue-100 text-blue-700'
-                      }`}>
+                      <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-700">
                         <CheckCircle className="mr-2" size={16} />
                         Selected
                       </div>
@@ -140,7 +134,7 @@ export default function ChoosePackage() {
           </Button>
           <Button
             onClick={handleComplete}
-            className="bg-purple-600 hover:bg-purple-700 px-8"
+            className="bg-blue-600 hover:bg-blue-700 px-8"
           >
             <CheckCircle className="mr-2" size={16} />
             Complete Registration
