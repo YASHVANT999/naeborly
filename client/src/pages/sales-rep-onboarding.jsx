@@ -145,7 +145,7 @@ export default function SalesRepOnboarding() {
         return (
           <form onSubmit={personalForm.handleSubmit(handlePersonalSubmit)} className="space-y-6">
             <div className="text-center mb-6">
-              <User className="mx-auto text-purple-600 mb-4" size={48} />
+              <User className="mx-auto text-blue-600 mb-4" size={48} />
               <h2 className="text-2xl font-bold text-gray-900">Personal Information</h2>
               <p className="text-gray-600">Let's start with your basic details</p>
             </div>
@@ -201,7 +201,7 @@ export default function SalesRepOnboarding() {
               )}
             </div>
 
-            <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700">
+            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
               Continue <ArrowRight className="ml-2" size={16} />
             </Button>
           </form>
@@ -211,7 +211,7 @@ export default function SalesRepOnboarding() {
         return (
           <form onSubmit={professionalForm.handleSubmit(handleProfessionalSubmit)} className="space-y-6">
             <div className="text-center mb-6">
-              <Briefcase className="mx-auto text-purple-600 mb-4" size={48} />
+              <Briefcase className="mx-auto text-blue-600 mb-4" size={48} />
               <h2 className="text-2xl font-bold text-gray-900">Professional Information</h2>
               <p className="text-gray-600">Tell us about your company and role</p>
             </div>
@@ -319,7 +319,7 @@ export default function SalesRepOnboarding() {
         return (
           <form onSubmit={salesForm.handleSubmit(handleSalesSubmit)} className="space-y-6">
             <div className="text-center mb-6">
-              <Target className="mx-auto text-purple-600 mb-4" size={48} />
+              <Target className="mx-auto text-blue-600 mb-4" size={48} />
               <h2 className="text-2xl font-bold text-gray-900">Sales Information</h2>
               <p className="text-gray-600">Help us understand your sales focus</p>
             </div>
@@ -404,7 +404,7 @@ export default function SalesRepOnboarding() {
       case 4:
         return (
           <div className="text-center space-y-6">
-            <Globe className="mx-auto text-purple-600 mb-4" size={48} />
+            <Globe className="mx-auto text-blue-600 mb-4" size={48} />
             <h2 className="text-2xl font-bold text-gray-900">LinkedIn Verification</h2>
             <p className="text-gray-600">
               We need to verify your LinkedIn profile to ensure authenticity.
@@ -453,7 +453,7 @@ export default function SalesRepOnboarding() {
       case 5:
         return (
           <div className="text-center space-y-6">
-            <CheckCircle className="mx-auto text-green-600 mb-4" size={48} />
+            <CheckCircle className="mx-auto text-blue-600 mb-4" size={48} />
             <h2 className="text-2xl font-bold text-gray-900">Complete Your Registration</h2>
             <p className="text-gray-600">
               Great! Your LinkedIn profile has been verified. Click below to complete your onboarding.
@@ -472,7 +472,7 @@ export default function SalesRepOnboarding() {
             <Button
               onClick={handleFinalSubmit}
               disabled={submitOnboardingMutation.isPending}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-blue-600 hover:bg-blue-700"
             >
               {submitOnboardingMutation.isPending ? (
                 <>
@@ -495,7 +495,7 @@ export default function SalesRepOnboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
