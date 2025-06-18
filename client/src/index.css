@@ -13,7 +13,7 @@
   --card-foreground: hsl(20, 14.3%, 4.1%);
   --border: hsl(20, 5.9%, 90%);
   --input: hsl(20, 5.9%, 90%);
-  --primary: hsl(262, 83%, 58%);
+  --primary: hsl(217, 91%, 60%);
   --primary-foreground: hsl(210, 40%, 98%);
   --secondary: hsl(60, 4.8%, 95.9%);
   --secondary-foreground: hsl(24, 9.8%, 10%);
@@ -23,9 +23,9 @@
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
-  --naeberly-purple: hsl(262, 83%, 58%);
-  --naeberly-green: hsl(158, 64%, 52%);
-  --naeberly-blue: hsl(217, 91%, 60%);
+  --naeborly-blue: hsl(217, 91%, 60%);
+  --naeborly-light-blue: hsl(217, 91%, 75%);
+  --naeborly-dark-blue: hsl(217, 91%, 45%);
 }
 
 .dark {
@@ -39,7 +39,7 @@
   --card-foreground: hsl(0, 0%, 98%);
   --border: hsl(240, 3.7%, 15.9%);
   --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(262, 83%, 58%);
+  --primary: hsl(217, 91%, 60%);
   --primary-foreground: hsl(210, 40%, 98%);
   --secondary: hsl(240, 3.7%, 15.9%);
   --secondary-foreground: hsl(0, 0%, 98%);
@@ -57,18 +57,18 @@
   }
 
   body {
-    @apply font-sans antialiased bg-gradient-to-br from-purple-50 to-blue-50 text-foreground min-h-screen;
+    @apply font-sans antialiased bg-gradient-to-br from-blue-50 to-slate-50 text-foreground min-h-screen;
   }
 }
 
-.naeberly-purple {
-  background-color: var(--naeberly-purple);
+.naeborly-blue {
+  background-color: var(--naeborly-blue);
 }
 
-.naeberly-green {
-  background-color: var(--naeberly-green);
+.naeborly-light-blue {
+  background-color: var(--naeborly-light-blue);
 }
 
-.naeberly-blue {
-  background-color: var(--naeberly-blue);
+.naeborly-dark-blue {
+  background-color: var(--naeborly-dark-blue);
 }

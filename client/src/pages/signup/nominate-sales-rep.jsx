@@ -67,7 +67,7 @@ export default function NominateSalesRep() {
                     <h3 className="font-semibold text-gray-900 mb-2">How Rep Nomination Works</h3>
                     <ul className="space-y-1 text-sm text-blue-700">
                       <li>• Nominate a sales rep you know to get platform access</li>
-                      <li>• They'll receive an invitation to join Naeberly</li>
+                      <li>• They'll receive an invitation to join Naeborly</li>
                       <li>• You both benefit from the connection</li>
                       <li>• This step is completely optional</li>
                     </ul>
