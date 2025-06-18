@@ -99,7 +99,7 @@ export default function DecisionMakerOnboarding() {
     },
     onSuccess: () => {
       toast({
-        title: "Welcome to Naeborly!",
+        title: "Welcome to Naeberly!",
         description: "Your profile is complete. Redirecting to dashboard...",
       });
       setTimeout(() => setLocation("/decision-dashboard"), 2000);

@@ -69,7 +69,7 @@ export default function Landing() {
       icon: TrendingUp,
       title: "AI-Powered Insights",
       description: "Custom call preparation and performance analysis for better outcomes",
-      color: "indigo"
+      color: "green"
     },
     {
       icon: Shield,
@@ -81,7 +81,7 @@ export default function Landing() {
       icon: Mail,
       title: "Email Access",
       description: "Premium access to decision-maker email addresses with approval",
-      color: "blue"
+      color: "yellow"
     },
     {
       icon: Users,
@@ -176,26 +176,27 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-violet-50 flex flex-col">
+    <div className="min-h-screen">
       {/* Hero Section */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-violet-600">Naeborly</span>
+            <span className="text-purple-600">Warm Intros</span>
+            <br />
+            to Decision-Makers
           </h1>
           <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
             Connect sales reps with verified executives through a community-driven platform. 
             Contribute decision-makers, earn credits, book quality intro calls.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/signup/sales-rep/personal-info">
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 text-lg font-semibold transform hover:scale-105 transition-all shadow-lg"
-              >
-                I'm a Sales Rep <ArrowRight className="ml-2" size={20} />
-              </Button>
-            </Link>
+            <Button 
+              onClick={() => setLocation("/role-selector")}
+              size="lg" 
+              className="bg-purple-600 text-white px-8 py-4 text-lg font-semibold hover:bg-purple-700 transform hover:scale-105 transition-all shadow-lg"
+            >
+              Get Started <ArrowRight className="ml-2" size={20} />
+            </Button>
             <Link href="/signup/decision-maker/personal-info">
               <Button 
                 variant="outline" 

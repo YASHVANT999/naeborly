@@ -86,7 +86,7 @@ export default function DMInviteSystem({ onComplete }) {
     <div className="max-w-4xl mx-auto p-6">
       <Card className="shadow-lg">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
             <Users className="text-white" size={32} />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">
@@ -126,7 +126,7 @@ export default function DMInviteSystem({ onComplete }) {
                 <Card key={field.id} className="border border-gray-200">
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-4">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm">
+                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-semibold text-sm">
                         {index + 1}
                       </div>
                       
@@ -189,7 +189,7 @@ export default function DMInviteSystem({ onComplete }) {
                 type="button"
                 variant="outline"
                 onClick={addInvite}
-                className="w-full border-dashed border-2 border-gray-300 hover:border-blue-400 text-gray-600 hover:text-blue-600"
+                className="w-full border-dashed border-2 border-gray-300 hover:border-purple-400 text-gray-600 hover:text-purple-600"
               >
                 <Plus className="mr-2" size={16} />
                 Add Another Invite
@@ -209,7 +209,7 @@ export default function DMInviteSystem({ onComplete }) {
             <Button
               type="submit"
               disabled={isSubmitting || sendInvitesMutation.isPending}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-purple-600 hover:bg-purple-700"
             >
               {isSubmitting || sendInvitesMutation.isPending ? (
                 <>

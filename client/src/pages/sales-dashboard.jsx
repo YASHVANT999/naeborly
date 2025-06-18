@@ -100,7 +100,7 @@ export default function SalesDashboard() {
   const databaseUnlocked = metrics?.databaseUnlocked || false;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-violet-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Responsive Dashboard Header */}
         <div className="mb-6 sm:mb-8">
@@ -139,7 +139,7 @@ export default function SalesDashboard() {
 
         {/* Responsive Metrics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <Card className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -152,7 +152,7 @@ export default function SalesDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-indigo-500 to-blue-600 text-white">
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -208,7 +208,7 @@ export default function SalesDashboard() {
               <Card className="shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <Lock className="text-purple-600 mr-3" size={24} />
+                    <Lock className="text-purple-500 mr-3" size={24} />
                     Database Access Locked
                   </CardTitle>
                 </CardHeader>
@@ -252,7 +252,7 @@ export default function SalesDashboard() {
                     <Button 
                       onClick={() => simulateAcceptanceMutation.mutate()}
                       disabled={simulateAcceptanceMutation.isPending}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                      className="bg-purple-600 hover:bg-purple-700"
                     >
                       {simulateAcceptanceMutation.isPending ? (
                         <>
