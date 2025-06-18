@@ -155,24 +155,24 @@ export default function Landing() {
 
   const getIconColor = (color) => {
     const colors = {
-      purple: "text-purple-600",
-      blue: "text-blue-600", 
+      blue: "text-blue-600",
+      lightblue: "text-blue-500", 
       green: "text-green-600",
       indigo: "text-indigo-600",
       yellow: "text-yellow-600"
     };
-    return colors[color] || "text-purple-600";
+    return colors[color] || "text-blue-600";
   };
 
   const getBgColor = (color) => {
     const colors = {
-      purple: "bg-purple-100",
       blue: "bg-blue-100",
+      lightblue: "bg-blue-50",
       green: "bg-green-100", 
       indigo: "bg-indigo-100",
       yellow: "bg-yellow-100"
     };
-    return colors[color] || "bg-purple-100";
+    return colors[color] || "bg-blue-100";
   };
 
   return (

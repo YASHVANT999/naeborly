@@ -217,17 +217,17 @@ export default function DecisionDashboard() {
                         </div>
                         <div>
                           <h3 className="font-bold text-gray-900">{call.salesRepName || 'Sales Rep'}</h3>
-                          <p className={`font-medium ${color === 'blue' ? 'text-blue-600' : 'text-purple-600'}`}>
+                          <p className="font-medium text-blue-600">
                             {call.company || 'Company'}
                           </p>
                           <p className="text-sm text-gray-600">{call.industry || 'Industry'}</p>
-                          <p className={`text-sm font-medium italic ${color === 'blue' ? 'text-blue-600' : 'text-purple-600'}`}>
+                          <p className="text-sm font-medium italic text-blue-600">
                             "{call.pitch || 'Scheduled call'}"
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className={`font-bold ${color === 'blue' ? 'text-blue-600' : 'text-purple-600'}`}>
+                        <p className="font-bold text-blue-600">
                           {call.scheduledAt ? formatDate(call.scheduledAt) : 'TBD'}
                         </p>
                         <p className="text-sm text-gray-500">15 min</p>
@@ -239,14 +239,14 @@ export default function DecisionDashboard() {
                           <Button 
                             variant="outline" 
                             size="sm"
-                            className={color === 'blue' ? 'border-blue-200 text-blue-600' : 'border-purple-200 text-purple-600'}
+                            className="border-blue-200 text-blue-600"
                           >
                             <ExternalLink className="mr-1" size={12} />
                             View Rep Profile
                           </Button>
                           <Button 
                             size="sm"
-                            className={color === 'blue' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'}
+                            className="bg-blue-600 hover:bg-blue-700"
                           >
                             <Phone className="mr-1" size={12} />
                             Join Call
