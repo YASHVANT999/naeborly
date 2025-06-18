@@ -32,11 +32,6 @@ import DecisionMakerNominate from "@/pages/signup/decision-maker/nominate";
 import DecisionMakerChoosePackage from "@/pages/signup/decision-maker/package";
 import TestSignup from "@/pages/test-signup";
 import FlagsManagement from "@/pages/flags-management";
-import RoleSelector from "@/pages/role-selector";
-import SalesRepOnboarding from "@/pages/sales-rep-onboarding";
-import DecisionMakerOnboarding from "@/pages/decision-maker-onboarding";
-import DMInviteLanding from "@/pages/dm-invite-landing";
-import DMInviteSystem from "@/pages/dm-invite-system";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -44,10 +39,6 @@ function Router() {
     <Switch>
       <Route path="/" component={Landing} />
       <Route path="/login" component={Login} />
-      <Route path="/role-selector" component={RoleSelector} />
-      <Route path="/sales-rep/onboarding" component={SalesRepOnboarding} />
-      <Route path="/decision-maker/onboarding" component={DecisionMakerOnboarding} />
-      <Route path="/invite-decision-makers" component={DMInviteLanding} />
       <Route path="/sales-dashboard">
         <ProtectedRoute requiredRole="sales_rep">
           <SalesDashboard />
