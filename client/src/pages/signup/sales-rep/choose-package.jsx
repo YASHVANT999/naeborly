@@ -38,7 +38,7 @@ export default function SalesRepChoosePackage() {
       console.log('Package selection saved successfully:', data);
       toast({
         title: "Account Created Successfully!",
-        description: "Welcome to Naeberly! Your sales rep account is now ready."
+        description: "Welcome to Naeborly! Your sales rep account is now ready."
       });
       setLocation("/sales-dashboard");
     },
@@ -123,7 +123,7 @@ export default function SalesRepChoosePackage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Progress Header */}
         <div className="mb-8">

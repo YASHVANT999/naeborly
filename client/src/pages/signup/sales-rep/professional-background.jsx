@@ -61,7 +61,7 @@ export default function SalesRepProfessionalBackground() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50">
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Progress Header */}
         <div className="mb-8">

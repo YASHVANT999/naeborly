@@ -250,7 +250,7 @@ export default function Landing() {
 
           {plansLoading ? (
             <div className="flex justify-center items-center py-16">
-              <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
               <span className="ml-3 text-gray-600">Loading pricing plans...</span>
             </div>
           ) : plansError ? (
@@ -264,11 +264,11 @@ export default function Landing() {
                 return (
                   <Card 
                     key={plan.id || index} 
-                    className={`relative ${plan.bestSeller ? 'border-2 border-purple-600 shadow-xl' : 'border border-gray-200 shadow-lg'}`}
+                    className={`relative ${plan.bestSeller ? 'border-2 border-blue-600 shadow-xl' : 'border border-gray-200 shadow-lg'}`}
                   >
                     {plan.bestSeller && (
                       <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                        <span className="bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                        <span className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
                           Best Seller
                         </span>
                       </div>
@@ -276,7 +276,7 @@ export default function Landing() {
                     <CardContent className="p-8">
                       <div className="text-center mb-8">
                         <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                        <div className="text-4xl font-bold text-purple-600 mb-1">{plan.price}</div>
+                        <div className="text-4xl font-bold text-blue-600 mb-1">{plan.price}</div>
                         {plan.period && <div className="text-gray-500">{plan.period}</div>}
                         {plan.description && plan.description !== plan.features[0] && (
                           <p className="text-sm text-gray-600 mt-3 italic">{plan.description}</p>
@@ -317,7 +317,7 @@ export default function Landing() {
                               {plan.prioritySupport && (
                                 <div className="flex justify-between">
                                   <span>Support:</span>
-                                  <span className="font-medium text-purple-600">Priority</span>
+                                  <span className="font-medium text-blue-600">Priority</span>
                                 </div>
                               )}
                             </div>
@@ -329,7 +329,7 @@ export default function Landing() {
                         variant={plan.buttonVariant}
                         className={`w-full py-3 font-semibold transition-all ${
                           plan.bestSeller
-                            ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg hover:shadow-xl' 
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl' 
                             : plan.name.toLowerCase().includes('team')
                             ? 'border-blue-600 text-blue-600 hover:bg-blue-50'
                             : 'border-gray-300 text-gray-700 hover:bg-gray-50'
