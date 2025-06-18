@@ -167,11 +167,11 @@ export default function DecisionMakerChoosePackage() {
                             htmlFor={pkg.id}
                             className="flex flex-col cursor-pointer"
                           >
-                            <Card className="peer-checked:ring-2 peer-checked:ring-purple-500 peer-checked:border-purple-500 hover:shadow-lg transition-all duration-200 h-full">
+                            <Card className="peer-checked:ring-2 peer-checked:ring-blue-500 peer-checked:border-blue-500 hover:shadow-lg transition-all duration-200 h-full">
                               <CardContent className="p-6 flex flex-col h-full">
                                 {pkg.popular && (
                                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                                    <Badge className="bg-purple-600 text-white flex items-center gap-1">
+                                    <Badge className="bg-blue-600 text-white flex items-center gap-1">
                                       <Star className="h-3 w-3" />
                                       Most Popular
                                     </Badge>
@@ -181,7 +181,7 @@ export default function DecisionMakerChoosePackage() {
                                 <div className="text-center mb-6">
                                   <h3 className="text-xl font-bold text-gray-900 mb-2">{pkg.name}</h3>
                                   <div className="mb-2">
-                                    <span className="text-3xl font-bold text-purple-600">{pkg.price}</span>
+                                    <span className="text-3xl font-bold text-blue-600">{pkg.price}</span>
                                     <span className="text-gray-600 ml-1">/{pkg.period}</span>
                                   </div>
                                   <p className="text-gray-600 text-sm">{pkg.description}</p>
