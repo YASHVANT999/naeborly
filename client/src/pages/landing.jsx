@@ -57,7 +57,7 @@ export default function Landing() {
       icon: UserCheck,
       title: "Verified Decision-Makers",
       description: "Access a growing database of verified executives and decision-makers",
-      color: "purple"
+      color: "blue"
     },
     {
       icon: Calendar,
@@ -87,7 +87,7 @@ export default function Landing() {
       icon: Users,
       title: "Pro Teams",
       description: "Enterprise solutions for entire sales teams with advanced guides",
-      color: "purple"
+      color: "lightblue"
     }
   ];
 
@@ -181,7 +181,7 @@ export default function Landing() {
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            <span className="text-purple-600">Warm Intros</span>
+            <span className="text-blue-600">Warm Intros</span>
             <br />
             to Decision-Makers
           </h1>
@@ -193,7 +193,7 @@ export default function Landing() {
             <Link href="/signup/sales-rep/personal-info">
               <Button 
                 size="lg" 
-                className="bg-purple-600 text-white px-8 py-4 text-lg font-semibold hover:bg-purple-700 transform hover:scale-105 transition-all shadow-lg"
+                className="bg-blue-600 text-white px-8 py-4 text-lg font-semibold hover:bg-blue-700 transform hover:scale-105 transition-all shadow-lg"
               >
                 I'm a Sales Rep <ArrowRight className="ml-2" size={20} />
               </Button>
@@ -202,7 +202,7 @@ export default function Landing() {
               <Button 
                 variant="outline" 
                 size="lg"
-                className="border-2 border-purple-600 text-purple-600 px-8 py-4 text-lg font-semibold hover:bg-purple-50"
+                className="border-2 border-blue-600 text-blue-600 px-8 py-4 text-lg font-semibold hover:bg-blue-50"
               >
                 I'm a Decision Maker ✓
               </Button>
@@ -241,7 +241,7 @@ export default function Landing() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 px-4 bg-gradient-to-br from-purple-50 to-blue-50">
+      <section className="py-20 px-4 bg-gradient-to-br from-blue-50 to-slate-50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Choose Your Plan</h2>
