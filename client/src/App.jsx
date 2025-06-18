@@ -35,8 +35,6 @@ import FlagsManagement from "@/pages/flags-management";
 import RoleSelector from "@/pages/role-selector";
 import SalesRepOnboarding from "@/pages/sales-rep-onboarding";
 import DecisionMakerOnboarding from "@/pages/decision-maker-onboarding";
-import DMInviteLanding from "@/pages/dm-invite-landing";
-import DMInviteSystem from "@/pages/dm-invite-system";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -47,7 +45,6 @@ function Router() {
       <Route path="/role-selector" component={RoleSelector} />
       <Route path="/sales-rep/onboarding" component={SalesRepOnboarding} />
       <Route path="/decision-maker/onboarding" component={DecisionMakerOnboarding} />
-      <Route path="/invite-decision-makers" component={DMInviteLanding} />
       <Route path="/sales-dashboard">
         <ProtectedRoute requiredRole="sales_rep">
           <SalesDashboard />

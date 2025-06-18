@@ -90,9 +90,9 @@ export default function SalesRepOnboarding() {
     onSuccess: () => {
       toast({
         title: "Success!",
-        description: "Your onboarding is complete. Next step: invite decision makers...",
+        description: "Your onboarding is complete. Redirecting to dashboard...",
       });
-      setTimeout(() => setLocation("/invite-decision-makers"), 2000);
+      setTimeout(() => setLocation("/sales-dashboard"), 2000);
     },
     onError: (error) => {
       toast({
