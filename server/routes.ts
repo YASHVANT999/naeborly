@@ -323,6 +323,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Onboarding API endpoints
+  app.post('/api/sales-rep/onboarding', async (req, res) => {
+    try {
+      const {
+        firstName, lastName, email, linkedinUrl, company, jobTitle, industry,
+        companySize, yearsInRole, icpDescription, productType, salesRegion,
+        targetIndustries, linkedinVerified, packageType
+      } = req.body;
+
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: 'User with this email already exists' });
+      }
+
+      const userData = {
+        email, password: 'tempPassword123!', firstName, lastName, linkedinUrl,
+        linkedinVerified: linkedinVerified || false, company, jobTitle, industry,
+        companySize, yearsInRole, icpDescription, productType, salesRegion,
+        targetIndustries, role: 'sales_rep', packageType: packageType || 'free',
+        isActive: true, standing: 'good', calendarIntegrationEnabled: false,
+        invitationStatus: 'pending', domainVerified: false, requirePasswordChange: true,
+        permissions: [], createdAt: new Date(), updatedAt: new Date()
+      };
+
+      const newUser = await storage.createUser(userData);
+      (req.session as any).userId = newUser.id || newUser._id;
+
+      res.status(201).json({
+        success: true,
+        message: 'Sales rep onboarding completed successfully',
+        user: { id: newUser.id || newUser._id, email: newUser.email, firstName: newUser.firstName, lastName: newUser.lastName, role: newUser.role }
+      });
+    } catch (error) {
+      console.error('Sales rep onboarding error:', error);
+      res.status(500).json({ success: false, message: 'Failed to complete onboarding', error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/decision-maker/onboarding', async (req, res) => {
+    try {
+      const {
+        firstName, lastName, email, phone, company, jobTitle, industry, companySize,
+        yearsInRole, decisionAreas, preferredMeetingTimes, timezone, meetingDuration,
+        meetingPreference, acceptTerms, acceptPrivacy
+      } = req.body;
+
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: 'User with this email already exists' });
+      }
+
+      const userData = {
+        email, password: 'tempPassword123!', firstName, lastName, phone: phone || '',
+        company, jobTitle, industry, companySize, yearsInRole, decisionAreas,
+        preferredMeetingTimes: preferredMeetingTimes || [], timezone, meetingDuration,
+        meetingPreference, acceptTerms: acceptTerms || false, acceptPrivacy: acceptPrivacy || false,
+        role: 'decision_maker', isActive: true, standing: 'good', calendarIntegrationEnabled: false,
+        invitationStatus: 'accepted', engagementScore: 50, domainVerified: false,
+        requirePasswordChange: true, permissions: [], createdAt: new Date(), updatedAt: new Date()
+      };
+
+      const newUser = await storage.createUser(userData);
+      (req.session as any).userId = newUser.id || newUser._id;
+
+      res.status(201).json({
+        success: true,
+        message: 'Decision maker onboarding completed successfully',
+        user: { id: newUser.id || newUser._id, email: newUser.email, firstName: newUser.firstName, lastName: newUser.lastName, role: newUser.role }
+      });
+    } catch (error) {
+      console.error('Decision maker onboarding error:', error);
+      res.status(500).json({ success: false, message: 'Failed to complete onboarding', error: (error as Error).message });
+    }
+  });
+
+  app.post('/api/sales-rep/invite-decision-makers', requireAuthentication, async (req, res) => {
+    try {
+      const { invites } = req.body;
+      const salesRepId = (req.session as any).userId;
+
+      if (!invites || !Array.isArray(invites) || invites.length < 3) {
+        return res.status(400).json({ message: 'At least 3 invites are required' });
+      }
+
+      const results = [];
+      let successCount = 0;
+
+      for (const invite of invites) {
+        try {
+          const invitationData = {
+            salesRepId, decisionMakerName: invite.name, decisionMakerEmail: invite.email,
+            status: 'pending', createdAt: new Date(), updatedAt: new Date()
+          };
+
+          const newInvitation = await storage.createInvitation(invitationData);
+          results.push({ ...invite, status: 'sent', invitationId: newInvitation.id || newInvitation._id });
+          successCount++;
+
+          await storage.createActivityLog({
+            userId: salesRepId, action: 'SEND_INVITATION', entityType: 'invitation',
+            entityId: newInvitation.id || newInvitation._id, details: `Invited ${invite.name} (${invite.email})`,
+            ipAddress: req.ip, userAgent: req.get('User-Agent')
+          });
+        } catch (error) {
+          results.push({ ...invite, status: 'failed', error: (error as Error).message });
+        }
+      }
+
+      res.status(200).json({
+        success: true, message: `Successfully sent ${successCount} invitations`,
+        invitesSent: successCount, results
+      });
+    } catch (error) {
+      console.error('Invite decision makers error:', error);
+      res.status(500).json({ success: false, message: 'Failed to send invitations', error: (error as Error).message });
+    }
+  });
+
   // Complete signup with package selection
   app.post("/api/sales-rep/package", async (req, res) => {
     try {
