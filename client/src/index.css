@@ -23,9 +23,9 @@
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
-  --naeberly-purple: hsl(262, 83%, 58%);
-  --naeberly-green: hsl(158, 64%, 52%);
-  --naeberly-blue: hsl(217, 91%, 60%);
+  --naeborly-primary: hsl(224, 76%, 48%);
+  --naeborly-secondary: hsl(214, 95%, 67%);
+  --naeborly-accent: hsl(214, 95%, 93%);
 }
 
 .dark {

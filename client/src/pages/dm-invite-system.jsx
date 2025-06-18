@@ -126,7 +126,7 @@ export default function DMInviteSystem({ onComplete }) {
                 <Card key={field.id} className="border border-gray-200">
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-4">
-                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-semibold text-sm">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm">
                         {index + 1}
                       </div>
                       
@@ -189,7 +189,7 @@ export default function DMInviteSystem({ onComplete }) {
                 type="button"
                 variant="outline"
                 onClick={addInvite}
-                className="w-full border-dashed border-2 border-gray-300 hover:border-purple-400 text-gray-600 hover:text-purple-600"
+                className="w-full border-dashed border-2 border-gray-300 hover:border-blue-400 text-gray-600 hover:text-blue-600"
               >
                 <Plus className="mr-2" size={16} />
                 Add Another Invite

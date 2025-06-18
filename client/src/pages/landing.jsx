@@ -69,7 +69,7 @@ export default function Landing() {
       icon: TrendingUp,
       title: "AI-Powered Insights",
       description: "Custom call preparation and performance analysis for better outcomes",
-      color: "green"
+      color: "indigo"
     },
     {
       icon: Shield,
@@ -81,7 +81,7 @@ export default function Landing() {
       icon: Mail,
       title: "Email Access",
       description: "Premium access to decision-maker email addresses with approval",
-      color: "yellow"
+      color: "blue"
     },
     {
       icon: Users,

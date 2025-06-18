@@ -143,7 +143,7 @@ export default function SalesDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100 text-sm font-medium">Call Credits</p>
+                  <p className="text-blue-100 text-sm font-medium">Call Credits</p>
                   <p className="text-3xl font-bold">{metrics?.callCredits || 0}</p>
                   <p className="text-purple-100 text-xs">this month</p>
                 </div>
@@ -152,7 +152,7 @@ export default function SalesDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+          <Card className="bg-gradient-to-r from-sky-500 to-sky-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -230,7 +230,7 @@ export default function SalesDashboard() {
                           <div key={invitation._id || invitation.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
                             <div className="flex items-center space-x-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                                invitation.status === 'accepted' ? 'bg-green-100 text-green-600' : 'bg-purple-100 text-purple-600'
+                                invitation.status === 'accepted' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
                               }`}>
                                 {getInitials(invitation.decisionMakerName || invitation.name || 'DM')}
                               </div>
