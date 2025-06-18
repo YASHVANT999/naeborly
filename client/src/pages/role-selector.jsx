@@ -13,7 +13,7 @@ export default function RoleSelector() {
       title: "I'm a Sales Rep",
       description: "Connect with decision makers and book intro calls",
       icon: Briefcase,
-      color: "from-purple-500 to-purple-600",
+      color: "from-blue-600 to-indigo-700",
       route: "/sales-rep/onboarding"
     },
     {
@@ -39,10 +39,10 @@ export default function RoleSelector() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Naeberly</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Naeborly</h1>
           <p className="text-xl text-gray-600">Choose your role to get started</p>
         </div>
 
@@ -52,7 +52,7 @@ export default function RoleSelector() {
             return (
               <Card 
                 key={role.id}
-                className="cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-2 hover:border-purple-300"
+                className="cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-2 hover:border-blue-300"
                 onClick={() => handleRoleSelect(role.route)}
               >
                 <CardHeader className="text-center">
@@ -85,7 +85,7 @@ export default function RoleSelector() {
             Already have an account? 
             <Button 
               variant="link" 
-              className="text-purple-600 hover:text-purple-700 p-0 ml-1"
+              className="text-blue-600 hover:text-blue-700 p-0 ml-1"
               onClick={() => setLocation("/login")}
             >
               Sign In
