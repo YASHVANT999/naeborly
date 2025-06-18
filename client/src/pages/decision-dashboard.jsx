@@ -50,7 +50,7 @@ export default function DecisionDashboard() {
   };
 
   const getCallColor = (index) => {
-    return index % 2 === 0 ? 'blue' : 'purple';
+    return 'blue'; // Use consistent blue theme
   };
 
   const formatDate = (dateString) => {
@@ -206,7 +206,7 @@ export default function DecisionDashboard() {
                       className={`flex items-center justify-between p-4 rounded-lg border-2 ${
                         color === 'blue' 
                           ? 'bg-blue-50 border-blue-200' 
-                          : 'bg-purple-50 border-purple-200'
+                          : 'bg-blue-50 border-blue-200'
                       }`}
                     >
                       <div className="flex items-center space-x-4">

@@ -463,7 +463,7 @@ export default function SalesDashboard() {
                               )}
                             </div>
                             <div className="flex-shrink-0 ml-2">
-                              <Badge className="bg-purple-100 text-purple-800">
+                              <Badge className="bg-blue-100 text-blue-800">
                                 {call.status}
                               </Badge>
                             </div>

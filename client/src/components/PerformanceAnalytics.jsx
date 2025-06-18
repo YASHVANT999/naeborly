@@ -102,7 +102,7 @@ export default function PerformanceAnalytics() {
 
   // Chart color schemes
   const colors = {
-    primary: '#8b5cf6',
+    primary: '#3b82f6',
     secondary: '#06b6d4',
     success: '#10b981',
     warning: '#f59e0b',

@@ -89,12 +89,12 @@ export default function PostCallEvaluation() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <Link href="/decision-dashboard">
-            <Button variant="ghost" className="mb-4 p-0 text-gray-600 hover:text-purple-600">
+            <Button variant="ghost" className="mb-4 p-0 text-gray-600 hover:text-blue-600">
               <ArrowLeft className="mr-2" size={16} />
               Back to Dashboard
             </Button>

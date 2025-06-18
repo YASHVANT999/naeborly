@@ -117,7 +117,7 @@ export default function Navigation() {
             ) : (
               /* Show Sign In button when not authenticated */
               <Link href="/login">
-                <Button className="bg-purple-600 text-white hover:bg-purple-700">
+                <Button className="bg-blue-600 text-white hover:bg-blue-700">
                   Sign In
                 </Button>
               </Link>
