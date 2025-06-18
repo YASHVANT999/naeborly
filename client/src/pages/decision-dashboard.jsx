@@ -210,10 +210,8 @@ export default function DecisionDashboard() {
                       }`}
                     >
                       <div className="flex items-center space-x-4">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                          color === 'blue' ? 'bg-blue-100' : 'bg-purple-100'
-                        }`}>
-                          <User className={color === 'blue' ? 'text-blue-600' : 'text-purple-600'} size={24} />
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100">
+                          <User className="text-blue-600" size={24} />
                         </div>
                         <div>
                           <h3 className="font-bold text-gray-900">{call.salesRepName || 'Sales Rep'}</h3>
@@ -339,7 +337,7 @@ export default function DecisionDashboard() {
                   </div>
                   <Progress 
                     value={metrics?.remainingCalls ? (metrics.remainingCalls / (metrics.totalCallLimit || 3)) * 100 : 0} 
-                    className="h-2 bg-purple-200" 
+                    className="h-2 bg-blue-200" 
                   />
                 </div>
               </CardContent>
