@@ -17,12 +17,12 @@ async function fixAdmin() {
     await mongoose.connect('mongodb+srv://yash6491:YASHVANT@cluster0.f3pmu6p.mongodb.net/biobridge?retryWrites=true&w=majority');
     
     // Delete existing admin if any
-    await User.deleteOne({ email: 'admin@naeberly.com' });
+    await User.deleteOne({ email: 'admin@naeborly.com' });
     
     // Create new admin with correct password hash
     const hashedPassword = await bcrypt.hash('admin123', 10);
     const adminUser = new User({
-      email: 'admin@naeberly.com',
+      email: 'admin@naeborly.com',
       password: hashedPassword,
       role: 'admin',
       firstName: 'Admin',
@@ -32,7 +32,7 @@ async function fixAdmin() {
     
     await adminUser.save();
     console.log('Admin user fixed successfully!');
-    console.log('Email: admin@naeberly.com');
+    console.log('Email: admin@naeborly.com');
     console.log('Password: admin123');
     
     // Test password

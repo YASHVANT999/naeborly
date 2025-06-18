@@ -154,13 +154,13 @@ export default function EnterpriseAdmin() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <Building2 className="text-purple-600 mr-3" size={32} />
+              <Building2 className="text-blue-600 mr-3" size={32} />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Enterprise Admin</h1>
                 <p className="text-sm text-gray-600">Manage company users and settings</p>
               </div>
             </div>
-            <Badge className="bg-purple-100 text-purple-800">
+            <Badge className="bg-blue-100 text-blue-800">
               <Shield className="mr-1 h-3 w-3" />
               Enterprise Access
             </Badge>

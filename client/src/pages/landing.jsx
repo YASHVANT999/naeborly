@@ -347,16 +347,16 @@ export default function Landing() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-purple-600 to-purple-700">
+      <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-blue-700">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-white mb-6">Ready to Start Connecting?</h2>
-          <p className="text-xl text-purple-100 mb-10">
+          <p className="text-xl text-blue-100 mb-10">
             Join the community of sales professionals and decision-makers building meaningful business relationships
           </p>
           <Link href="/sales-dashboard">
             <Button 
               size="lg"
-              className="bg-white text-purple-600 px-8 py-4 text-lg font-bold hover:bg-gray-100 transform hover:scale-105 transition-all shadow-lg"
+              className="bg-white text-blue-600 px-8 py-4 text-lg font-bold hover:bg-gray-100 transform hover:scale-105 transition-all shadow-lg"
             >
               Get Started as Sales Rep
             </Button>
@@ -368,7 +368,7 @@ export default function Landing() {
       <footer className="bg-gray-900 text-white py-8">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <div className="flex justify-center items-center space-x-8">
-            <p className="text-gray-400">© 2024 Naeberly. All rights reserved.</p>
+            <p className="text-gray-400">© 2024 Naeborly. All rights reserved.</p>
             <Link href="/super-admin/login">
               <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
                 <Shield className="h-4 w-4 mr-2" />

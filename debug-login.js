@@ -19,7 +19,7 @@ async function debugLogin() {
     console.log('Testing admin login...');
     
     // Find the admin user
-    const user = await User.findOne({ email: 'admin@naeberly.com' });
+    const user = await User.findOne({ email: 'admin@naeborly.com' });
     if (!user) {
       console.log('ERROR: Admin user not found');
       await mongoose.disconnect();

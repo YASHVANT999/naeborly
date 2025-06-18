@@ -414,7 +414,7 @@ export default function SalesDashboard() {
                     {/* This Week's Calls */}
                     <div>
                       <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                         This Week
                       </h4>
                       <div className="space-y-2">
@@ -433,17 +433,17 @@ export default function SalesDashboard() {
                           return callDate > tomorrow && callDate <= weekEnd && 
                                  callStr !== todayStr && callStr !== tomorrowStr;
                         }).map((call) => (
-                          <div key={call.id} className="flex items-center p-3 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+                          <div key={call.id} className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
                             <div className="flex-shrink-0 mr-3">
-                              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                <User className="w-5 h-5 text-purple-600" />
+                              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <User className="w-5 h-5 text-blue-600" />
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-purple-900 truncate">
+                              <p className="font-medium text-blue-900 truncate">
                                 {call.decisionMakerName || 'Decision Maker'}
                               </p>
-                              <div className="flex items-center text-sm text-purple-700">
+                              <div className="flex items-center text-sm text-blue-700">
                                 <Calendar className="w-3 h-3 mr-1" />
                                 {new Date(call.scheduledAt).toLocaleDateString('en-US', {
                                   weekday: 'short',

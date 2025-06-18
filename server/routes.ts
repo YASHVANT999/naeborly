@@ -365,7 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create Super Admin (development only)
   app.post("/api/create-super-admin", async (req, res) => {
     try {
-      const email = 'superadmin@naeberly.com';
+      const email = 'superadmin@naeborly.com';
       const password = 'SuperAdmin123!';
       
       // Check if super admin already exists

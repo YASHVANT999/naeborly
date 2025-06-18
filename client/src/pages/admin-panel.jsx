@@ -205,14 +205,14 @@ export default function AdminPanel() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100 text-sm font-medium">Active Sales Reps</p>
+                  <p className="text-blue-100 text-sm font-medium">Active Sales Reps</p>
                   <p className="text-3xl font-bold">{stats?.activeSalesReps || 0}</p>
                 </div>
-                <TrendingUp className="text-purple-200" size={32} />
+                <TrendingUp className="text-blue-200" size={32} />
               </div>
             </CardContent>
           </Card>
