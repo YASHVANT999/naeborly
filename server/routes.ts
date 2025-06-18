@@ -398,7 +398,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/sales-rep/invite-decision-makers', requireAuthentication, async (req, res) => {
+  app.post('/api/sales-rep/invite-decision-makers', async (req, res) => {
+    // Simple auth check
+    if (!(req.session as any).userId) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
     try {
       const { invites } = req.body;
       const salesRepId = (req.session as any).userId;
