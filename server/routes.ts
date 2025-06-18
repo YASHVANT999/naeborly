@@ -2060,13 +2060,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ]
         },
         support: {
-          contactEmail: "support@naeberly.com",
-          helpCenterUrl: "https://help.naeberly.com",
-          statusPageUrl: "https://status.naeberly.com",
+          contactEmail: "support@naeborly.com",
+          helpCenterUrl: "https://help.naeborly.com",
+          statusPageUrl: "https://status.naeborly.com",
           prioritySupport: true,
           accountManager: {
             name: "Sarah Johnson",
-            email: "sarah.johnson@naeberly.com",
+            email: "sarah.johnson@naeborly.com",
             phone: "+1 (555) 123-4567"
           }
         }

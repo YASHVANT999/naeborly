@@ -29,7 +29,7 @@ async function createAdminUser() {
     console.log('Connected to MongoDB');
     
     // Check if admin already exists
-    const existingAdmin = await User.findOne({ email: 'admin@naeberly.com' });
+    const existingAdmin = await User.findOne({ email: 'admin@naeborly.com' });
     if (existingAdmin) {
       console.log('Admin user already exists');
       await mongoose.disconnect();
@@ -39,7 +39,7 @@ async function createAdminUser() {
     // Create admin user
     const hashedPassword = await bcrypt.hash('admin123', 10);
     const adminUser = new User({
-      email: 'admin@naeberly.com',
+      email: 'admin@naeborly.com',
       password: hashedPassword,
       role: 'admin',
       firstName: 'Admin',
@@ -51,7 +51,7 @@ async function createAdminUser() {
     
     await adminUser.save();
     console.log('Admin user created successfully!');
-    console.log('Email: admin@naeberly.com');
+    console.log('Email: admin@naeborly.com');
     console.log('Password: admin123');
     
     await mongoose.disconnect();

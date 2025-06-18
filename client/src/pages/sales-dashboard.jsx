@@ -100,7 +100,7 @@ export default function SalesDashboard() {
   const databaseUnlocked = metrics?.databaseUnlocked || false;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Responsive Dashboard Header */}
         <div className="mb-6 sm:mb-8">
@@ -139,7 +139,7 @@ export default function SalesDashboard() {
 
         {/* Responsive Metrics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -208,7 +208,7 @@ export default function SalesDashboard() {
               <Card className="shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <Lock className="text-purple-500 mr-3" size={24} />
+                    <Lock className="text-blue-500 mr-3" size={24} />
                     Database Access Locked
                   </CardTitle>
                 </CardHeader>
@@ -230,7 +230,7 @@ export default function SalesDashboard() {
                           <div key={invitation._id || invitation.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
                             <div className="flex items-center space-x-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                                invitation.status === 'accepted' ? 'bg-green-100 text-green-600' : 'bg-purple-100 text-purple-600'
+                                invitation.status === 'accepted' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
                               }`}>
                                 {getInitials(invitation.decisionMakerName || invitation.name || 'DM')}
                               </div>
@@ -252,7 +252,7 @@ export default function SalesDashboard() {
                     <Button 
                       onClick={() => simulateAcceptanceMutation.mutate()}
                       disabled={simulateAcceptanceMutation.isPending}
-                      className="bg-purple-600 hover:bg-purple-700"
+                      className="bg-blue-600 hover:bg-blue-700"
                     >
                       {simulateAcceptanceMutation.isPending ? (
                         <>
