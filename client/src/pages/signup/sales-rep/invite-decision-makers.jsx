@@ -208,7 +208,7 @@ export default function InviteDecisionMakers() {
                     <Button
                       type="submit"
                       disabled={saveInvitesMutation.isPending}
-                      className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-purple-700"
                     >
                       {saveInvitesMutation.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />

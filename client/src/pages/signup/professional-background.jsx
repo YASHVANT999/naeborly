@@ -168,7 +168,7 @@ export default function ProfessionalBackground() {
           <Button
             onClick={handleNext}
             disabled={!canProceed}
-            className="bg-purple-600 hover:bg-purple-700 px-8"
+            className="bg-blue-600 hover:bg-purple-700 px-8"
           >
             Next
           </Button>

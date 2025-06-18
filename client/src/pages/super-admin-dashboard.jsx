@@ -753,7 +753,7 @@ export default function SuperAdminDashboard() {
                     <Card key={plan.id} className="relative">
                       {plan.bestSeller && (
                         <div className="absolute -top-3 -right-3">
-                          <Badge className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs">
+                          <Badge className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs">
                             Best Seller
                           </Badge>
                         </div>
