@@ -13,7 +13,7 @@ export default function RoleSelector() {
       title: "I'm a Sales Rep",
       description: "Connect with decision makers and book intro calls",
       icon: Briefcase,
-      color: "from-blue-600 to-indigo-700",
+      color: "from-purple-600 to-pink-600",
       route: "/sales-rep/onboarding"
     },
     {
@@ -21,7 +21,7 @@ export default function RoleSelector() {
       title: "I'm a Decision Maker",
       description: "Get introduced to relevant sales professionals",
       icon: Users,
-      color: "from-blue-500 to-blue-600",
+      color: "from-violet-500 to-purple-600",
       route: "/decision-maker/onboarding"
     },
     {
@@ -39,7 +39,7 @@ export default function RoleSelector() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-violet-50 flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Naeborly</h1>

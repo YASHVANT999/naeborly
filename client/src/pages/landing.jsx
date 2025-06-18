@@ -176,12 +176,12 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-violet-50 flex flex-col">
       {/* Hero Section */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">Naeborly</span>
+            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-violet-600">Naeborly</span>
           </h1>
           <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
             Connect sales reps with verified executives through a community-driven platform. 
@@ -191,7 +191,7 @@ export default function Landing() {
             <Link href="/signup/sales-rep/personal-info">
               <Button 
                 size="lg" 
-                className="bg-purple-600 text-white px-8 py-4 text-lg font-semibold hover:bg-purple-700 transform hover:scale-105 transition-all shadow-lg"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 text-lg font-semibold transform hover:scale-105 transition-all shadow-lg"
               >
                 I'm a Sales Rep <ArrowRight className="ml-2" size={20} />
               </Button>
