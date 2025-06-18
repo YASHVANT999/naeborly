@@ -86,7 +86,7 @@ export default function DMInviteSystem({ onComplete }) {
     <div className="max-w-4xl mx-auto p-6">
       <Card className="shadow-lg">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-full flex items-center justify-center">
             <Users className="text-white" size={32} />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">
@@ -209,7 +209,7 @@ export default function DMInviteSystem({ onComplete }) {
             <Button
               type="submit"
               disabled={isSubmitting || sendInvitesMutation.isPending}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-blue-600 hover:bg-blue-700"
             >
               {isSubmitting || sendInvitesMutation.isPending ? (
                 <>
