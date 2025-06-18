@@ -145,9 +145,9 @@ export default function SalesDashboard() {
                 <div>
                   <p className="text-blue-100 text-sm font-medium">Call Credits</p>
                   <p className="text-3xl font-bold">{metrics?.callCredits || 0}</p>
-                  <p className="text-purple-100 text-xs">this month</p>
+                  <p className="text-blue-100 text-xs">this month</p>
                 </div>
-                <Phone className="text-purple-200" size={32} />
+                <Phone className="text-blue-200" size={32} />
               </div>
             </CardContent>
           </Card>
