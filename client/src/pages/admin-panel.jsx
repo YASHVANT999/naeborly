@@ -139,7 +139,7 @@ export default function AdminPanel() {
   const getRoleColor = (role) => {
     switch (role) {
       case 'sales_rep': return 'bg-blue-100 text-blue-800';
-      case 'decision_maker': return 'bg-purple-100 text-purple-800';
+      case 'decision_maker': return 'bg-blue-100 text-blue-800';
       case 'admin': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }

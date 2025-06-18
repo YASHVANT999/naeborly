@@ -140,7 +140,7 @@ export default function FlagsManagement() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Flag className="h-12 w-12 animate-pulse text-purple-600 mx-auto mb-4" />
+          <Flag className="h-12 w-12 animate-pulse text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading flags...</p>
         </div>
       </div>

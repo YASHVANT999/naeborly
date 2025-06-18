@@ -109,8 +109,8 @@ export default function PostCallEvaluation() {
         <Card className="mb-8 shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                <User className="text-purple-600" size={24} />
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <User className="text-blue-600" size={24} />
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-bold text-gray-900">{callData.name}</h3>

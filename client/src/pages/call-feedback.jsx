@@ -195,7 +195,7 @@ export default function CallFeedback() {
               <Button
                 onClick={handleSubmit}
                 disabled={!selectedExperience}
-                className="bg-purple-600 hover:bg-purple-700 px-8 py-3"
+                className="bg-blue-600 hover:bg-blue-700 px-8 py-3"
               >
                 <CheckCircle className="mr-2" size={16} />
                 Submit Feedback
