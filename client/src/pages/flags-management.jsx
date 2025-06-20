@@ -367,17 +367,24 @@ export default function FlagsManagement() {
               </DialogHeader>
               <div className="space-y-4">
                 <div className="flex gap-2">
-                  <Badge className={getStatusColor(selectedFlag.status)}>
-                    {selectedFlag.status.charAt(0).toUpperCase() + selectedFlag.status.slice(1)}
+                  <Badge className={getStatusColor(selectedFlag.status || 'open')}>
+                    {selectedFlag.status ? 
+                      selectedFlag.status.charAt(0).toUpperCase() + selectedFlag.status.slice(1) : 'Unknown'
+                    }
                   </Badge>
-                  <Badge variant="outline" className={getPriorityColor(selectedFlag.priority)}>
-                    {selectedFlag.priority.charAt(0).toUpperCase() + selectedFlag.priority.slice(1)} Priority
+                  <Badge variant="outline" className={getPriorityColor(selectedFlag.priority || 'medium')}>
+                    {selectedFlag.priority ? 
+                      selectedFlag.priority.charAt(0).toUpperCase() + selectedFlag.priority.slice(1) : 'Medium'
+                    } Priority
                   </Badge>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Reason</Label>
                   <p className="text-gray-900">
-                    {selectedFlag.reason?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    {selectedFlag.reason ? 
+                      selectedFlag.reason.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
+                      'No reason provided'
+                    }
                   </p>
                 </div>
                 <div>
