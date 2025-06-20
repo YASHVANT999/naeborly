@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Loader2, Eye, EyeOff } from "lucide-react";
 import { superAdminLoginSchema } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function SuperAdminLogin() {
   const [, setLocation] = useLocation();

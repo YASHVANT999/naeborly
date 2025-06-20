@@ -48,14 +48,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get current user (mock endpoint)
-  app.get("/api/user", async (req, res) => {
-    // For demo purposes, return a mock sales rep user
-    const user = await storage.getUser("1");
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+  // Get current authenticated user
+  app.get("/api/current-user", async (req, res) => {
+    try {
+      const userId = req.session?.userId;
+      const isAuthenticated = req.session?.isAuthenticated;
+      
+      console.log('Current user check - Session ID:', req.sessionID, 'User ID:', userId, 'Authenticated:', isAuthenticated);
+      
+      if (!userId || !isAuthenticated) {
+        console.log('No authenticated user found');
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        console.log('User not found in database:', userId);
+        // Clear invalid session
+        req.session.destroy(() => {});
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      // Return user data without password
+      const { password: _, ...userWithoutPassword } = user;
+      console.log('Current user found:', userWithoutPassword.email, userWithoutPassword.role);
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error('Current user error:', error);
+      res.status(500).json({ message: "Failed to get current user" });
     }
-    res.json(user);
   });
 
   // Get invitations for current user
@@ -421,21 +442,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid super admin credentials" });
       }
       
-      // Set session
-      (req.session as any).userId = user.id;
-      (req.session as any).userRole = user.role;
+      // Set session with proper save
+      req.session.userId = user.id;
+      req.session.userRole = user.role;
+      req.session.isAuthenticated = true;
       
-      console.log('Super admin login successful:', email);
-      res.json({ 
-        success: true, 
-        message: "Super admin login successful", 
-        user: { 
-          id: user.id, 
-          email: user.email, 
-          role: user.role,
-          firstName: user.firstName,
-          lastName: user.lastName
-        } 
+      req.session.save((err) => {
+        if (err) {
+          console.error('Super admin session save error:', err);
+          return res.status(500).json({ message: "Session creation failed" });
+        }
+        
+        console.log('Super admin login successful:', email, 'Session ID:', req.sessionID);
+        res.json({ 
+          success: true, 
+          message: "Super admin login successful", 
+          user: { 
+            id: user.id, 
+            email: user.email, 
+            role: user.role,
+            firstName: user.firstName,
+            lastName: user.lastName
+          },
+          sessionId: req.sessionID
+        });
       });
     } catch (error) {
       console.error('Super admin login error:', error);
@@ -2979,6 +3009,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Login error:', error);
       res.status(500).json({ message: "Login failed", error: error.message });
     }
+  });
+
+  // Logout route
+  app.post("/api/logout", (req, res) => {
+    const sessionId = req.sessionID;
+    const userId = req.session?.userId;
+    
+    console.log('Logout request - Session ID:', sessionId, 'User ID:', userId);
+    
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destruction error:', err);
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      
+      res.clearCookie('naeborly.sid');
+      console.log('Logout successful for session:', sessionId);
+      res.json({ success: true, message: "Logout successful" });
+    });
   });
 
   // ===== LOGOUT ROUTE =====

@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Handshake, Eye, EyeOff, ArrowLeft } from "lucide-react";
 
 const loginSchema = z.object({
@@ -43,6 +43,9 @@ export default function Login() {
         title: "Welcome back!",
         description: "Login successful",
       });
+      
+      // Invalidate current user query to refresh authentication state
+      queryClient.invalidateQueries({ queryKey: ['/api/current-user'] });
       
       // Navigate based on user role
       if (response.user.role === 'sales_rep') {
