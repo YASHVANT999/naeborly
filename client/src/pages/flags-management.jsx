@@ -302,17 +302,19 @@ export default function FlagsManagement() {
                           {flag.status === 'open' && <AlertTriangle className="mr-1" size={12} />}
                           {flag.status === 'pending' && <Clock className="mr-1" size={12} />}
                           {flag.status === 'resolved' && <CheckCircle className="mr-1" size={12} />}
-                          {flag.status.charAt(0).toUpperCase() + flag.status.slice(1)}
+                          {flag.status ? flag.status.charAt(0).toUpperCase() + flag.status.slice(1) : 'Unknown'}
                         </Badge>
-                        <Badge variant="outline" className={getPriorityColor(flag.priority)}>
-                          {flag.priority.charAt(0).toUpperCase() + flag.priority.slice(1)} Priority
+                        <Badge variant="outline" className={getPriorityColor(flag.priority || 'medium')}>
+                          {flag.priority ? 
+                            flag.priority.charAt(0).toUpperCase() + flag.priority.slice(1) : 'Medium'
+                          } Priority
                         </Badge>
                         <span className="text-sm text-gray-500">
                           {new Date(flag.reportedAt).toLocaleDateString()}
                         </span>
                       </div>
                       <h3 className="font-semibold text-gray-900 mb-2">
-                        {flag.reason?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        {flag.reason ? flag.reason.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'No reason provided'}
                       </h3>
                       <p className="text-gray-600 mb-3">{flag.description}</p>
                       <div className="text-sm text-gray-500">
