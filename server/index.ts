@@ -1,24 +1,68 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import MongoStore from "connect-mongo";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { connectToMongoDB } from "./mongodb";
 
 
 const app = express();
+
+// Trust proxy for secure cookies in production
+app.set('trust proxy', 1);
+
+// CORS configuration for production deployment
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    // In development, allow all origins
+    if (process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
+    
+    // In production, allow Replit domains and custom domains
+    const allowedOrigins = [
+      /^https:\/\/.*\.replit\.dev$/,
+      /^https:\/\/.*\.repl\.co$/,
+      /^https:\/\/.*\.replit\.app$/,
+      /^https:\/\/localhost:\d+$/,
+      /^http:\/\/localhost:\d+$/
+    ];
+    
+    const isAllowed = allowedOrigins.some(pattern => pattern.test(origin));
+    callback(null, isAllowed);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session configuration - using memory store for MongoDB
+// Session configuration with MongoDB store for production persistence
+const isProduction = process.env.NODE_ENV === 'production';
+const mongoUrl = process.env.MONGODB_URI || 'mongodb+srv://yash6491:YASHVANT@cluster0.f3pmu6p.mongodb.net/biobridge?retryWrites=true&w=majority';
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key-here',
+  secret: process.env.SESSION_SECRET || 'naeborly-session-secret-key-2024',
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: mongoUrl,
+    touchAfter: 24 * 3600 // lazy session update
+  }),
   cookie: {
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production'
-  }
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-origin in production
+    domain: isProduction ? undefined : undefined // Let browser handle domain
+  },
+  name: 'naeborly.sid' // Custom session name
 }));
 
 app.use((req, res, next) => {

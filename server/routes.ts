@@ -29,7 +29,10 @@ import {
 // Extend Express Request type to include session
 declare module 'express-session' {
   interface SessionData {
-    signupUserId?: number;
+    signupUserId?: string;
+    userId?: string;
+    userRole?: string;
+    isAuthenticated?: boolean;
   }
 }
 
@@ -443,11 +446,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication middleware
   const requireAuthentication = (req: any, res: any, next: any) => {
     const userId = req.session?.userId;
+    const isAuthenticated = req.session?.isAuthenticated;
     
-    if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
+    console.log('Auth check - Session ID:', req.sessionID, 'User ID:', userId, 'Authenticated:', isAuthenticated);
+    
+    if (!userId || !isAuthenticated) {
+      console.log('Authentication failed - missing session data');
+      return res.status(401).json({ message: "Not authenticated" });
     }
     
+    req.userId = userId;
     next();
   };
 
@@ -2942,19 +2950,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid email or password" });
       }
       
-      // Store user session
-      (req.session as any).userId = user.id;
-      (req.session as any).userRole = user.role;
+      // Store user session with proper typing
+      req.session.userId = user.id;
+      req.session.userRole = user.role;
+      req.session.isAuthenticated = true;
       
-      console.log('Login successful for:', user.email);
-      
-      // Return user data (excluding password)
-      const { password: _, ...userWithoutPassword } = user;
-      
-      res.json({
-        success: true,
-        message: "Login successful",
-        user: userWithoutPassword
+      // Force session save before response
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ message: "Session creation failed" });
+        }
+        
+        console.log('Login successful for:', user.email, 'Session ID:', req.sessionID);
+        
+        // Return user data (excluding password)
+        const { password: _, ...userWithoutPassword } = user;
+        
+        res.json({
+          success: true,
+          message: "Login successful",
+          user: userWithoutPassword,
+          sessionId: req.sessionID
+        });
       });
       
     } catch (error: any) {
