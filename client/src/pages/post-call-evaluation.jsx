@@ -194,11 +194,20 @@ export default function PostCallEvaluation() {
             <div className="flex justify-end">
               <Button
                 onClick={handleSubmit}
-                disabled={!selectedExperience}
+                disabled={!selectedExperience || submitEvaluationMutation.isPending}
                 className="bg-blue-600 hover:bg-blue-700 px-8 py-3"
               >
-                <CheckCircle className="mr-2" size={16} />
-                Submit Evaluation
+                {submitEvaluationMutation.isPending ? (
+                  <>
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="mr-2" size={16} />
+                    Submit Evaluation
+                  </>
+                )}
               </Button>
             </div>
           </CardContent>

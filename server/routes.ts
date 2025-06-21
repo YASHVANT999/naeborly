@@ -888,6 +888,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Submit post-call evaluation
+  app.post("/api/decision-maker/call-evaluation", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "User not logged in" });
+    }
+
+    try {
+      const evaluationData = {
+        ...req.body,
+        decisionMakerId: req.session.userId,
+        submittedAt: new Date()
+      };
+
+      // Create feedback record
+      const feedback = await storage.createFeedback(evaluationData);
+
+      // Update call record if it exists
+      if (evaluationData.callId) {
+        await storage.updateCall(evaluationData.callId, {
+          rating: evaluationData.rating,
+          feedback: evaluationData.comments,
+          status: 'completed',
+          completedAt: new Date()
+        });
+      }
+
+      // Log activity
+      await storage.createActivityLog({
+        action: 'SUBMIT_CALL_EVALUATION',
+        performedBy: req.session.userId,
+        details: `Submitted evaluation for call with ${evaluationData.salesRepName}`,
+        metadata: {
+          callId: evaluationData.callId,
+          rating: evaluationData.rating,
+          experience: evaluationData.experience
+        }
+      });
+
+      res.json({
+        success: true,
+        message: "Evaluation submitted successfully",
+        feedbackId: feedback.id
+      });
+    } catch (error) {
+      console.error('Error submitting call evaluation:', error);
+      res.status(500).json({ message: "Failed to submit evaluation" });
+    }
+  });
+
   // Demo calendar connection endpoint
   app.patch("/api/users/:userId", async (req, res) => {
     if (!req.session.userId) {
