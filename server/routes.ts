@@ -740,7 +740,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ===== GOOGLE CALENDAR INTEGRATION ROUTES =====
 
-  // Initiate Google Calendar OAuth
+  // Initiate Google Calendar OAuth (direct redirect)
+  app.get("/api/auth/google", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "User not logged in" });
+    }
+
+    try {
+      const authUrl = getAuthUrl(req.session.userId);
+      res.redirect(authUrl);
+    } catch (error) {
+      console.error('Error generating auth URL:', error);
+      res.status(500).json({ message: "Failed to generate auth URL" });
+    }
+  });
+
+  // Initiate Google Calendar OAuth (API endpoint)
   app.get("/api/auth/google/connect", requireAuthentication, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
@@ -770,26 +785,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         calendarIntegrationEnabled: true
       });
 
-      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5000'}/sales-dashboard?calendar=connected`);
+      res.redirect('/?calendar=connected');
     } catch (error) {
       console.error('Error in Google Calendar callback:', error);
-      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5000'}/sales-dashboard?calendar=error`);
+      res.redirect('/?calendar=error');
     }
   });
 
   // Get calendar integration status
-  app.get("/api/calendar/status", requireAuthentication, async (req, res) => {
+  app.get("/api/calendar/status", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "User not logged in" });
+    }
+
     try {
-      const userId = (req.session as any).userId;
-      const user = await storage.getUser(userId);
-      
+      const user = await storage.getUserById(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
       res.json({
-        connected: user?.calendarIntegrationEnabled || false,
-        hasTokens: !!(user?.googleCalendarTokens?.access_token)
+        connected: !!user.calendarIntegrationEnabled,
+        email: user.email
       });
     } catch (error) {
-      console.error('Error getting calendar status:', error);
-      res.status(500).json({ message: "Failed to get calendar status" });
+      console.error('Error checking calendar status:', error);
+      res.status(500).json({ message: "Failed to check calendar status" });
     }
   });
 
