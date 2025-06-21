@@ -1012,6 +1012,144 @@ export class SimpleMongoDBStorage implements IStorage {
     }
   }
 
+  // Suspension-related methods
+  async checkRepSuspensionStatus(repId: string): Promise<any> {
+    try {
+      await connectToMongoDB();
+      const user = await User.findById(repId);
+      if (!user) {
+        return { isSuspended: false, suspension: null };
+      }
+
+      const suspension = user.suspension;
+      if (!suspension || !suspension.isActive) {
+        return { isSuspended: false, suspension: null };
+      }
+
+      // Check if suspension has expired
+      const now = new Date();
+      const endDate = new Date(suspension.endDate);
+      
+      if (endDate < now) {
+        // Suspension has expired, deactivate it
+        await User.findByIdAndUpdate(repId, {
+          'suspension.isActive': false
+        });
+        return { isSuspended: false, suspension: null };
+      }
+
+      return { isSuspended: true, suspension };
+    } catch (error) {
+      console.error('Error checking rep suspension status:', error);
+      return { isSuspended: false, suspension: null };
+    }
+  }
+
+  async suspendRep(repId: string, suspensionData: any): Promise<any> {
+    try {
+      await connectToMongoDB();
+      
+      const suspension = {
+        type: suspensionData.type, // '30-day' or '90-day'
+        startDate: new Date(),
+        endDate: suspensionData.endDate,
+        suspensionReason: suspensionData.reason,
+        isActive: true,
+        triggeredBy: suspensionData.triggeredBy || 'automatic'
+      };
+
+      const updatedUser = await User.findByIdAndUpdate(
+        repId,
+        { $set: { suspension } },
+        { new: true }
+      );
+
+      if (updatedUser) {
+        // Log the suspension
+        await this.createActivityLog({
+          action: 'SUSPEND_REP',
+          performedBy: 'system',
+          targetUser: repId,
+          details: `Sales rep suspended: ${suspension.suspensionReason}`,
+          metadata: {
+            suspensionType: suspension.type,
+            endDate: suspension.endDate
+          }
+        });
+      }
+
+      return updatedUser ? this.toPlainObject(updatedUser) : null;
+    } catch (error) {
+      console.error('Error suspending rep:', error);
+      throw error;
+    }
+  }
+
+  async liftRepSuspension(repId: string, liftedBy: string, reason?: string): Promise<any> {
+    try {
+      await connectToMongoDB();
+      
+      const updatedUser = await User.findByIdAndUpdate(
+        repId,
+        { 
+          $set: { 
+            'suspension.isActive': false,
+            'suspension.liftedAt': new Date(),
+            'suspension.liftedBy': liftedBy,
+            'suspension.liftReason': reason || 'Manual lift'
+          }
+        },
+        { new: true }
+      );
+
+      if (updatedUser) {
+        // Log the suspension lift
+        await this.createActivityLog({
+          action: 'LIFT_SUSPENSION',
+          performedBy: liftedBy,
+          targetUser: repId,
+          details: `Sales rep suspension lifted: ${reason || 'Manual lift'}`,
+          metadata: {
+            originalSuspensionType: updatedUser.suspension?.type
+          }
+        });
+      }
+
+      return updatedUser ? this.toPlainObject(updatedUser) : null;
+    } catch (error) {
+      console.error('Error lifting rep suspension:', error);
+      throw error;
+    }
+  }
+
+  async getRecentFeedbackForRep(repId: string, limit: number = 10): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const feedback = await Feedback.find({ salesRepId: repId })
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .populate('decisionMakerId', 'firstName lastName email');
+      return feedback.map(f => this.toPlainObject(f));
+    } catch (error) {
+      console.error('Error getting recent feedback for rep:', error);
+      return [];
+    }
+  }
+
+  async getSuspendedReps(): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const suspendedUsers = await User.find({
+        'suspension.isActive': true,
+        'suspension.endDate': { $gt: new Date() }
+      });
+      return suspendedUsers.map(user => this.toPlainObject(user));
+    } catch (error) {
+      console.error('Error getting suspended reps:', error);
+      return [];
+    }
+  }
+
   private toPlainObject(mongooseDoc: any): any {
     const obj = mongooseDoc.toObject();
     // Convert MongoDB _id to id for consistency
