@@ -949,6 +949,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check for suspicious sales rep activity (for DM dashboard)
+  app.get("/api/decision-maker/suspicious-activity", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "User not logged in" });
+    }
+
+    try {
+      // Get current user to find their company domain
+      const currentUser = await storage.getUserById(req.session.userId);
+      if (!currentUser || !currentUser.companyDomain) {
+        return res.json({ hasSuspiciousActivity: false, suspendedRepsCount: 0 });
+      }
+
+      // Find all sales reps that have interacted with this DM's company
+      const companyFeedback = await storage.getFeedbackByCompany(currentUser.companyDomain);
+      const repIds = [...new Set(companyFeedback.map(f => f.salesRepId?.toString()).filter(Boolean))];
+
+      // Check for suspended reps
+      let suspendedRepsCount = 0;
+      const suspendedReps = [];
+
+      for (const repId of repIds) {
+        const suspensionStatus = await storage.checkRepSuspensionStatus(repId);
+        if (suspensionStatus.isSuspended) {
+          suspendedRepsCount++;
+          const rep = await storage.getUserById(repId);
+          if (rep) {
+            suspendedReps.push({
+              repId,
+              repName: `${rep.firstName} ${rep.lastName}`,
+              repEmail: rep.email,
+              suspension: suspensionStatus.suspension
+            });
+          }
+        }
+      }
+
+      res.json({
+        hasSuspiciousActivity: suspendedRepsCount > 0,
+        suspendedRepsCount,
+        suspendedReps,
+        companyDomain: currentUser.companyDomain
+      });
+    } catch (error) {
+      console.error('Error checking suspicious activity:', error);
+      res.status(500).json({ message: "Failed to check suspicious activity" });
+    }
+  });
+
   // Helper function to handle red flag suspension logic
   async function handleRedFlagSuspension(salesRepId: string, feedbackId: string) {
     try {

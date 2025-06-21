@@ -206,6 +206,33 @@ export default function DecisionDashboard() {
           </Card>
         </div>
 
+        {/* Suspicious Activity Alert */}
+        {suspiciousActivity?.hasSuspiciousActivity && (
+          <Alert className="mb-6 border-orange-200 bg-orange-50">
+            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-orange-800">
+              <div className="space-y-2">
+                <div className="font-semibold">
+                  Suspicious Sales Rep Activity Detected
+                </div>
+                <div className="text-sm">
+                  <p>We've detected {suspiciousActivity.suspendedRepsCount} sales rep(s) in your network who have been suspended due to poor behavior or red flag feedback.</p>
+                  <div className="mt-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="text-orange-700 border-orange-300"
+                      onClick={() => window.location.href = '/dm-suspension-alerts'}
+                    >
+                      View Details
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
@@ -268,6 +295,15 @@ export default function DecisionDashboard() {
                           >
                             <Phone className="mr-1" size={12} />
                             Join Call
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            size="sm"
+                            className="border-red-200 text-red-600"
+                            onClick={() => window.location.href = '/post-call-evaluation'}
+                          >
+                            <Star className="mr-1" size={12} />
+                            Rate Call
                           </Button>
                         </div>
                       </div>
@@ -486,7 +522,11 @@ export default function DecisionDashboard() {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="ghost" className="w-full justify-start p-3">
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start p-3"
+                  onClick={() => window.location.href = '/post-call-evaluation'}
+                >
                   <Star className="text-yellow-500 mr-3" size={16} />
                   <span className="text-sm font-medium">Rate Last Call</span>
                 </Button>
@@ -498,6 +538,18 @@ export default function DecisionDashboard() {
                   <MessageCircle className="text-blue-500 mr-3" size={16} />
                   <span className="text-sm font-medium">View Feedback</span>
                 </Button>
+                {suspiciousActivity?.hasSuspiciousActivity && (
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start p-3 text-orange-600"
+                    onClick={() => window.location.href = '/dm-suspension-alerts'}
+                  >
+                    <AlertTriangle className="text-orange-500 mr-3" size={16} />
+                    <span className="text-sm font-medium">
+                      {suspiciousActivity.suspendedRepsCount} Suspended Sales Reps
+                    </span>
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>
