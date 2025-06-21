@@ -33,6 +33,7 @@ import DecisionMakerChoosePackage from "@/pages/signup/decision-maker/package";
 import TestSignup from "@/pages/test-signup";
 import FlagsManagement from "@/pages/flags-management";
 import NotFound from "@/pages/not-found";
+import DMSuspensionAlerts from "@/pages/dm-suspension-alerts";
 
 function Router() {
   return (
@@ -87,6 +88,11 @@ function Router() {
       <Route path="/signup/decision-maker/nominate" component={DecisionMakerNominate} />
       <Route path="/signup/decision-maker/package" component={DecisionMakerChoosePackage} />
       <Route path="/test-signup" component={TestSignup} />
+      <Route path="/dm-suspension-alerts">
+        <ProtectedRoute requiredRole="decision_maker">
+          <DMSuspensionAlerts />
+        </ProtectedRoute>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

@@ -59,6 +59,12 @@ export default function DecisionDashboard() {
     queryKey: ['/api/calendar/upcoming-meetings'],
     enabled: !!user?.id && !!calendarStatus?.connected,
   });
+
+  // Check for suspicious sales rep activity for DM
+  const { data: suspiciousActivity } = useQuery({
+    queryKey: ['/api/decision-maker/suspicious-activity'],
+    retry: false
+  });
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star 
