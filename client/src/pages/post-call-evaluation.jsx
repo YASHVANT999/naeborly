@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   ArrowLeft,
   User,
@@ -19,8 +22,12 @@ export default function PostCallEvaluation() {
   const [, setLocation] = useLocation();
   const [selectedExperience, setSelectedExperience] = useState(null);
   const [comments, setComments] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const callData = {
+    id: "call_123",
+    salesRepId: "rep_456",
     name: "Sarah Chen",
     company: "TechCorp Solutions",
     role: "VP of Sales",
@@ -81,11 +88,64 @@ export default function PostCallEvaluation() {
     }
   ];
 
+  // Submit evaluation mutation
+  const submitEvaluationMutation = useMutation({
+    mutationFn: async (evaluationData) => {
+      return await apiRequest('/api/decision-maker/call-evaluation', {
+        method: 'POST',
+        body: JSON.stringify(evaluationData)
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Evaluation submitted",
+        description: "Thank you for your feedback! Your evaluation has been saved.",
+      });
+      
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/decision-maker/calls'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/decision-maker/metrics'] });
+      
+      // Navigate back to dashboard
+      setTimeout(() => {
+        setLocation("/decision-dashboard");
+      }, 1000);
+    },
+    onError: (error) => {
+      toast({
+        title: "Submission failed",
+        description: error.message || "Failed to submit evaluation. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleSubmit = () => {
-    // Handle form submission here
-    console.log("Selected experience:", selectedExperience);
-    console.log("Comments:", comments);
-    setLocation("/decision-dashboard");
+    if (!selectedExperience) {
+      toast({
+        title: "Please select your experience",
+        description: "You must select a call experience before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const selectedOption = experienceOptions.find(opt => opt.id === selectedExperience);
+    
+    const evaluationData = {
+      callId: callData.id,
+      salesRepId: callData.salesRepId,
+      experience: selectedExperience,
+      experienceTitle: selectedOption?.title,
+      rating: selectedOption?.rating || 3,
+      comments: comments.trim(),
+      evaluatedAt: new Date().toISOString(),
+      callDate: callData.date,
+      salesRepName: callData.name,
+      company: callData.company
+    };
+
+    submitEvaluationMutation.mutate(evaluationData);
   };
 
   return (
