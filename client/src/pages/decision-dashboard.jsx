@@ -1,8 +1,12 @@
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   CheckCircle, 
   Calendar, 
@@ -16,7 +20,11 @@ import {
   Phone,
   AlertTriangle,
   MessageCircle,
-  Loader2
+  Loader2,
+  RefreshCw,
+  CalendarDays,
+  Video,
+  Users
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
@@ -38,6 +46,18 @@ export default function DecisionDashboard() {
   const { data: metrics, isLoading: metricsLoading } = useQuery({
     queryKey: ['/api/decision-maker/metrics'],
     enabled: !!user?.id
+  });
+
+  // Fetch calendar integration status
+  const { data: calendarStatus, isLoading: calendarStatusLoading } = useQuery({
+    queryKey: ['/api/calendar/status'],
+    enabled: !!user?.id
+  });
+
+  // Fetch upcoming meetings
+  const { data: upcomingMeetings = [], isLoading: meetingsLoading, refetch: refetchMeetings } = useQuery({
+    queryKey: ['/api/calendar/upcoming-meetings'],
+    enabled: !!user?.id && !!calendarStatus?.connected,
   });
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -343,23 +363,103 @@ export default function DecisionDashboard() {
               </CardContent>
             </Card>
 
-            {/* Calendar */}
+            {/* Calendar Integration */}
             <Card className="shadow-lg">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="text-blue-500 mr-3" size={20} />
-                  Calendar
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Calendar className="text-blue-500 mr-3" size={20} />
+                    Calendar Integration
+                  </div>
+                  {calendarStatus?.connected && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => refetchMeetings()}
+                      disabled={meetingsLoading}
+                    >
+                      <RefreshCw className={`h-4 w-4 ${meetingsLoading ? 'animate-spin' : ''}`} />
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center text-green-600 mb-4">
-                  <CheckCircle className="mr-2" size={16} />
-                  <span className="text-sm font-medium">Google Calendar Connected</span>
-                </div>
-                <Button variant="outline" className="w-full">
-                  <Settings className="mr-2" size={16} />
-                  Manage Availability
-                </Button>
+                {calendarStatusLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full" />
+                  </div>
+                ) : calendarStatus?.connected ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center text-green-600 mb-4">
+                      <CheckCircle className="mr-2" size={16} />
+                      <span className="text-sm font-medium">Google Calendar Connected</span>
+                    </div>
+                    
+                    {/* Upcoming Meetings */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-gray-900">Upcoming Meetings</h4>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <CalendarDays className="mr-2" size={14} />
+                              View All
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center">
+                                <Calendar className="mr-2" size={20} />
+                                Upcoming Meetings with Sales Reps
+                              </DialogTitle>
+                            </DialogHeader>
+                            <CalendarMeetingsView meetings={upcomingMeetings} loading={meetingsLoading} />
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                      
+                      {meetingsLoading ? (
+                        <div className="space-y-2">
+                          {[1, 2, 3].map(i => (
+                            <div key={i} className="animate-pulse">
+                              <div className="h-12 bg-gray-200 rounded-lg"></div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : upcomingMeetings.length > 0 ? (
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {upcomingMeetings.slice(0, 3).map((meeting) => (
+                            <MeetingCard key={meeting.id} meeting={meeting} compact={true} />
+                          ))}
+                          {upcomingMeetings.length > 3 && (
+                            <p className="text-sm text-gray-500 text-center py-2">
+                              +{upcomingMeetings.length - 3} more meetings
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-gray-500">
+                          <CalendarDays className="mx-auto mb-2" size={24} />
+                          <p className="text-sm">No upcoming meetings</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center text-orange-600 mb-4">
+                      <AlertTriangle className="mr-2" size={16} />
+                      <span className="text-sm font-medium">Calendar Not Connected</span>
+                    </div>
+                    <Button 
+                      onClick={() => window.location.href = '/api/auth/google'}
+                      className="w-full"
+                    >
+                      <Calendar className="mr-2" size={16} />
+                      Connect Google Calendar
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -386,6 +486,229 @@ export default function DecisionDashboard() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Meeting Card Component
+function MeetingCard({ meeting, compact = false }) {
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const isToday = date.toDateString() === today.toDateString();
+    const isTomorrow = date.toDateString() === tomorrow.toDateString();
+    
+    if (isToday) return `Today, ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+    if (isTomorrow) return `Tomorrow, ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+    
+    return date.toLocaleDateString([], {
+      weekday: 'short',
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const extractMeetingLink = (description = '') => {
+    const zoomRegex = /https:\/\/[\w-]*\.?zoom\.us\/j\/[\d\w?=-]+/g;
+    const meetRegex = /https:\/\/meet\.google\.com\/[\w-]+/g;
+    const teamsRegex = /https:\/\/teams\.microsoft\.com\/[\w\/?=-]+/g;
+    
+    const zoomMatch = description.match(zoomRegex);
+    const meetMatch = description.match(meetRegex);
+    const teamsMatch = description.match(teamsRegex);
+    
+    return zoomMatch?.[0] || meetMatch?.[0] || teamsMatch?.[0] || null;
+  };
+
+  const meetingLink = extractMeetingLink(meeting.description);
+
+  if (compact) {
+    return (
+      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900 truncate">
+            {meeting.summary || 'Meeting with Sales Rep'}
+          </p>
+          <p className="text-xs text-gray-500">
+            {formatDate(meeting.start?.dateTime || meeting.start?.date)}
+          </p>
+        </div>
+        {meetingLink && (
+          <Button size="sm" variant="ghost" asChild>
+            <a href={meetingLink} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <Video className="text-blue-500" size={16} />
+              <h4 className="font-medium text-gray-900 truncate">
+                {meeting.summary || 'Meeting with Sales Rep'}
+              </h4>
+            </div>
+            
+            <div className="space-y-1 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
+                <Clock size={14} />
+                <span>{formatDate(meeting.start?.dateTime || meeting.start?.date)}</span>
+              </div>
+              
+              {meeting.organizer?.email && (
+                <div className="flex items-center gap-2">
+                  <Users size={14} />
+                  <span>Organized by: {meeting.organizer.email}</span>
+                </div>
+              )}
+              
+              {meeting.attendees && meeting.attendees.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Users size={14} />
+                  <span>{meeting.attendees.length} attendees</span>
+                </div>
+              )}
+            </div>
+            
+            {meeting.description && (
+              <p className="text-sm text-gray-500 mt-2 line-clamp-2">
+                {meeting.description.replace(/https?:\/\/[^\s]+/g, '').trim()}
+              </p>
+            )}
+          </div>
+          
+          <div className="flex flex-col gap-2 ml-4">
+            {meeting.status === 'confirmed' && (
+              <Badge className="bg-green-100 text-green-800">Confirmed</Badge>
+            )}
+            {meetingLink && (
+              <Button size="sm" asChild>
+                <a href={meetingLink} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="mr-1" size={14} />
+                  Join
+                </a>
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Calendar Meetings View Component
+function CalendarMeetingsView({ meetings, loading }) {
+  const [filterDate, setFilterDate] = useState('');
+  const [filterSalesRep, setFilterSalesRep] = useState('');
+
+  const filteredMeetings = meetings.filter(meeting => {
+    const matchesDate = !filterDate || 
+      new Date(meeting.start?.dateTime || meeting.start?.date).toDateString().includes(filterDate);
+    const matchesSalesRep = !filterSalesRep || 
+      meeting.organizer?.email?.toLowerCase().includes(filterSalesRep.toLowerCase()) ||
+      meeting.summary?.toLowerCase().includes(filterSalesRep.toLowerCase());
+    
+    return matchesDate && matchesSalesRep;
+  });
+
+  const groupedMeetings = filteredMeetings.reduce((groups, meeting) => {
+    const date = new Date(meeting.start?.dateTime || meeting.start?.date);
+    const dateKey = date.toDateString();
+    
+    if (!groups[dateKey]) {
+      groups[dateKey] = [];
+    }
+    groups[dateKey].push(meeting);
+    return groups;
+  }, {});
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="animate-pulse">
+            <div className="h-20 bg-gray-200 rounded-lg"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Filters */}
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <Label htmlFor="filter-date">Filter by Date</Label>
+          <Input
+            id="filter-date"
+            type="text"
+            placeholder="e.g., Jan 15 or Monday"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+          />
+        </div>
+        <div className="flex-1">
+          <Label htmlFor="filter-rep">Filter by Sales Rep</Label>
+          <Input
+            id="filter-rep"
+            type="text"
+            placeholder="Search by name or email"
+            value={filterSalesRep}
+            onChange={(e) => setFilterSalesRep(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Meetings List */}
+      {Object.keys(groupedMeetings).length === 0 ? (
+        <div className="text-center py-8">
+          <CalendarDays className="mx-auto mb-4 text-gray-300" size={48} />
+          <p className="text-gray-500">No meetings found</p>
+          <p className="text-sm text-gray-400 mt-2">
+            {filterDate || filterSalesRep ? 'Try adjusting your filters' : 'No upcoming meetings scheduled'}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {Object.entries(groupedMeetings)
+            .sort(([a], [b]) => new Date(a) - new Date(b))
+            .map(([dateKey, dayMeetings]) => (
+              <div key={dateKey}>
+                <h3 className="font-semibold text-gray-900 mb-3 pb-2 border-b">
+                  {new Date(dateKey).toLocaleDateString([], {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </h3>
+                <div className="space-y-3">
+                  {dayMeetings
+                    .sort((a, b) => 
+                      new Date(a.start?.dateTime || a.start?.date) - 
+                      new Date(b.start?.dateTime || b.start?.date)
+                    )
+                    .map(meeting => (
+                      <MeetingCard key={meeting.id} meeting={meeting} />
+                    ))}
+                </div>
+              </div>
+            ))}
+        </div>
+      )}
     </div>
   );
 }
