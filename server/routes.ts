@@ -914,6 +914,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Check for red flags and handle rep suspension
+      const isRedFlag = ['poor', 'rude'].includes(evaluationData.experience);
+      if (isRedFlag && evaluationData.salesRepId) {
+        await handleRedFlagSuspension(evaluationData.salesRepId, feedback._id);
+      }
+
+      // If positive feedback and rep was suspended, check for suspension removal
+      if (!isRedFlag && evaluationData.salesRepId) {
+        await handleSuspensionRemoval(evaluationData.salesRepId);
+      }
+
       // Log activity
       await storage.createActivityLog({
         action: 'SUBMIT_CALL_EVALUATION',
@@ -922,7 +933,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: {
           callId: evaluationData.callId,
           rating: evaluationData.rating,
-          experience: evaluationData.experience
+          experience: evaluationData.experience,
+          isRedFlag
         }
       });
 

@@ -257,6 +257,21 @@ const dmFlagsSchema = new mongoose.Schema({
 export const CompanyDMs = mongoose.model("CompanyDMs", companyDMsSchema);
 export const DMFlags = mongoose.model("DMFlags", dmFlagsSchema);
 
+// Rep Suspension Schema
+const repSuspensionSchema = new mongoose.Schema({
+  repId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  type: { type: String, enum: ['30-day', '90-day'], required: true },
+  startDate: { type: Date, required: true },
+  endDate: { type: Date, required: true },
+  isActive: { type: Boolean, default: true },
+  suspensionReason: { type: String, required: true },
+  triggeringFlags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Feedback' }],
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+export const RepSuspension = mongoose.model("RepSuspension", repSuspensionSchema);
+
 export type UserDocument = mongoose.Document & {
   _id: mongoose.Types.ObjectId;
   email: string;

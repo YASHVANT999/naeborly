@@ -85,6 +85,14 @@ export interface IStorage {
   // Additional flags methods
   getFlagsByRep(repId: string): Promise<any[]>;
   getAllFlags(): Promise<any[]>;
+  
+  // Rep suspension methods
+  createRepSuspension(suspensionData: any): Promise<any>;
+  getActiveRepSuspension(repId: string): Promise<any | undefined>;
+  updateRepSuspension(suspensionId: string, updates: any): Promise<any | undefined>;
+  getRepSuspensionHistory(repId: string): Promise<any[]>;
+  checkRepSuspensionStatus(repId: string): Promise<{ isSuspended: boolean, suspension?: any }>;
+  getRecentFeedbackForRep(repId: string, limit?: number): Promise<any[]>;
 }
 
 // Import and use only MongoDB storage
