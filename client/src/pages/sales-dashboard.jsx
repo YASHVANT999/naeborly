@@ -21,6 +21,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CalendarBooking from "@/components/CalendarBooking";
 import FlagsBadge from "@/components/FlagsBadge";
+import SuspensionAlert from "@/components/SuspensionAlert";
 
 export default function SalesDashboard() {
   const { user } = useAuth();
@@ -43,6 +44,12 @@ export default function SalesDashboard() {
   const { data: metrics, isLoading: metricsLoading } = useQuery({
     queryKey: ['/api/sales-rep/metrics'],
     enabled: !!user?.id
+  });
+
+  // Fetch suspension status
+  const { data: suspensionStatus } = useQuery({
+    queryKey: ['/api/sales-rep/suspension-status'],
+    retry: false
   });
 
   const simulateAcceptanceMutation = useMutation({

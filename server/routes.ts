@@ -949,6 +949,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper function to handle red flag suspension logic
+  async function handleRedFlagSuspension(salesRepId: string, feedbackId: string) {
+    try {
+      // Get recent feedback for this rep
+      const recentFeedback = await storage.getRecentFeedbackForRep(salesRepId, 10);
+      
+      // Count red flags
+      const redFlags = recentFeedback.filter(f => 
+        ['poor', 'rude'].includes(f.experience)
+      );
+      
+      // Check for 90-day suspension (3 consecutive red flags)
+      let consecutiveRedFlags = 0;
+      for (const feedback of recentFeedback) {
+        if (['poor', 'rude'].includes(feedback.experience)) {
+          consecutiveRedFlags++;
+        } else {
+          break; // Break streak on non-red flag
+        }
+      }
+      
+      // Check current suspension status
+      const suspensionStatus = await storage.checkRepSuspensionStatus(salesRepId);
+      if (suspensionStatus.isSuspended) {
+        return; // Already suspended
+      }
+      
+      let suspensionType = null;
+      let suspensionReason = '';
+      
+      if (consecutiveRedFlags >= 3) {
+        // 90-day suspension for consecutive red flags
+        suspensionType = '90-day';
+        suspensionReason = `3 consecutive red flags received`;
+      } else if (redFlags.length >= 3) {
+        // Check if red flags are from different DMs
+        const uniqueDMs = new Set(redFlags.map(f => f.decisionMakerId?.toString()));
+        if (uniqueDMs.size >= 3) {
+          suspensionType = '30-day';
+          suspensionReason = `3 red flags from different decision makers`;
+        }
+      }
+      
+      if (suspensionType) {
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(startDate.getDate() + (suspensionType === '90-day' ? 90 : 30));
+        
+        const suspensionData = {
+          repId: salesRepId,
+          type: suspensionType,
+          startDate,
+          endDate,
+          isActive: true,
+          suspensionReason,
+          triggeringFlags: redFlags.slice(0, 3).map(f => f._id)
+        };
+        
+        await storage.createRepSuspension(suspensionData);
+        
+        // Log suspension activity
+        await storage.createActivityLog({
+          action: 'REP_SUSPENDED',
+          performedBy: 'system',
+          details: `Sales rep suspended for ${suspensionType}: ${suspensionReason}`,
+          metadata: {
+            repId: salesRepId,
+            suspensionType,
+            redFlagCount: redFlags.length,
+            consecutiveCount: consecutiveRedFlags
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error handling red flag suspension:', error);
+    }
+  }
+  
+  // Helper function to handle suspension removal
+  async function handleSuspensionRemoval(salesRepId: string) {
+    try {
+      const suspensionStatus = await storage.checkRepSuspensionStatus(salesRepId);
+      if (suspensionStatus.isSuspended && suspensionStatus.suspension) {
+        // Lift the suspension
+        await storage.updateRepSuspension(suspensionStatus.suspension._id, {
+          isActive: false
+        });
+        
+        // Log suspension removal
+        await storage.createActivityLog({
+          action: 'REP_SUSPENSION_LIFTED',
+          performedBy: 'system',
+          details: `Sales rep suspension lifted due to successful call completion without red flag`,
+          metadata: {
+            repId: salesRepId,
+            originalSuspensionType: suspensionStatus.suspension.type
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error handling suspension removal:', error);
+    }
+  }
+
+  // Get rep suspension status
+  app.get("/api/sales-rep/suspension-status", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "User not logged in" });
+    }
+
+    try {
+      const suspensionStatus = await storage.checkRepSuspensionStatus(req.session.userId);
+      res.json(suspensionStatus);
+    } catch (error) {
+      console.error('Error checking suspension status:', error);
+      res.status(500).json({ message: "Failed to check suspension status" });
+    }
+  });
+
   // Demo calendar connection endpoint
   app.patch("/api/users/:userId", async (req, res) => {
     if (!req.session.userId) {
