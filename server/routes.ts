@@ -814,6 +814,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upcoming meetings endpoint for decision makers
+  app.get("/api/calendar/upcoming-meetings", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "User not logged in" });
+    }
+
+    try {
+      const user = await storage.getUserById(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (!user.calendarIntegrationEnabled) {
+        return res.json([]);
+      }
+
+      // Sample meetings data for demo
+      const sampleMeetings = [
+        {
+          id: "meeting_1",
+          summary: "Sales Demo - Product Presentation",
+          description: "Discussion about our premium features and enterprise solutions. Join here: https://meet.google.com/abc-defg-hij",
+          start: {
+            dateTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString()
+          },
+          end: {
+            dateTime: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString()
+          },
+          organizer: {
+            email: "salesrep@techize.com",
+            displayName: "John Doe"
+          },
+          attendees: [
+            { email: user.email, displayName: user.firstName + " " + user.lastName },
+            { email: "salesrep@techize.com", displayName: "John Doe" }
+          ],
+          status: "confirmed"
+        },
+        {
+          id: "meeting_2", 
+          summary: "Follow-up Call - Technical Discussion",
+          description: "Technical deep dive and Q&A session. Zoom link: https://zoom.us/j/1234567890",
+          start: {
+            dateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          },
+          end: {
+            dateTime: new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString()
+          },
+          organizer: {
+            email: "salesrep2@techize.com",
+            displayName: "Jane Smith"
+          },
+          attendees: [
+            { email: user.email, displayName: user.firstName + " " + user.lastName },
+            { email: "salesrep2@techize.com", displayName: "Jane Smith" }
+          ],
+          status: "confirmed"
+        }
+      ];
+
+      res.json(sampleMeetings);
+    } catch (error) {
+      console.error('Error fetching upcoming meetings:', error);
+      res.status(500).json({ message: "Failed to fetch upcoming meetings" });
+    }
+  });
+
   // Get available time slots for a decision maker
   app.get("/api/calendar/availability/:decisionMakerId", requireAuthentication, async (req, res) => {
     try {
