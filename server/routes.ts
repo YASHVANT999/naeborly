@@ -746,6 +746,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "User not logged in" });
     }
 
+    // Check if Google credentials are available
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      return res.status(500).json({ 
+        message: "Google Calendar integration not configured. Please contact administrator." 
+      });
+    }
+
     try {
       const authUrl = getAuthUrl(req.session.userId);
       res.redirect(authUrl);
@@ -878,6 +885,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching upcoming meetings:', error);
       res.status(500).json({ message: "Failed to fetch upcoming meetings" });
+    }
+  });
+
+  // Demo calendar connection endpoint
+  app.patch("/api/users/:userId", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "User not logged in" });
+    }
+
+    const { userId } = req.params;
+    const { calendarIntegrationEnabled } = req.body;
+
+    // Verify user can only update their own record
+    if (req.session.userId !== userId) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const updatedUser = await storage.updateUser(userId, {
+        calendarIntegrationEnabled: !!calendarIntegrationEnabled
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        id: updatedUser.id,
+        calendarIntegrationEnabled: updatedUser.calendarIntegrationEnabled
+      });
+    } catch (error) {
+      console.error('Error updating user:', error);
+      res.status(500).json({ message: "Failed to update user" });
     }
   });
 

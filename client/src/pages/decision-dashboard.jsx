@@ -451,13 +451,30 @@ export default function DecisionDashboard() {
                       <AlertTriangle className="mr-2" size={16} />
                       <span className="text-sm font-medium">Calendar Not Connected</span>
                     </div>
-                    <Button 
-                      onClick={() => window.location.href = '/api/auth/google'}
-                      className="w-full"
-                    >
-                      <Calendar className="mr-2" size={16} />
-                      Connect Google Calendar
-                    </Button>
+                    <div className="space-y-3">
+                      <Button 
+                        onClick={async () => {
+                          try {
+                            const user = await apiRequest('/api/current-user');
+                            await apiRequest(`/api/users/${user._id}`, {
+                              method: 'PATCH',
+                              body: JSON.stringify({ calendarIntegrationEnabled: true })
+                            });
+                            refetchMeetings();
+                            window.location.reload();
+                          } catch (error) {
+                            console.error('Demo connection failed:', error);
+                          }
+                        }}
+                        className="w-full"
+                      >
+                        <Calendar className="mr-2" size={16} />
+                        Connect Calendar (Demo)
+                      </Button>
+                      <p className="text-xs text-gray-500 text-center">
+                        Demo mode: This will simulate calendar connection with sample meetings
+                      </p>
+                    </div>
                   </div>
                 )}
               </CardContent>

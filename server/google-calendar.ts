@@ -4,7 +4,7 @@ import { OAuth2Client } from 'google-auth-library';
 // Google Calendar configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'http://localhost:5000'}/api/auth/google/callback`;
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `https://44892040-2026-48f1-a224-0c22212f220b-00-1iyarcm83n4u6.janeway.replit.dev/api/auth/google/callback`;
 
 if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
   console.warn('Google Calendar integration disabled: Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET');
