@@ -61,10 +61,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get invitations for current user
-  app.get("/api/invitations", async (req, res) => {
+  app.get("/api/invitations", authenticateToken, async (req, res) => {
     try {
-      // For demo purposes, get invitations for user ID 1 (sales rep)
-      const invitations = await storage.getInvitationsByUserId("1");
+      const invitations = await storage.getInvitationsByUserId(req.user!.userId);
       res.json(invitations);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch invitations" });
@@ -72,11 +71,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new invitation
-  app.post("/api/invitations", async (req, res) => {
+  app.post("/api/invitations", authenticateToken, async (req, res) => {
     try {
       const validatedData = insertInvitationSchema.parse({
         ...req.body,
-        salesRepId: 1 // Mock current user ID
+        salesRepId: req.user!.userId
       });
       
       const invitation = await storage.createInvitation(validatedData);

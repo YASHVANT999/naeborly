@@ -39,6 +39,14 @@ export default function Login() {
     },
     onSuccess: (response) => {
       console.log('Login successful:', response);
+      
+      // Store JWT token
+      if (response.token) {
+        import('@/lib/auth').then(({ setToken }) => {
+          setToken(response.token);
+        });
+      }
+      
       toast({
         title: "Welcome back!",
         description: "Login successful",
