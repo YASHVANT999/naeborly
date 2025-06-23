@@ -775,13 +775,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get calendar integration status
-  app.get("/api/calendar/status", async (req, res) => {
-    if (!req.session.userId) {
-      return res.status(401).json({ message: "User not logged in" });
-    }
-
+  app.get("/api/calendar/status", authenticateToken, async (req, res) => {
     try {
-      const user = await storage.getUserById(req.session.userId);
+      const user = await storage.getUserById(req.user!.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -3422,7 +3418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const calls = await storage.getCallsByUserId(userId);
+      const calls = await storage.getCallsByUserId(req.user!.userId);
 
       // Calculate metrics
       const completedCalls = calls.filter(call => call.status === 'completed');
