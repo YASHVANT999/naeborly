@@ -3402,13 +3402,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ===== DECISION MAKER DASHBOARD ROUTES =====
 
   // Get decision maker's calls
-  app.get("/api/decision-maker/calls", async (req, res) => {
+  app.get("/api/decision-maker/calls", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.session as any)?.userId;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
+      const userId = req.user!.userId;
 
       const calls = await storage.getCallsByUserId(userId);
       res.json(calls);
