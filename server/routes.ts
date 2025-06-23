@@ -2552,10 +2552,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ===== CALENDAR & BOOKING ROUTES =====
 
   // Get DM availability for calendar view
-  app.get("/api/calendar/dm-availability/:dmId", async (req, res) => {
-    if (!req.session || !req.session.userId) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
+  app.get("/api/calendar/dm-availability/:dmId", authenticateToken, async (req, res) => {
     try {
       const { dmId } = req.params;
       const { startDate, endDate } = req.query;
@@ -2663,12 +2660,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Book a meeting slot
-  app.post("/api/calendar/book-slot", async (req, res) => {
-    if (!req.session || !(req.session as any).userId) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
+  app.post("/api/calendar/book-slot", authenticateToken, async (req, res) => {
     try {
-      const currentUser = await storage.getUserById((req.session as any).userId);
+      const currentUser = await storage.getUserById(req.user!.userId);
       const { dmId, startTime, endTime, agenda, notes } = req.body;
 
       // Validate DM exists and is available
@@ -2727,14 +2721,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Cancel a booked meeting
-  app.delete("/api/calendar/cancel-booking/:bookingId", async (req, res) => {
-    if (!req.session || !(req.session as any).userId) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
+  app.delete("/api/calendar/cancel-booking/:bookingId", authenticateToken, async (req, res) => {
     try {
       const { bookingId } = req.params;
       const { reason } = req.body;
-      const currentUser = await storage.getUserById((req.session as any).userId);
+      const currentUser = await storage.getUserById(req.user!.userId);
 
       const booking = await storage.getCallById(bookingId);
       if (!booking) {
@@ -2776,12 +2767,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's flag count
-  app.get("/api/user/flags-count", async (req, res) => {
-    if (!req.session || !(req.session as any).userId) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
+  app.get("/api/user/flags-count", authenticateToken, async (req, res) => {
     try {
-      const currentUser = await storage.getUserById((req.session as any).userId);
+      const currentUser = await storage.getUserById(req.user!.userId);
       
       let flagCount = 0;
       if (currentUser.role === 'decision_maker') {
@@ -2805,12 +2793,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's upcoming meetings
-  app.get("/api/calendar/my-meetings", async (req, res) => {
-    if (!req.session || !(req.session as any).userId) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
+  app.get("/api/calendar/my-meetings", authenticateToken, async (req, res) => {
     try {
-      const currentUser = await storage.getUserById((req.session as any).userId);
+      const currentUser = await storage.getUserById(req.user!.userId);
       const { startDate, endDate } = req.query;
 
       let meetings;
