@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
+import { authenticateToken, optionalAuth, generateToken, JWTPayload } from './jwt-middleware';
 import { 
   getAuthUrl, 
   setCredentials, 
@@ -25,16 +26,6 @@ import {
   decisionMakerNominationSchema,
   decisionMakerPackageSchema
 } from "@shared/schema";
-
-// Extend Express Request type to include session
-declare module 'express-session' {
-  interface SessionData {
-    signupUserId?: string;
-    userId?: string;
-    userRole?: string;
-    isAuthenticated?: boolean;
-  }
-}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Public endpoint for subscription plans (for landing page)
