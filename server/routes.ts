@@ -3371,21 +3371,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get sales rep's metrics
-  app.get("/api/sales-rep/metrics", async (req, res) => {
+  app.get("/api/sales-rep/metrics", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.session as any)?.userId;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const user = await storage.getUser(userId);
+      const user = await storage.getUser(req.user!.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const invitations = await storage.getInvitationsByUserId(userId);
-      const calls = await storage.getCallsByUserId(userId);
+      const invitations = await storage.getInvitationsByUserId(req.user!.userId);
+      const calls = await storage.getCallsByUserId(req.user!.userId);
 
       // Calculate metrics
       const totalInvitations = invitations.length;
@@ -3449,15 +3443,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get decision maker's metrics
-  app.get("/api/decision-maker/metrics", async (req, res) => {
+  app.get("/api/decision-maker/metrics", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.session as any)?.userId;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const user = await storage.getUser(userId);
+      const user = await storage.getUser(req.user!.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -3511,15 +3499,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rate a call
-  app.post("/api/decision-maker/calls/:callId/rate", async (req, res) => {
+  app.post("/api/decision-maker/calls/:callId/rate", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.session as any)?.userId;
       const { callId } = req.params;
       const { rating, feedback } = req.body;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
 
       if (!rating || rating < 1 || rating > 5) {
         return res.status(400).json({ message: "Rating must be between 1 and 5" });
@@ -3708,14 +3691,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // =============================================================================
 
   // Get flags based on user role
-  app.get("/api/flags", async (req, res) => {
+  app.get("/api/flags", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.session as any)?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const user = await storage.getUserById(userId);
+      const user = await storage.getUserById(req.user!.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -3724,10 +3702,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (user.role === 'sales_rep') {
         // Sales reps can see flags they created
-        flags = await storage.getFlagsByRep(userId);
+        flags = await storage.getFlagsByRep(req.user!.userId);
       } else if (user.role === 'decision_maker') {
         // Decision makers can see flags against them
-        flags = await storage.getDMFlags(userId);
+        flags = await storage.getDMFlags(req.user!.userId);
       } else if (user.role === 'enterprise_admin') {
         // Enterprise admins can see flags for their company
         const userDomain = user.email.split('@')[1];
