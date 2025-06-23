@@ -471,38 +471,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Super Admin middleware
   const requireSuperAdmin = (req: any, res: any, next: any) => {
-    const userId = req.session?.userId;
-    const userRole = req.session?.userRole;
-    
-    if (!userId || userRole !== 'super_admin') {
-      return res.status(403).json({ message: "Super admin access required" });
-    }
-    
-    next();
+    // First authenticate the token
+    authenticateToken(req, res, (err) => {
+      if (err) return;
+      
+      const userRole = req.user?.role;
+      
+      if (userRole !== 'super_admin') {
+        return res.status(403).json({ message: "Super admin access required" });
+      }
+      
+      next();
+    });
   };
 
   // Enterprise Admin middleware
   const requireEnterpriseAdmin = async (req: any, res: any, next: any) => {
-    const userId = req.session?.userId;
-    const userRole = req.session?.userRole;
-    
-    if (!userId || userRole !== 'enterprise_admin') {
-      return res.status(403).json({ message: "Enterprise admin access required" });
-    }
-
-    // Verify domain access
-    try {
-      const user = await storage.getUser(userId);
-      if (!user?.companyDomain || !user?.domainVerified) {
-        return res.status(403).json({ message: "Domain verification required for enterprise access" });
-      }
+    // First authenticate the token
+    authenticateToken(req, res, async (err) => {
+      if (err) return;
       
-      // Add user info to request for use in handlers
-      req.enterpriseUser = user;
-      next();
-    } catch (error) {
-      return res.status(500).json({ message: "Failed to verify enterprise access" });
-    }
+      const userId = req.user?.userId;
+      const userRole = req.user?.role;
+      
+      if (!userId || userRole !== 'enterprise_admin') {
+        return res.status(403).json({ message: "Enterprise admin access required" });
+      }
+
+      // Verify domain access
+      try {
+        const user = await storage.getUser(userId);
+        if (!user?.companyDomain || !user?.domainVerified) {
+          return res.status(403).json({ message: "Domain verification required for enterprise access" });
+        }
+        
+        // Add user info to request for use in handlers
+        req.enterpriseUser = user;
+        next();
+      } catch (error) {
+        return res.status(500).json({ message: "Failed to verify enterprise access" });
+      }
+    });
   };
 
   // User Management Routes
