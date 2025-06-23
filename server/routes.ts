@@ -40,23 +40,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get current authenticated user
-  app.get("/api/current-user", async (req, res) => {
+  app.get("/api/current-user", authenticateToken, async (req, res) => {
     try {
-      const userId = req.session?.userId;
-      const isAuthenticated = req.session?.isAuthenticated;
+      console.log('Current user check - User ID:', req.user?.userId, 'Email:', req.user?.email);
       
-      console.log('Current user check - Session ID:', req.sessionID, 'User ID:', userId, 'Authenticated:', isAuthenticated);
-      
-      if (!userId || !isAuthenticated) {
-        console.log('No authenticated user found');
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      const user = await storage.getUser(userId);
+      const user = await storage.getUser(req.user!.userId);
       if (!user) {
-        console.log('User not found in database:', userId);
-        // Clear invalid session
-        req.session.destroy(() => {});
+        console.log('User not found in database:', req.user?.userId);
         return res.status(401).json({ message: "User not found" });
       }
       
@@ -3328,29 +3318,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid email or password" });
       }
       
-      // Store user session with proper typing
-      req.session.userId = user.id;
-      req.session.userRole = user.role;
-      req.session.isAuthenticated = true;
+      // Generate JWT token
+      const token = generateToken({
+        userId: user.id,
+        email: user.email,
+        role: user.role
+      });
       
-      // Force session save before response
-      req.session.save((err) => {
-        if (err) {
-          console.error('Session save error:', err);
-          return res.status(500).json({ message: "Session creation failed" });
-        }
-        
-        console.log('Login successful for:', user.email, 'Session ID:', req.sessionID);
-        
-        // Return user data (excluding password)
-        const { password: _, ...userWithoutPassword } = user;
-        
-        res.json({
-          success: true,
-          message: "Login successful",
-          user: userWithoutPassword,
-          sessionId: req.sessionID
-        });
+      console.log('Login successful for:', user.email, 'Token generated');
+      
+      // Return user data (excluding password)
+      const { password: _, ...userWithoutPassword } = user;
+      
+      res.json({
+        success: true,
+        message: "Login successful",
+        user: userWithoutPassword,
+        token
       });
       
     } catch (error: any) {
@@ -3359,38 +3343,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Logout route
+  // Logout route (JWT-based - client handles token removal)
   app.post("/api/logout", (req, res) => {
-    const sessionId = req.sessionID;
-    const userId = req.session?.userId;
-    
-    console.log('Logout request - Session ID:', sessionId, 'User ID:', userId);
-    
-    req.session.destroy((err) => {
-      if (err) {
-        console.error('Session destruction error:', err);
-        return res.status(500).json({ message: "Logout failed" });
-      }
-      
-      res.clearCookie('naeborly.sid');
-      console.log('Logout successful for session:', sessionId);
-      res.json({ success: true, message: "Logout successful" });
-    });
-  });
-
-  // ===== LOGOUT ROUTE =====
-  
-  app.post("/api/logout", async (req, res) => {
-    try {
-      req.session.destroy((err) => {
-        if (err) {
-          return res.status(500).json({ message: "Logout failed" });
-        }
-        res.json({ success: true, message: "Logout successful" });
-      });
-    } catch (error: any) {
-      res.status(500).json({ message: "Logout failed" });
-    }
+    console.log('Logout request received');
+    // With JWT, logout is handled client-side by removing the token
+    // Server doesn't need to do anything special unless implementing token blacklisting
+    res.json({ success: true, message: "Logout successful" });
   });
 
   // ===== GET CURRENT USER ROUTE =====
