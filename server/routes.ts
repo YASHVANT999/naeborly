@@ -453,21 +453,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Authentication middleware
-  const requireAuthentication = (req: any, res: any, next: any) => {
-    const userId = req.session?.userId;
-    const isAuthenticated = req.session?.isAuthenticated;
-    
-    console.log('Auth check - Session ID:', req.sessionID, 'User ID:', userId, 'Authenticated:', isAuthenticated);
-    
-    if (!userId || !isAuthenticated) {
-      console.log('Authentication failed - missing session data');
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-    
-    req.userId = userId;
-    next();
-  };
+  // JWT Authentication middleware (already defined above)
+  // const requireAuthentication = authenticateToken;
 
   // Super Admin middleware
   const requireSuperAdmin = (req: any, res: any, next: any) => {
@@ -2643,12 +2630,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all available DMs for calendar selection
-  app.get("/api/calendar/available-dms", async (req, res) => {
-    if (!req.session || !(req.session as any).userId) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
+  app.get("/api/calendar/available-dms", authenticateToken, async (req, res) => {
     try {
-      const currentUser = await storage.getUserById((req.session as any).userId);
+      const currentUser = await storage.getUserById(req.user!.userId);
       console.log('Current user role:', currentUser.role);
       
       let availableDMs;
@@ -3359,43 +3343,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ success: true, message: "Logout successful" });
   });
 
-  // ===== GET CURRENT USER ROUTE =====
-  
-  app.get("/api/current-user", async (req, res) => {
-    try {
-      const userId = (req.session as any)?.userId;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(401).json({ message: "User not found" });
-      }
-      
-      // Return user data (excluding password)
-      const { password: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
-      
-    } catch (error: any) {
-      console.error('Get current user error:', error);
-      res.status(500).json({ message: "Failed to get user data" });
-    }
-  });
+  // ===== DUPLICATE CURRENT USER ROUTE - REMOVED =====
+  // JWT-based current user route is already implemented above
 
   // ===== SALES REP DASHBOARD ROUTES =====
 
   // Get sales rep's invitations
-  app.get("/api/sales-rep/invitations", async (req, res) => {
+  app.get("/api/sales-rep/invitations", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.session as any)?.userId;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const invitations = await storage.getInvitationsByUserId(userId);
+      const invitations = await storage.getInvitationsByUserId(req.user!.userId);
       res.json(invitations);
     } catch (error: any) {
       console.error('Get invitations error:', error);
@@ -3404,15 +3360,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get sales rep's calls
-  app.get("/api/sales-rep/calls", async (req, res) => {
+  app.get("/api/sales-rep/calls", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.session as any)?.userId;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const calls = await storage.getCallsByUserId(userId);
+      const calls = await storage.getCallsByUserId(req.user!.userId);
       res.json(calls);
     } catch (error: any) {
       console.error('Get calls error:', error);
