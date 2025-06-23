@@ -40,27 +40,31 @@ export default function Login() {
     onSuccess: (response) => {
       console.log('Login successful:', response);
       
-      // Store JWT token
+      // Store JWT token first
       if (response.token) {
         localStorage.setItem('naeborly_token', response.token);
       }
+      
+      // Clear all queries and force refetch
+      queryClient.clear();
       
       toast({
         title: "Welcome back!",
         description: "Login successful",
       });
       
-      // Invalidate current user query to refresh authentication state
-      queryClient.invalidateQueries({ queryKey: ['/api/current-user'] });
-      
-      // Navigate based on user role
-      if (response.user.role === 'sales_rep') {
-        setLocation('/sales-dashboard');
-      } else if (response.user.role === 'decision_maker') {
-        setLocation('/decision-dashboard');
-      } else {
-        setLocation('/');
-      }
+      // Navigate based on user role with a small delay to ensure token is stored
+      setTimeout(() => {
+        if (response.user.role === 'sales_rep') {
+          setLocation('/sales-dashboard');
+        } else if (response.user.role === 'decision_maker') {
+          setLocation('/decision-dashboard');
+        } else if (response.user.role === 'enterprise_admin') {
+          setLocation('/enterprise-admin');
+        } else {
+          setLocation('/');
+        }
+      }, 100);
     },
     onError: (error) => {
       console.error('Login error:', error);

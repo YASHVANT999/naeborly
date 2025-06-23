@@ -13,7 +13,8 @@ export function useAuth() {
   const { data: user, isLoading, error } = useQuery({
     queryKey: ['/api/current-user'],
     retry: false,
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 0, // Always fresh
+    refetchInterval: false,
     enabled: !!isTokenValid, // Only fetch if token exists and is valid
   });
   

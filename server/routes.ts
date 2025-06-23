@@ -925,14 +925,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Check for suspicious sales rep activity (for DM dashboard)
-  app.get("/api/decision-maker/suspicious-activity", async (req, res) => {
-    if (!req.session.userId) {
-      return res.status(401).json({ message: "User not logged in" });
-    }
-
+  app.get("/api/decision-maker/suspicious-activity", authenticateToken, async (req, res) => {
     try {
       // Get current user to find their company domain
-      const currentUser = await storage.getUserById(req.session.userId);
+      const currentUser = await storage.getUserById(req.user!.userId);
       if (!currentUser || !currentUser.companyDomain) {
         return res.json({ hasSuspiciousActivity: false, suspendedRepsCount: 0 });
       }
