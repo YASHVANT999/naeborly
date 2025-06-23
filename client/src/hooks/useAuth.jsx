@@ -1,20 +1,37 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { removeToken, getToken } from "@/lib/auth";
+import { removeToken, getToken, isTokenExpired } from "@/lib/auth";
 import { useState, useEffect } from "react";
 
 export function useAuth() {
   const queryClient = useQueryClient();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  // Check token on every render to ensure fresh state
   const token = getToken();
+  const isTokenValid = token && !isTokenExpired(token);
+  
   const { data: user, isLoading, error } = useQuery({
     queryKey: ['/api/current-user'],
     retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: !!token, // Only fetch if token exists
+    staleTime: 1 * 60 * 1000, // 1 minute
+    enabled: !!isTokenValid, // Only fetch if token exists and is valid
   });
   
-  console.log('Auth state:', { token: !!token, user: !!user, error: !!error });
+  // Remove expired tokens immediately
+  useEffect(() => {
+    if (token && isTokenExpired(token)) {
+      removeToken();
+      queryClient.clear();
+    }
+  }, [token, queryClient]);
+  
+  console.log('Auth state:', { 
+    hasToken: !!token, 
+    tokenValid: isTokenValid,
+    hasUser: !!user, 
+    hasError: !!error,
+    errorMsg: error?.message 
+  });
 
   const logout = () => {
     console.log('Logout function called');
@@ -44,7 +61,7 @@ export function useAuth() {
     }
   };
 
-  const isAuthenticated = !!user && !error;
+  const isAuthenticated = !!user && !error && !!isTokenValid;
   const isLoading401 = error?.message?.includes('401');
 
   const authResult = {
@@ -56,10 +73,10 @@ export function useAuth() {
   };
   
   console.log('useAuth returning:', { 
-    user: !!user, 
+    hasUser: !!user, 
     isAuthenticated, 
-    hasLogout: typeof logout === 'function',
-    logoutFunction: logout
+    hasToken: !!token,
+    tokenValid: isTokenValid
   });
   return authResult;
 }

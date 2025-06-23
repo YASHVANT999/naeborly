@@ -16,7 +16,12 @@ export default function Navigation() {
   const authData = useAuth();
   const { user, isAuthenticated, logout, isLoggingOut } = authData;
   
-  console.log('Navigation authData:', authData);
+  console.log('Navigation authData:', {
+    isAuthenticated: authData.isAuthenticated,
+    hasUser: !!authData.user,
+    hasLogout: typeof authData.logout === 'function',
+    isLoading: authData.isLoading
+  });
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-100">
@@ -109,17 +114,12 @@ export default function Navigation() {
                     <DropdownMenuItem 
                       onClick={(e) => {
                         e.preventDefault();
-                        console.log('Logout clicked, function available:', typeof logout);
-                        if (typeof logout === 'function') {
-                          logout();
-                        } else {
-                          console.error('Logout is not a function:', logout);
-                          // Fallback logout
-                          localStorage.clear();
-                          window.location.href = '/';
-                        }
+                        // Direct logout implementation
+                        localStorage.removeItem('naeborly_token');
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        window.location.replace('/');
                       }}
-                      disabled={isLoggingOut}
                       className="text-red-600 cursor-pointer"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
