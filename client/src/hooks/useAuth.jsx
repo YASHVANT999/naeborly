@@ -11,27 +11,24 @@ export function useAuth() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
+  const logout = () => {
+    try {
       // Remove JWT token from localStorage
       removeToken();
       
-      // Optional: Call logout endpoint (though it's not required for JWT)
-      return await apiRequest('/api/logout', {
-        method: 'POST',
-      });
-    },
-    onSuccess: () => {
-      // Clear all queries and redirect to home
+      // Clear all cached data
+      queryClient.clear();
+      
+      // Force a page reload to reset application state
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force cleanup even if there's an error
+      removeToken();
       queryClient.clear();
       window.location.href = '/';
-    },
-    onError: () => {
-      // Even if logout API fails, still clear token and redirect
-      queryClient.clear();
-      window.location.href = '/';
-    },
-  });
+    }
+  };
 
   const isAuthenticated = !!user && !error;
   const isLoading401 = error?.message?.includes('401');
@@ -40,7 +37,7 @@ export function useAuth() {
     user,
     isLoading: isLoading && !isLoading401,
     isAuthenticated,
-    logout: logoutMutation.mutate,
-    isLoggingOut: logoutMutation.isPending,
+    logout,
+    isLoggingOut: false,
   };
 }

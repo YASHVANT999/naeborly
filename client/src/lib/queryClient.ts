@@ -72,11 +72,9 @@ export const getQueryFn: <T>(options: {
     if (res.status === 401 || res.status === 403) {
       // Token is invalid or expired, remove it
       removeToken();
-      // Redirect to login
-      if (window.location.pathname !== '/') {
-        window.location.href = '/';
-      }
-      throw new Error(`${res.status}: ${res.statusText}`);
+      // For unauthorized access, redirect to home page
+      window.location.href = '/';
+      throw new Error(`${res.status}: Unauthorized`);
     }
 
     await throwIfResNotOk(res);
