@@ -5,26 +5,50 @@ import { useState, useEffect } from "react";
 export function useAuth() {
   const queryClient = useQueryClient();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [tokenState, setTokenState] = useState(() => {
+    const token = getToken();
+    return { token, isValid: token && !isTokenExpired(token) };
+  });
 
-  // Check token on every render to ensure fresh state
-  const token = getToken();
-  const isTokenValid = token && !isTokenExpired(token);
+  // Update token state when localStorage changes
+  useEffect(() => {
+    const checkToken = () => {
+      const token = getToken();
+      const isValid = token && !isTokenExpired(token);
+      setTokenState({ token, isValid });
+    };
+    
+    // Check immediately
+    checkToken();
+    
+    // Listen for storage changes
+    window.addEventListener('storage', checkToken);
+    
+    // Also check periodically
+    const interval = setInterval(checkToken, 1000);
+    
+    return () => {
+      window.removeEventListener('storage', checkToken);
+      clearInterval(interval);
+    };
+  }, []);
   
   const { data: user, isLoading, error } = useQuery({
     queryKey: ['/api/current-user'],
     retry: false,
-    staleTime: 0, // Always fresh
-    refetchInterval: false,
-    enabled: !!isTokenValid, // Only fetch if token exists and is valid
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    enabled: tokenState.isValid, // Only fetch if token exists and is valid
   });
   
   // Remove expired tokens immediately
   useEffect(() => {
-    if (token && isTokenExpired(token)) {
+    if (tokenState.token && isTokenExpired(tokenState.token)) {
       removeToken();
       queryClient.clear();
+      setTokenState({ token: null, isValid: false });
     }
-  }, [token, queryClient]);
+  }, [tokenState.token, queryClient]);
   
   console.log('Auth state:', { 
     hasToken: !!token, 

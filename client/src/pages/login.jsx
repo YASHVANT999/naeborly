@@ -43,18 +43,20 @@ export default function Login() {
       // Store JWT token first
       if (response.token) {
         localStorage.setItem('naeborly_token', response.token);
+        // Trigger storage event for other components
+        window.dispatchEvent(new Event('storage'));
       }
-      
-      // Clear all queries and force refetch
-      queryClient.clear();
       
       toast({
         title: "Welcome back!",
         description: "Login successful",
       });
       
-      // Navigate based on user role with a small delay to ensure token is stored
+      // Navigate based on user role with proper delay
       setTimeout(() => {
+        // Clear queries after token is stored
+        queryClient.clear();
+        
         if (response.user.role === 'sales_rep') {
           setLocation('/sales-dashboard');
         } else if (response.user.role === 'decision_maker') {
@@ -64,7 +66,7 @@ export default function Login() {
         } else {
           setLocation('/');
         }
-      }, 100);
+      }, 200);
     },
     onError: (error) => {
       console.error('Login error:', error);

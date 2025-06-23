@@ -9,8 +9,11 @@ export default function ProtectedRoute({ children, requiredRole }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('ProtectedRoute effect:', { isLoading, isAuthenticated, user: user?.role, requiredRole });
+    
     if (!isLoading) {
       if (!isAuthenticated) {
+        console.log('Not authenticated, redirecting to login');
         toast({
           title: "Authentication Required",
           description: "Please sign in to access this page",
@@ -21,6 +24,7 @@ export default function ProtectedRoute({ children, requiredRole }) {
       }
 
       if (requiredRole && user?.role !== requiredRole) {
+        console.log('Role mismatch:', { userRole: user?.role, requiredRole });
         toast({
           title: "Access Denied",
           description: "You don't have permission to access this page",
