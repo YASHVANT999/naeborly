@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { removeToken } from "@/lib/auth";
 
 export function useAuth() {
   const queryClient = useQueryClient();
@@ -12,12 +13,21 @@ export function useAuth() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
+      // Remove JWT token from localStorage
+      removeToken();
+      
+      // Optional: Call logout endpoint (though it's not required for JWT)
       return await apiRequest('/api/logout', {
         method: 'POST',
       });
     },
     onSuccess: () => {
       // Clear all queries and redirect to home
+      queryClient.clear();
+      window.location.href = '/';
+    },
+    onError: () => {
+      // Even if logout API fails, still clear token and redirect
       queryClient.clear();
       window.location.href = '/';
     },

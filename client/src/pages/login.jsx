@@ -42,9 +42,7 @@ export default function Login() {
       
       // Store JWT token
       if (response.token) {
-        import('@/lib/auth').then(({ setToken }) => {
-          setToken(response.token);
-        });
+        localStorage.setItem('naeborly_token', response.token);
       }
       
       toast({

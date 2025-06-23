@@ -538,7 +538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log activity
       await storage.createActivityLog({
-        userId: (req.session as any).userId,
+        userId: req.user!.userId,
         action: 'UPDATE_USER',
         entityType: 'user',
         entityId: id,
@@ -565,7 +565,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log activity
       await storage.createActivityLog({
-        userId: (req.session as any).userId,
+        userId: req.user!.userId,
         action: 'DELETE_USER',
         entityType: 'user',
         entityId: id,
@@ -603,7 +603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log activity
       await storage.createActivityLog({
-        userId: (req.session as any).userId,
+        userId: req.user!.userId,
         action: 'CREATE_SUBSCRIPTION_PLAN',
         entityType: 'subscription_plan',
         details: `Created plan: ${planData.name}`,
@@ -626,7 +626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log activity
       await storage.createActivityLog({
-        userId: (req.session as any).userId,
+        userId: req.user!.userId,
         action: 'UPDATE_SUBSCRIPTION_PLAN',
         entityType: 'subscription_plan',
         entityId: id,
@@ -653,7 +653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log activity
       await storage.createActivityLog({
-        userId: (req.session as any).userId,
+        userId: req.user!.userId,
         action: 'DELETE_SUBSCRIPTION_PLAN',
         entityType: 'subscription_plan',
         entityId: id,
