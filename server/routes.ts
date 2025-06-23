@@ -741,8 +741,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initiate Google Calendar OAuth (API endpoint)
   app.get("/api/auth/google/connect", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
-      const authUrl = getAuthUrl(userId);
+      const authUrl = getAuthUrl(req.user!.userId);
       res.json({ authUrl });
     } catch (error) {
       console.error('Error generating Google auth URL:', error);
@@ -1079,13 +1078,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Get rep suspension status
-  app.get("/api/sales-rep/suspension-status", async (req, res) => {
-    if (!req.session.userId) {
-      return res.status(401).json({ message: "User not logged in" });
-    }
-
+  app.get("/api/sales-rep/suspension-status", authenticateToken, async (req, res) => {
     try {
-      const suspensionStatus = await storage.checkRepSuspensionStatus(req.session.userId);
+      const suspensionStatus = await storage.checkRepSuspensionStatus(req.user!.userId);
       res.json(suspensionStatus);
     } catch (error) {
       console.error('Error checking suspension status:', error);
@@ -1127,7 +1122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get available time slots for a decision maker
-  app.get("/api/calendar/availability/:decisionMakerId", requireAuthentication, async (req, res) => {
+  app.get("/api/calendar/availability/:decisionMakerId", authenticateToken, async (req, res) => {
     try {
       const { decisionMakerId } = req.params;
       const { startDate, endDate, duration = 30 } = req.query;
@@ -1157,9 +1152,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Schedule a meeting
-  app.post("/api/calendar/schedule", requireAuthentication, async (req, res) => {
+  app.post("/api/calendar/schedule", authenticateToken, async (req, res) => {
     try {
-      const salesRepId = (req.session as any).userId;
+      const salesRepId = req.user!.userId;
       const { 
         decisionMakerId, 
         startTime, 
