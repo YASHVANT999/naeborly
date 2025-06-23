@@ -739,7 +739,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Initiate Google Calendar OAuth (API endpoint)
-  app.get("/api/auth/google/connect", requireAuthentication, async (req, res) => {
+  app.get("/api/auth/google/connect", authenticateToken, async (req, res) => {
     try {
       const userId = (req.session as any).userId;
       const authUrl = getAuthUrl(userId);
@@ -3723,14 +3723,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create a new flag
-  app.post("/api/flags", async (req, res) => {
+  app.post("/api/flags", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.session as any)?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const user = await storage.getUserById(userId);
+      const user = await storage.getUserById(req.user!.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -3748,7 +3743,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const flagData = {
         dmId,
-        flaggedBy: userId,
+        flaggedBy: req.user!.userId,
         flaggedByRole: user.role,
         reason,
         description,
@@ -3769,14 +3764,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update flag status
-  app.put("/api/flags/:flagId", async (req, res) => {
+  app.put("/api/flags/:flagId", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.session as any)?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const user = await storage.getUserById(userId);
+      const user = await storage.getUserById(req.user!.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
