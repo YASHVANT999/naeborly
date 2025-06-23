@@ -26,8 +26,11 @@ export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string 
 
 export function verifyToken(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    console.log('Token verified successfully for user:', decoded.userId);
+    return decoded;
   } catch (error) {
+    console.log('Token verification failed:', error instanceof Error ? error.message : 'Unknown error');
     return null;
   }
 }

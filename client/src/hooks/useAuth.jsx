@@ -86,7 +86,7 @@ export function useAuth() {
     }
   };
 
-  const isAuthenticated = !!user && !error && !!isTokenValid;
+  const isAuthenticated = !!user && !error && tokenState.isValid;
   const isLoading401 = error?.message?.includes('401');
 
   const authResult = {
