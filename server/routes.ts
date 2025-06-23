@@ -793,13 +793,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upcoming meetings endpoint for decision makers
-  app.get("/api/calendar/upcoming-meetings", async (req, res) => {
-    if (!req.session.userId) {
-      return res.status(401).json({ message: "User not logged in" });
-    }
-
+  app.get("/api/calendar/upcoming-meetings", authenticateToken, async (req, res) => {
     try {
-      const user = await storage.getUserById(req.session.userId);
+      const user = await storage.getUserById(req.user!.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }

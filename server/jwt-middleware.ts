@@ -37,11 +37,13 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
   if (!token) {
+    console.log('No token provided for:', req.url);
     return res.status(401).json({ message: 'Access token required' });
   }
 
   const decoded = verifyToken(token);
   if (!decoded) {
+    console.log('Invalid token for:', req.url);
     return res.status(403).json({ message: 'Invalid or expired token' });
   }
 
