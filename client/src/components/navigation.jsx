@@ -13,7 +13,10 @@ import {
 
 export default function Navigation() {
   const [location] = useLocation();
-  const { user, isAuthenticated, logout, isLoggingOut } = useAuth();
+  const authData = useAuth();
+  const { user, isAuthenticated, logout, isLoggingOut } = authData;
+  
+  console.log('Navigation authData:', authData);
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-100">
@@ -104,7 +107,18 @@ export default function Navigation() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
-                      onClick={logout}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        console.log('Logout clicked, function available:', typeof logout);
+                        if (typeof logout === 'function') {
+                          logout();
+                        } else {
+                          console.error('Logout is not a function:', logout);
+                          // Fallback logout
+                          localStorage.clear();
+                          window.location.href = '/';
+                        }
+                      }}
                       disabled={isLoggingOut}
                       className="text-red-600 cursor-pointer"
                     >

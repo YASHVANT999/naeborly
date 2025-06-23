@@ -11,6 +11,7 @@ export function setToken(token: string): void {
 
 export function removeToken(): void {
   localStorage.removeItem(TOKEN_KEY);
+  console.log('Token removed from localStorage');
 }
 
 export function isTokenExpired(token: string): boolean {

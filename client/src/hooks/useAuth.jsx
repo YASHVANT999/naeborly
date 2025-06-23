@@ -6,16 +6,19 @@ export function useAuth() {
   const queryClient = useQueryClient();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  const token = getToken();
   const { data: user, isLoading, error } = useQuery({
     queryKey: ['/api/current-user'],
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: !!getToken(), // Only fetch if token exists
+    enabled: !!token, // Only fetch if token exists
   });
+  
+  console.log('Auth state:', { token: !!token, user: !!user, error: !!error });
 
-  const logout = async () => {
+  const logout = () => {
+    console.log('Logout function called');
     setIsLoggingOut(true);
-    console.log('Logout initiated');
     
     try {
       // Remove JWT token from localStorage
@@ -27,6 +30,8 @@ export function useAuth() {
       // Clear all local storage
       localStorage.clear();
       sessionStorage.clear();
+      
+      console.log('Logout complete, redirecting...');
       
       // Force immediate redirect to home page
       window.location.replace('/');
@@ -42,11 +47,19 @@ export function useAuth() {
   const isAuthenticated = !!user && !error;
   const isLoading401 = error?.message?.includes('401');
 
-  return {
+  const authResult = {
     user,
     isLoading: isLoading && !isLoading401,
     isAuthenticated,
-    logout,
+    logout: logout,
     isLoggingOut,
   };
+  
+  console.log('useAuth returning:', { 
+    user: !!user, 
+    isAuthenticated, 
+    hasLogout: typeof logout === 'function',
+    logoutFunction: logout
+  });
+  return authResult;
 }
