@@ -3413,7 +3413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get decision maker's metrics
   app.get("/api/decision-maker/metrics", authenticateToken, async (req, res) => {
     try {
-      const user = await storage.getUser(req.user!.userId);
+      const user = await storage.getUserById(req.user!.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
