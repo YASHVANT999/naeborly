@@ -1,17 +1,22 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { removeToken } from "@/lib/auth";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { removeToken, getToken } from "@/lib/auth";
+import { useState, useEffect } from "react";
 
 export function useAuth() {
   const queryClient = useQueryClient();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const { data: user, isLoading, error } = useQuery({
     queryKey: ['/api/current-user'],
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!getToken(), // Only fetch if token exists
   });
 
-  const logout = () => {
+  const logout = async () => {
+    setIsLoggingOut(true);
+    console.log('Logout initiated');
+    
     try {
       // Remove JWT token from localStorage
       removeToken();
@@ -19,14 +24,18 @@ export function useAuth() {
       // Clear all cached data
       queryClient.clear();
       
-      // Force a page reload to reset application state
-      window.location.href = '/';
+      // Clear all local storage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Force immediate redirect to home page
+      window.location.replace('/');
     } catch (error) {
       console.error('Logout error:', error);
-      // Force cleanup even if there's an error
+      // Force cleanup even on error
       removeToken();
-      queryClient.clear();
-      window.location.href = '/';
+      localStorage.clear();
+      window.location.replace('/');
     }
   };
 
@@ -38,6 +47,6 @@ export function useAuth() {
     isLoading: isLoading && !isLoading401,
     isAuthenticated,
     logout,
-    isLoggingOut: false,
+    isLoggingOut,
   };
 }

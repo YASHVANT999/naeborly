@@ -60,6 +60,9 @@ export const getQueryFn: <T>(options: {
     
     if (token && !isTokenExpired(token)) {
       headers.Authorization = `Bearer ${token}`;
+    } else if (token && isTokenExpired(token)) {
+      // Remove expired token immediately
+      removeToken();
     }
     
     const res = await fetch(queryKey[0] as string, { headers });
