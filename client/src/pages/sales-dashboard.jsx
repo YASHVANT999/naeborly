@@ -382,7 +382,7 @@ export default function SalesDashboard() {
                       </div>
                       
                       <div className="space-y-3 max-h-96 overflow-y-auto">
-                        {gatedDMs?.dms?.map((dm) => (
+                        {gatedDMs?.dms?.length > 0 ? gatedDMs.dms.map((dm) => (
                           <div key={dm.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
@@ -466,10 +466,20 @@ export default function SalesDashboard() {
                               </div>
                             </div>
                           </div>
-                        ))}
+                        )) : (
+                        <div className="text-center py-8">
+                          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Users className="w-8 h-8 text-blue-600" />
+                          </div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading Decision Makers...</h3>
+                          <p className="text-gray-500">
+                            {!gatedDMs ? 'Fetching available decision makers...' : 'No decision makers found in database'}
+                          </p>
+                        </div>
+                        )}
                       </div>
                       
-                      {gatedDMs?.dms?.length === 0 && (
+                      {gatedDMs?.dms?.length === 0 && gatedDMs !== undefined && (
                         <div className="text-center py-8">
                           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Users className="w-8 h-8 text-gray-400" />
