@@ -52,6 +52,19 @@ export default function SalesDashboard() {
     retry: false
   });
 
+  // New queries for credit system
+  const { data: creditsData, isLoading: creditsLoading } = useQuery({
+    queryKey: ['/api/sales-rep/credits']
+  });
+
+  const { data: databaseAccess, isLoading: databaseAccessLoading } = useQuery({
+    queryKey: ['/api/sales-rep/database-access']
+  });
+
+  const { data: gatedDMs, isLoading: gatedDMsLoading } = useQuery({
+    queryKey: ['/api/sales-rep/available-dms-gated']
+  });
+
   const simulateAcceptanceMutation = useMutation({
     mutationFn: async () => {
       return { success: true };
@@ -75,7 +88,11 @@ export default function SalesDashboard() {
       return response;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/sales-rep'] });
+      // Invalidate all relevant queries
+      queryClient.invalidateQueries({ queryKey: ['/api/sales-rep/credits'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales-rep/database-access'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales-rep/available-dms-gated'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales-rep/metrics'] });
       toast({
         title: "Success!",
         description: data.message || "DM onboarding completed and credit awarded!",
@@ -85,7 +102,7 @@ export default function SalesDashboard() {
       console.error('Onboarding simulation error:', error);
       toast({
         title: "Error", 
-        description: "Failed to simulate onboarding completion",
+        description: error.message || "Failed to simulate onboarding completion",
         variant: "destructive",
       });
     }
