@@ -361,8 +361,24 @@ export default function SalesDashboard() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <div className="text-sm text-gray-600 mb-4">
-                        {gatedDMs?.unlockedCount || 0} of {gatedDMs?.totalCount || 0} profiles fully visible
+                      {/* Credit System Status */}
+                      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-200 mb-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-semibold text-green-800 mb-1">Database Access Unlocked!</h4>
+                            <p className="text-sm text-gray-600">
+                              You've earned <span className="font-semibold text-green-600">{totalCredits} credits</span> and can now browse {gatedDMs?.unlockedCount || 0} of {gatedDMs?.totalCount || 0} profiles
+                            </p>
+                          </div>
+                          <Button 
+                            onClick={() => simulateOnboardingMutation.mutate()}
+                            disabled={simulateOnboardingMutation.isPending}
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            {simulateOnboardingMutation.isPending ? 'Processing...' : 'Earn More Credits'}
+                          </Button>
+                        </div>
                       </div>
                       
                       <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -370,55 +386,83 @@ export default function SalesDashboard() {
                           <div key={dm.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
-                                <div className="flex items-center space-x-3 mb-2">
-                                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <User className="w-5 h-5 text-blue-600" />
+                                <div className="flex items-center space-x-3 mb-3">
+                                  <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
+                                    <User className="w-6 h-6 text-blue-600" />
                                   </div>
                                   <div>
                                     <div className="flex items-center space-x-2">
-                                      <h4 className="font-medium text-gray-900">{dm.name}</h4>
+                                      <h4 className="font-semibold text-gray-900">{dm.name}</h4>
                                       {!dm.isUnlocked && (
                                         <Lock className="w-4 h-4 text-gray-400" />
                                       )}
                                     </div>
-                                    <p className="text-sm text-gray-500">{dm.email}</p>
+                                    <p className="text-sm text-blue-600 font-medium">{dm.email}</p>
+                                    <p className="text-xs text-gray-500">{dm.jobTitle}</p>
                                   </div>
                                 </div>
                                 
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                  <div>
-                                    <span className="text-gray-500">Company:</span>
-                                    <span className="ml-2 font-medium">{dm.company}</span>
+                                <div className="grid grid-cols-2 gap-3 text-sm bg-gray-50 rounded-lg p-3">
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                    <span className="text-gray-600">Company:</span>
+                                    <span className="font-medium text-gray-900">{dm.company}</span>
                                   </div>
-                                  <div>
-                                    <span className="text-gray-500">Industry:</span>
-                                    <span className="ml-2 font-medium">{dm.industry}</span>
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                                    <span className="text-gray-600">Industry:</span>
+                                    <span className="font-medium text-gray-900">{dm.industry}</span>
                                   </div>
-                                  <div>
-                                    <span className="text-gray-500">Role:</span>
-                                    <span className="ml-2 font-medium">{dm.jobTitle}</span>
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <span className="text-gray-600">Engagement:</span>
+                                    <span className="font-medium text-green-600">{dm.engagementScore}%</span>
                                   </div>
-                                  <div>
-                                    <span className="text-gray-500">Engagement:</span>
-                                    <span className="ml-2 font-medium">{dm.engagementScore}%</span>
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                    <span className="text-gray-600">Status:</span>
+                                    <span className="font-medium text-gray-900">
+                                      {dm.isUnlocked ? 'Full Access' : 'Limited'}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
                               
-                              <div className="flex flex-col items-end space-y-2">
-                                {dm.isUnlocked ? (
-                                  <Badge className="bg-green-100 text-green-800">
-                                    {dm.unlockReason === 'enterprise_plan' ? 'Enterprise' : 'Booked'}
-                                  </Badge>
-                                ) : (
-                                  <Badge className="bg-gray-100 text-gray-600">
-                                    Book Call to Unlock
-                                  </Badge>
-                                )}
+                              <div className="flex flex-col items-end space-y-3 ml-4">
+                                <div className="flex flex-col space-y-2">
+                                  {dm.isUnlocked ? (
+                                    <Badge className="bg-green-100 text-green-800 border border-green-300">
+                                      ✓ {dm.unlockReason === 'enterprise_plan' ? 'Enterprise Plan' : 'Call Booked'}
+                                    </Badge>
+                                  ) : (
+                                    <Badge className="bg-orange-100 text-orange-700 border border-orange-300">
+                                      🔒 Book Call to Unlock
+                                    </Badge>
+                                  )}
+                                  
+                                  <div className="text-xs text-gray-500 text-right">
+                                    Score: <span className="font-medium">{dm.engagementScore}%</span>
+                                  </div>
+                                </div>
                                 
-                                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                                  Book Call
-                                </Button>
+                                <div className="flex flex-col space-y-2">
+                                  <Button 
+                                    size="sm" 
+                                    className="bg-blue-600 hover:bg-blue-700 shadow-sm"
+                                    onClick={() => window.location.href = '/calendar'}
+                                  >
+                                    📅 Book Call
+                                  </Button>
+                                  {dm.isUnlocked && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      className="border-green-300 text-green-700 hover:bg-green-50"
+                                    >
+                                      💬 Message
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -427,9 +471,32 @@ export default function SalesDashboard() {
                       
                       {gatedDMs?.dms?.length === 0 && (
                         <div className="text-center py-8">
-                          <p className="text-gray-500">No decision makers available at the moment</p>
+                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Users className="w-8 h-8 text-gray-400" />
+                          </div>
+                          <p className="text-gray-500 font-medium">No decision makers available</p>
+                          <p className="text-sm text-gray-400 mt-1">Check back later for new opportunities</p>
                         </div>
                       )}
+                      
+                      {/* Action Buttons */}
+                      <div className="border-t pt-4 mt-4">
+                        <div className="flex space-x-3">
+                          <Button 
+                            onClick={() => window.location.href = '/decision-dashboard'}
+                            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                          >
+                            🎯 Browse All Decision Makers
+                          </Button>
+                          <Button 
+                            onClick={() => window.location.href = '/calendar'}
+                            variant="outline"
+                            className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-50"
+                          >
+                            📅 Schedule Meetings
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </CardContent>
