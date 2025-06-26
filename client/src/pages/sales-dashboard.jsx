@@ -396,8 +396,7 @@ export default function SalesDashboard() {
                       </div>
                       
                       <div className="space-y-3 max-h-96 overflow-y-auto">
-                        {console.log('Rendering check:', gatedDMs?.dms?.length, gatedDMs?.dms) || 
-                         (gatedDMs?.dms && Array.isArray(gatedDMs.dms) && gatedDMs.dms.length > 0) ? 
+                        {gatedDMs?.dms && Array.isArray(gatedDMs.dms) && gatedDMs.dms.length > 0 ? 
                          gatedDMs.dms.map((dm) => (
                           <div key={dm.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                             <div className="flex items-center justify-between">
@@ -408,13 +407,23 @@ export default function SalesDashboard() {
                                   </div>
                                   <div>
                                     <div className="flex items-center space-x-2">
-                                      <h4 className="font-semibold text-gray-900">{dm.name}</h4>
-                                      {!dm.isUnlocked && (
-                                        <Lock className="w-4 h-4 text-gray-400" />
-                                      )}
+                                      <h4 className="font-semibold text-gray-900 flex items-center">
+                                        {dm.isUnlocked ? dm.name : (
+                                          <span className="flex items-center space-x-2">
+                                            <span className="bg-gray-200 text-gray-400 px-2 py-1 rounded text-sm">Hidden Name</span>
+                                            <Lock className="w-4 h-4 text-gray-400" />
+                                          </span>
+                                        )}
+                                      </h4>
                                     </div>
-                                    <p className="text-sm text-blue-600 font-medium">{dm.email}</p>
-                                    <p className="text-xs text-gray-500">{dm.jobTitle}</p>
+                                    <p className="text-sm font-medium flex items-center">
+                                      {dm.isUnlocked ? (
+                                        <span className="text-blue-600">{dm.email}</span>
+                                      ) : (
+                                        <span className="bg-gray-200 text-gray-400 px-2 py-1 rounded text-xs">Hidden Email</span>
+                                      )}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">{dm.role}</p>
                                   </div>
                                 </div>
                                 
@@ -436,9 +445,9 @@ export default function SalesDashboard() {
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                                    <span className="text-gray-600">Status:</span>
-                                    <span className="font-medium text-gray-900">
-                                      {dm.isUnlocked ? 'Full Access' : 'Limited'}
+                                    <span className="text-gray-600">Access:</span>
+                                    <span className={`font-medium ${dm.isUnlocked ? 'text-green-600' : 'text-orange-600'}`}>
+                                      {dm.isUnlocked ? 'Unlocked' : 'Locked'}
                                     </span>
                                   </div>
                                 </div>
@@ -475,7 +484,7 @@ export default function SalesDashboard() {
                                       variant="outline"
                                       className="border-green-300 text-green-700 hover:bg-green-50"
                                     >
-                                      💬 Message
+                                      💬 Contact
                                     </Button>
                                   )}
                                 </div>
@@ -495,15 +504,11 @@ export default function SalesDashboard() {
                              gatedDMsError ? 'Error loading decision makers' :
                              'No decision makers found in your network'}
                           </p>
-                          <div className="mt-4 text-xs text-gray-400">
-                            Debug: {JSON.stringify({
-                              hasData: !!gatedDMs,
-                              hasArray: Array.isArray(gatedDMs?.dms),
-                              length: gatedDMs?.dms?.length,
-                              loading: gatedDMsLoading,
-                              error: !!gatedDMsError
-                            })}
-                          </div>
+                          {gatedDMsError && (
+                            <div className="mt-4 text-xs text-red-500">
+                              Error: {gatedDMsError.message}
+                            </div>
+                          )}
                           {gatedDMsLoading && (
                             <div className="mt-4">
                               <Loader2 className="animate-spin h-6 w-6 mx-auto text-blue-600" />
