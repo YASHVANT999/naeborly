@@ -35,6 +35,7 @@ import TestSignup from "@/pages/test-signup";
 import FlagsManagement from "@/pages/flags-management";
 import NotFound from "@/pages/not-found";
 import DMSuspensionAlerts from "@/pages/dm-suspension-alerts";
+import Analytics from "@/pages/analytics";
 
 function Router() {
   return (
