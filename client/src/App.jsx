@@ -36,6 +36,7 @@ import FlagsManagement from "@/pages/flags-management";
 import NotFound from "@/pages/not-found";
 import DMSuspensionAlerts from "@/pages/dm-suspension-alerts";
 import Analytics from "@/pages/analytics";
+import Profile from "@/pages/profile";
 
 function Router() {
   return (
@@ -98,6 +99,11 @@ function Router() {
       <Route path="/analytics">
         <ProtectedRoute requiredRole="sales_rep">
           <Analytics />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/profile">
+        <ProtectedRoute requiredRole="sales_rep">
+          <Profile />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />

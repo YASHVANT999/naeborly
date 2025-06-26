@@ -198,7 +198,11 @@ export default function SalesDashboard() {
                   <TrendingUp className="mr-2" size={16} />
                   Analytics
                 </Button>
-                <Button variant="ghost" size="sm">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => window.location.href = '/profile'}
+                >
                   <Users className="mr-2" size={16} />
                   Profile
                 </Button>
