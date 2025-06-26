@@ -95,6 +95,11 @@ function Router() {
           <DMSuspensionAlerts />
         </ProtectedRoute>
       </Route>
+      <Route path="/analytics">
+        <ProtectedRoute requiredRole="sales_rep">
+          <Analytics />
+        </ProtectedRoute>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
