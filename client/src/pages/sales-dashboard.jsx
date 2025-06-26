@@ -382,7 +382,9 @@ export default function SalesDashboard() {
                       </div>
                       
                       <div className="space-y-3 max-h-96 overflow-y-auto">
-                        {gatedDMs && gatedDMs.dms && gatedDMs.dms.length > 0 ? gatedDMs.dms.map((dm) => (
+                        {console.log('Rendering check:', gatedDMs?.dms?.length, gatedDMs?.dms) || 
+                         (gatedDMs?.dms && Array.isArray(gatedDMs.dms) && gatedDMs.dms.length > 0) ? 
+                         gatedDMs.dms.map((dm) => (
                           <div key={dm.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
@@ -472,12 +474,23 @@ export default function SalesDashboard() {
                             <Users className="w-8 h-8 text-blue-600" />
                           </div>
                           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                            {!gatedDMs ? 'Loading Decision Makers...' : 'No Decision Makers Available'}
+                            {gatedDMsLoading ? 'Loading Decision Makers...' : 'No Decision Makers Available'}
                           </h3>
                           <p className="text-gray-500">
-                            {!gatedDMs ? 'Fetching available decision makers from database...' : 'No decision makers found in your network'}
+                            {gatedDMsLoading ? 'Fetching available decision makers from database...' : 
+                             gatedDMsError ? 'Error loading decision makers' :
+                             'No decision makers found in your network'}
                           </p>
-                          {!gatedDMs && (
+                          <div className="mt-4 text-xs text-gray-400">
+                            Debug: {JSON.stringify({
+                              hasData: !!gatedDMs,
+                              hasArray: Array.isArray(gatedDMs?.dms),
+                              length: gatedDMs?.dms?.length,
+                              loading: gatedDMsLoading,
+                              error: !!gatedDMsError
+                            })}
+                          </div>
+                          {gatedDMsLoading && (
                             <div className="mt-4">
                               <Loader2 className="animate-spin h-6 w-6 mx-auto text-blue-600" />
                             </div>
