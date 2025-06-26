@@ -190,7 +190,11 @@ export default function SalesDashboard() {
               </Badge>
               <FlagsBadge />
               <div className="hidden sm:flex items-center space-x-2">
-                <Button variant="ghost" size="sm">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => window.location.href = '/analytics'}
+                >
                   <TrendingUp className="mr-2" size={16} />
                   Analytics
                 </Button>
