@@ -3764,6 +3764,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Credit management endpoints
+  app.post("/api/dm/complete-onboarding", authenticateToken, async (req, res) => {
+    try {
+      const dmId = req.user!.userId;
+      const { invitedByRepId } = req.body;
+
+      if (!invitedByRepId) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Inviting sales rep ID is required" 
+        });
+      }
+
+      const result = await storage.markDMOnboardingComplete(dmId, invitedByRepId);
+      
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (error) {
+      console.error("Error completing DM onboarding:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to complete onboarding" 
+      });
+    }
+  });
+
+  app.get("/api/sales-rep/credits", authenticateToken, async (req, res) => {
+    try {
+      const repId = req.user!.userId;
+      const credits = await storage.getRepCredits(repId);
+      const totalCredits = await storage.getRepTotalCredits(repId);
+      
+      res.json({
+        credits,
+        totalCredits,
+        databaseAccess: totalCredits > 0
+      });
+    } catch (error) {
+      console.error("Error fetching rep credits:", error);
+      res.status(500).json({ message: "Failed to fetch credits" });
+    }
+  });
+
+  app.get("/api/sales-rep/database-access", authenticateToken, async (req, res) => {
+    try {
+      const repId = req.user!.userId;
+      const hasAccess = await storage.checkDatabaseAccess(repId);
+      
+      res.json({ 
+        hasAccess,
+        message: hasAccess ? "Database access granted" : "Complete a DM onboarding to unlock database access"
+      });
+    } catch (error) {
+      console.error("Error checking database access:", error);
+      res.status(500).json({ 
+        hasAccess: false, 
+        message: "Failed to check database access" 
+      });
+    }
+  });
+
+  // Enhanced DM listing with gated information
+  app.get("/api/sales-rep/available-dms-gated", authenticateToken, async (req, res) => {
+    try {
+      const repId = req.user!.userId;
+      const user = await storage.getUserById(repId);
+      
+      if (!user || user.role !== 'sales_rep') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Check if rep has database access
+      const hasAccess = await storage.checkDatabaseAccess(repId);
+      if (!hasAccess) {
+        return res.json({ 
+          dms: [],
+          message: "Invite decision makers to unlock database access",
+          accessGranted: false
+        });
+      }
+
+      // Get all available DMs
+      const allDMs = await storage.getUsersByRole('decision_maker');
+      const activeAvailableDMs = allDMs.filter(dm => 
+        dm.isActive && 
+        dm.invitationStatus === 'accepted'
+      );
+
+      // Check which DMs this rep can see full info for
+      const isEnterprisePlan = user.packageType === 'enterprise';
+      const repCalls = await storage.getCallsByRep(repId);
+      const bookedDMIds = new Set(repCalls.map(call => call.decisionMakerId?.toString()));
+
+      const gatedDMs = activeAvailableDMs.map(dm => {
+        const canSeeDetails = isEnterprisePlan || bookedDMIds.has(dm._id?.toString() || dm.id);
+        
+        return {
+          id: dm._id || dm.id,
+          role: dm.role,
+          company: dm.company,
+          industry: dm.industry || 'Technology',
+          engagementScore: Math.floor(Math.random() * 100) + 1,
+          
+          // Gated information
+          name: canSeeDetails ? `${dm.firstName} ${dm.lastName}` : "••••••",
+          email: canSeeDetails ? dm.email : "••••••@••••.com",
+          jobTitle: canSeeDetails ? dm.jobTitle : "••••••",
+          
+          // Access indicators
+          isUnlocked: canSeeDetails,
+          unlockReason: canSeeDetails ? 
+            (isEnterprisePlan ? "enterprise_plan" : "booked_call") : 
+            "locked"
+        };
+      });
+
+      res.json({
+        dms: gatedDMs,
+        accessGranted: true,
+        totalCount: gatedDMs.length,
+        unlockedCount: gatedDMs.filter(dm => dm.isUnlocked).length
+      });
+
+    } catch (error) {
+      console.error("Error fetching gated DMs:", error);
+      res.status(500).json({ message: "Failed to fetch decision makers" });
+    }
+  });
+
+  // Simulate DM onboarding completion (for testing)
+  app.post("/api/simulate/dm-onboarding-complete", authenticateToken, async (req, res) => {
+    try {
+      const { dmEmail, repId } = req.body;
+      
+      if (!dmEmail || !repId) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "DM email and rep ID are required" 
+        });
+      }
+
+      // Find the DM
+      const dm = await storage.getUserByEmail(dmEmail);
+      if (!dm || dm.role !== 'decision_maker') {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Decision maker not found" 
+        });
+      }
+
+      // Complete onboarding
+      const result = await storage.markDMOnboardingComplete(dm._id || dm.id, repId);
+      res.json(result);
+
+    } catch (error) {
+      console.error("Error simulating DM onboarding:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to simulate onboarding completion" 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

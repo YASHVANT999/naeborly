@@ -272,6 +272,32 @@ const repSuspensionSchema = new mongoose.Schema({
 
 export const RepSuspension = mongoose.model("RepSuspension", repSuspensionSchema);
 
+// Call Credits Schema - Tracks credits earned by sales reps
+const callCreditsSchema = new mongoose.Schema({
+  repId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  dmId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  earnedAt: { type: Date, default: Date.now },
+  source: { type: String, required: true, enum: ['dm_onboarding', 'manual', 'bonus'] },
+  creditAmount: { type: Number, required: true, default: 1 },
+  month: { type: String, required: true }, // Format: YYYY-MM
+  isActive: { type: Boolean, default: true }
+}, { timestamps: true });
+
+// DM-Rep Credit Usage Schema - Tracks monthly credit usage per DM-Rep pair
+const dmRepCreditUsageSchema = new mongoose.Schema({
+  repId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  dmId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  month: { type: String, required: true }, // Format: YYYY-MM
+  creditsUsed: { type: Number, default: 0, max: 3 }
+}, { timestamps: true });
+
+// Create compound indexes for performance
+callCreditsSchema.index({ repId: 1, dmId: 1, month: 1 });
+dmRepCreditUsageSchema.index({ repId: 1, dmId: 1, month: 1 }, { unique: true });
+
+export const CallCredits = mongoose.model("CallCredits", callCreditsSchema);
+export const DMRepCreditUsage = mongoose.model("DMRepCreditUsage", dmRepCreditUsageSchema);
+
 export type UserDocument = mongoose.Document & {
   _id: mongoose.Types.ObjectId;
   email: string;

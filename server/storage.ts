@@ -93,6 +93,17 @@ export interface IStorage {
   getRepSuspensionHistory(repId: string): Promise<any[]>;
   checkRepSuspensionStatus(repId: string): Promise<{ isSuspended: boolean, suspension?: any }>;
   getRecentFeedbackForRep(repId: string, limit?: number): Promise<any[]>;
+
+  // Credit management methods
+  awardCreditToDMCompletion(repId: string, dmId: string): Promise<{ success: boolean, message: string, creditAwarded?: any }>;
+  checkDMCreditUsage(repId: string, dmId: string, month: string): Promise<number>;
+  updateDMCreditUsage(repId: string, dmId: string, month: string): Promise<any>;
+  getRepCredits(repId: string): Promise<any[]>;
+  getRepTotalCredits(repId: string): Promise<number>;
+  checkDatabaseAccess(repId: string): Promise<boolean>;
+  
+  // DM onboarding completion
+  markDMOnboardingComplete(dmId: string, invitedByRepId: string): Promise<{ success: boolean, message: string }>;
 }
 
 // Import and use only MongoDB storage

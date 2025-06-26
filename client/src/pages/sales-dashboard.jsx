@@ -256,44 +256,137 @@ export default function SalesDashboard() {
                       </div>
                     </div>
 
-                    <Button 
-                      onClick={() => simulateAcceptanceMutation.mutate()}
-                      disabled={simulateAcceptanceMutation.isPending}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      {simulateAcceptanceMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Simulating...
-                        </>
-                      ) : (
-                        "Simulate DM Acceptance (Demo)"
-                      )}
-                    </Button>
+                    <div className="space-y-3">
+                      <Button 
+                        onClick={() => simulateAcceptanceMutation.mutate()}
+                        disabled={simulateAcceptanceMutation.isPending}
+                        className="bg-blue-600 hover:bg-blue-700 w-full"
+                      >
+                        {simulateAcceptanceMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Simulating...
+                          </>
+                        ) : (
+                          "Simulate DM Acceptance (Demo)"
+                        )}
+                      </Button>
+                      
+                      <Button 
+                        onClick={() => simulateOnboardingMutation.mutate()}
+                        disabled={simulateOnboardingMutation.isPending}
+                        className="bg-green-600 hover:bg-green-700 w-full"
+                      >
+                        {simulateOnboardingMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Completing...
+                          </>
+                        ) : (
+                          "Complete DM Onboarding (Award Credit)"
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ) : (
               <Card className="shadow-lg">
                 <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Users className="text-green-500 mr-3" size={24} />
-                    Database Access Unlocked
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Users className="text-green-500 mr-3" size={24} />
+                      Decision Maker Database
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge className="bg-green-100 text-green-800">
+                        {totalCredits} Credits Earned
+                      </Badge>
+                      <Badge className="bg-blue-100 text-blue-800">
+                        Access Unlocked
+                      </Badge>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12">
-                    <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Users className="text-green-600" size={48} />
+                  {gatedDMsLoading ? (
+                    <div className="text-center py-8">
+                      <Loader2 className="animate-spin h-8 w-8 mx-auto mb-4 text-blue-600" />
+                      <p className="text-gray-500">Loading decision makers...</p>
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-4">Welcome to the Database!</h3>
-                    <p className="text-gray-600 mb-8">
-                      You now have access to verified decision makers. Start booking your intro calls.
-                    </p>
-                    <Button className="bg-green-600 hover:bg-green-700">
-                      Browse Decision Makers
-                    </Button>
-                  </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="text-sm text-gray-600 mb-4">
+                        {gatedDMs?.unlockedCount || 0} of {gatedDMs?.totalCount || 0} profiles fully visible
+                      </div>
+                      
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {gatedDMs?.dms?.map((dm) => (
+                          <div key={dm.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-2">
+                                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <User className="w-5 h-5 text-blue-600" />
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center space-x-2">
+                                      <h4 className="font-medium text-gray-900">{dm.name}</h4>
+                                      {!dm.isUnlocked && (
+                                        <Lock className="w-4 h-4 text-gray-400" />
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-gray-500">{dm.email}</p>
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  <div>
+                                    <span className="text-gray-500">Company:</span>
+                                    <span className="ml-2 font-medium">{dm.company}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">Industry:</span>
+                                    <span className="ml-2 font-medium">{dm.industry}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">Role:</span>
+                                    <span className="ml-2 font-medium">{dm.jobTitle}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">Engagement:</span>
+                                    <span className="ml-2 font-medium">{dm.engagementScore}%</span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="flex flex-col items-end space-y-2">
+                                {dm.isUnlocked ? (
+                                  <Badge className="bg-green-100 text-green-800">
+                                    {dm.unlockReason === 'enterprise_plan' ? 'Enterprise' : 'Booked'}
+                                  </Badge>
+                                ) : (
+                                  <Badge className="bg-gray-100 text-gray-600">
+                                    Book Call to Unlock
+                                  </Badge>
+                                )}
+                                
+                                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                  Book Call
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {gatedDMs?.dms?.length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500">No decision makers available at the moment</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
