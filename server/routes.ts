@@ -4066,32 +4066,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Create issue report using the flag system for tracking
-      const issueReport = {
-        reportedBy: currentUser._id.toString(),
-        reporterEmail: currentUser.email,
-        reporterName: `${currentUser.firstName} ${currentUser.lastName}`,
-        company: currentUser.company,
-        type,
-        description,
-        priority,
-        status: 'open',
-        reportedAt: new Date(),
-        resolvedAt: null,
-        resolution: null
+      // Map the issue type to valid flagType enum values
+      const flagTypeMapping = {
+        'technical': 'quality_concern',
+        'behavior': 'inappropriate_behavior',
+        'quality': 'quality_concern',
+        'scheduling': 'scheduling_issues',
+        'other': 'quality_concern'
       };
 
-      // Create a flag for tracking (reusing the flag system for issue tracking)
+      const flagType = flagTypeMapping[type] || 'quality_concern';
+      const companyDomain = currentUser.company ? 
+        currentUser.company.toLowerCase().replace(/[^a-z0-9]/g, '') + '.com' : 
+        currentUser.email.split('@')[1];
+
+      // Create a flag for tracking (using the existing flag system)
       const flag = await storage.createDMFlag({
         dmId: currentUser._id.toString(),
-        salesRepId: null, // No specific rep for general issues
-        flagType: 'issue_report',
-        reason: `${type}: ${description}`,
-        description: description,
         flaggedBy: currentUser._id.toString(),
-        severity: priority,
-        status: 'open',
-        metadata: issueReport
+        companyDomain: companyDomain,
+        flagType: flagType,
+        description: `${type}: ${description}`,
+        severity: priority || 'medium',
+        status: 'open'
       });
 
       // Log activity
