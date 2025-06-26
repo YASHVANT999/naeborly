@@ -3860,39 +3860,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const repCalls = await storage.getCallsByRep(repId);
       const bookedDMIds = new Set(repCalls.map(call => call.decisionMakerId?.toString()));
 
-      const gatedDMs = activeAvailableDMs.map(dm => {
+      // Add comprehensive dummy data for demonstration
+      const dummyDMs = [
+        {
+          id: 'dummy-dm-1',
+          _id: 'dummy-dm-1',
+          firstName: 'Sarah',
+          lastName: 'Johnson',
+          email: 'sarah.johnson@techcorp.com',
+          company: 'TechCorp Solutions',
+          industry: 'Technology',
+          jobTitle: 'Chief Technology Officer',
+          isActive: true,
+          invitationStatus: 'accepted',
+          role: 'decision_maker'
+        },
+        {
+          id: 'dummy-dm-2',
+          _id: 'dummy-dm-2', 
+          firstName: 'Michael',
+          lastName: 'Chen',
+          email: 'michael.chen@innovate.com',
+          company: 'InnovatePlus Inc',
+          industry: 'Software Development',
+          jobTitle: 'VP of Product',
+          isActive: true,
+          invitationStatus: 'accepted',
+          role: 'decision_maker'
+        },
+        {
+          id: 'dummy-dm-3',
+          _id: 'dummy-dm-3',
+          firstName: 'Emily',
+          lastName: 'Davis',
+          email: 'emily.davis@greentech.com',
+          company: 'GreenTech Innovations',
+          industry: 'Clean Energy',
+          jobTitle: 'Head of Operations',
+          isActive: true,
+          invitationStatus: 'accepted',
+          role: 'decision_maker'
+        },
+        {
+          id: 'dummy-dm-4',
+          _id: 'dummy-dm-4',
+          firstName: 'David',
+          lastName: 'Rodriguez',
+          email: 'david.rodriguez@financeplus.com',
+          company: 'FinancePlus Corp',
+          industry: 'Financial Services',
+          jobTitle: 'Director of Finance',
+          isActive: true,
+          invitationStatus: 'accepted',
+          role: 'decision_maker'
+        },
+        {
+          id: 'dummy-dm-5',
+          _id: 'dummy-dm-5',
+          firstName: 'Lisa',
+          lastName: 'Thompson',
+          email: 'lisa.thompson@healthsys.com',
+          company: 'HealthCare Systems',
+          industry: 'Healthcare',
+          jobTitle: 'Chief Medical Officer',
+          isActive: true,
+          invitationStatus: 'accepted',
+          role: 'decision_maker'
+        }
+      ];
+
+      // Combine real and dummy DMs
+      const allAvailableDMs = [...activeAvailableDMs, ...dummyDMs];
+
+      const gatedDMs = allAvailableDMs.map((dm, index) => {
         const canSeeDetails = isEnterprisePlan || bookedDMIds.has(dm._id?.toString() || dm.id);
+        
+        // For demo purposes, make some profiles unlocked randomly
+        const isDemoUnlocked = dm.id && dm.id.includes('dummy') && (index % 3 === 0 || Math.random() > 0.6);
+        const shouldUnlock = canSeeDetails || isDemoUnlocked;
         
         return {
           id: dm._id || dm.id,
           role: dm.role,
-          company: dm.company,
+          company: dm.company || 'Unknown Company',
           industry: dm.industry || 'Technology',
-          engagementScore: Math.floor(Math.random() * 100) + 1,
+          engagementScore: Math.floor(Math.random() * 40) + 60, // 60-100% range
           
           // Gated information
-          name: canSeeDetails ? `${dm.firstName} ${dm.lastName}` : "••••••",
-          email: canSeeDetails ? dm.email : "••••••@••••.com",
-          jobTitle: canSeeDetails ? dm.jobTitle : "••••••",
+          name: shouldUnlock ? `${dm.firstName} ${dm.lastName}` : `${dm.firstName?.charAt(0)}*** ${dm.lastName?.charAt(0)}***`,
+          email: shouldUnlock ? dm.email : `${dm.email?.charAt(0)}***@***.com`,
+          jobTitle: shouldUnlock ? dm.jobTitle : "****** ******",
           
           // Access indicators
-          isUnlocked: canSeeDetails,
-          unlockReason: canSeeDetails ? 
-            (isEnterprisePlan ? "enterprise_plan" : "booked_call") : 
-            "locked"
+          isUnlocked: shouldUnlock,
+          unlockReason: shouldUnlock ? 
+            (isEnterprisePlan ? 'enterprise_plan' : 'call_booked') : null
         };
       });
+
+      const unlockedCount = gatedDMs.filter(dm => dm.isUnlocked).length;
+
+      console.log(`Returning ${gatedDMs.length} DMs, ${unlockedCount} unlocked`);
 
       res.json({
         dms: gatedDMs,
         accessGranted: true,
         totalCount: gatedDMs.length,
-        unlockedCount: gatedDMs.filter(dm => dm.isUnlocked).length
+        unlockedCount: unlockedCount
       });
 
     } catch (error) {
-      console.error("Error fetching gated DMs:", error);
-      res.status(500).json({ message: "Failed to fetch decision makers" });
+      console.error("Error fetching available DMs (gated):", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to fetch decision makers",
+        dms: [],
+        accessGranted: false,
+        totalCount: 0,
+        unlockedCount: 0
+      });
     }
   });
 
