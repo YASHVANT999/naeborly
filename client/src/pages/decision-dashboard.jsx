@@ -136,6 +136,8 @@ export default function DecisionDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [reportIssueOpen, setReportIssueOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   // Fetch decision maker's calls
   const { data: calls = [], isLoading: callsLoading } = useQuery({
@@ -730,25 +732,266 @@ export default function DecisionDashboard() {
               <CardContent className="space-y-3">
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start p-3"
-                  onClick={() => window.location.href = '/post-call-evaluation'}
+                  className="w-full justify-start p-3 hover:bg-yellow-50"
+                  onClick={() => handleRateLastCall()}
                 >
                   <Star className="text-yellow-500 mr-3" size={16} />
                   <span className="text-sm font-medium">Rate Last Call</span>
                 </Button>
-                <Button variant="ghost" className="w-full justify-start p-3">
-                  <AlertTriangle className="text-red-500 mr-3" size={16} />
-                  <span className="text-sm font-medium">Report Issue</span>
-                </Button>
-                <Button variant="ghost" className="w-full justify-start p-3">
-                  <MessageCircle className="text-blue-500 mr-3" size={16} />
-                  <span className="text-sm font-medium">View Feedback</span>
-                </Button>
+                <Dialog open={reportIssueOpen} onOpenChange={setReportIssueOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" className="w-full justify-start p-3 hover:bg-red-50">
+                      <AlertTriangle className="text-red-500 mr-3" size={16} />
+                      <span className="text-sm font-medium">Report Issue</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Report an Issue</DialogTitle>
+                    </DialogHeader>
+                    <ReportIssueForm onClose={() => setReportIssueOpen(false)} />
+                  </DialogContent>
+                </Dialog>
+                <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" className="w-full justify-start p-3 hover:bg-blue-50">
+                      <MessageCircle className="text-blue-500 mr-3" size={16} />
+                      <span className="text-sm font-medium">View Feedback</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Your Call Feedback History</DialogTitle>
+                    </DialogHeader>
+                    <FeedbackHistory onClose={() => setFeedbackOpen(false)} />
+                  </DialogContent>
+                </Dialog>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Report Issue Form Component
+function ReportIssueForm({ onClose }) {
+  const [issueType, setIssueType] = useState('');
+  const [description, setDescription] = useState('');
+  const [priority, setPriority] = useState('medium');
+  const { toast } = useToast();
+
+  const issueTypes = [
+    { value: 'technical', label: 'Technical Issue' },
+    { value: 'behavior', label: 'Inappropriate Behavior' },
+    { value: 'quality', label: 'Call Quality Problem' },
+    { value: 'scheduling', label: 'Scheduling Issue' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  const priorityLevels = [
+    { value: 'low', label: 'Low Priority', color: 'text-green-600' },
+    { value: 'medium', label: 'Medium Priority', color: 'text-yellow-600' },
+    { value: 'high', label: 'High Priority', color: 'text-red-600' }
+  ];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!issueType || !description.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please select an issue type and provide a description.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await apiRequest('/api/decision-maker/report-issue', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: issueType,
+          description: description.trim(),
+          priority,
+          reportedAt: new Date().toISOString()
+        })
+      });
+
+      toast({
+        title: "Issue Reported",
+        description: "Your issue has been reported successfully. We'll investigate and get back to you.",
+      });
+      
+      onClose();
+      setIssueType('');
+      setDescription('');
+      setPriority('medium');
+    } catch (error) {
+      toast({
+        title: "Report Failed",
+        description: error.message || "Failed to submit report. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="issueType">Issue Type</Label>
+        <select
+          id="issueType"
+          value={issueType}
+          onChange={(e) => setIssueType(e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded-md mt-1"
+          required
+        >
+          <option value="">Select an issue type</option>
+          {issueTypes.map(type => (
+            <option key={type.value} value={type.value}>{type.label}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <Label htmlFor="priority">Priority Level</Label>
+        <select
+          id="priority"
+          value={priority}
+          onChange={(e) => setPriority(e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded-md mt-1"
+        >
+          {priorityLevels.map(level => (
+            <option key={level.value} value={level.value}>{level.label}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Please describe the issue in detail..."
+          className="mt-1"
+          rows={4}
+          required
+        />
+      </div>
+
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit" className="bg-red-600 hover:bg-red-700">
+          <AlertTriangle className="mr-2" size={16} />
+          Submit Report
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+// Feedback History Component
+function FeedbackHistory({ onClose }) {
+  const { data: feedbackHistory, isLoading } = useQuery({
+    queryKey: ['/api/decision-maker/feedback-history'],
+  });
+
+  const renderStars = (rating) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star 
+        key={i} 
+        className={`${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+        size={14} 
+      />
+    ));
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  const feedback = feedbackHistory || [];
+
+  return (
+    <div className="space-y-4">
+      {feedback.length === 0 ? (
+        <div className="text-center py-8">
+          <MessageCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Feedback Yet</h3>
+          <p className="text-gray-500">Complete calls to start receiving feedback and ratings.</p>
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-4">
+            {feedback.map((item, index) => (
+              <Card key={index} className="border-l-4 border-l-blue-500">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">
+                        Call with {item.salesRepName || 'Sales Representative'}
+                      </h4>
+                      <p className="text-sm text-gray-500">
+                        {item.company} • {new Date(item.callDate).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex items-center">
+                      {renderStars(item.rating)}
+                      <span className="ml-2 text-sm font-medium text-gray-700">
+                        {item.rating}/5
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {item.experienceTitle && (
+                    <Badge 
+                      variant="secondary" 
+                      className={`mb-2 ${
+                        item.rating >= 4 ? 'bg-green-100 text-green-800' :
+                        item.rating >= 3 ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {item.experienceTitle}
+                    </Badge>
+                  )}
+                  
+                  {item.comments && (
+                    <p className="text-sm text-gray-600 mt-2 italic">
+                      "{item.comments}"
+                    </p>
+                  )}
+                  
+                  <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+                    <span className="text-xs text-gray-400">
+                      Submitted {new Date(item.evaluatedAt).toLocaleDateString()}
+                    </span>
+                    {item.rating <= 2 && (
+                      <Badge variant="destructive" className="text-xs">
+                        Follow-up Required
+                      </Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          <div className="flex justify-end pt-4">
+            <Button variant="outline" onClick={onClose}>
+              Close
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
