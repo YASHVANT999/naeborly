@@ -81,9 +81,12 @@ export default function SalesDashboard() {
 
   const simulateOnboardingMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/simulate/dm-onboarding-complete', {
-        dmEmail: 'dm@techize.com',
-        repId: user?.id || user?._id
+      const response = await apiRequest('/api/simulate/dm-onboarding-complete', {
+        method: 'POST',
+        body: JSON.stringify({
+          dmEmail: 'dm@techize.com',
+          repId: user?.id || user?._id
+        })
       });
       return response;
     },
