@@ -1,4 +1,4 @@
-import { User, Invitation, Call, SubscriptionPlan, CompanyCredits, CallLog, Feedback, CompanyDMs, DMFlags, connectToMongoDB } from './mongodb';
+import { User, Invitation, Call, SubscriptionPlan, CompanyCredits, CallLog, Feedback, CompanyDMs, DMFlags, RepSuspension, CallCredits, DMRepCreditUsage, connectToMongoDB } from './mongodb';
 import type { IStorage } from './storage';
 import bcrypt from 'bcrypt';
 
@@ -1146,6 +1146,217 @@ export class SimpleMongoDBStorage implements IStorage {
       return suspendedUsers.map(user => this.toPlainObject(user));
     } catch (error) {
       console.error('Error getting suspended reps:', error);
+      return [];
+    }
+  }
+
+  // Credit management methods
+  async awardCreditToDMCompletion(repId: string, dmId: string): Promise<{ success: boolean, message: string, creditAwarded?: any }> {
+    try {
+      const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+      
+      // Check if rep has already earned max credits from this DM this month
+      const currentUsage = await this.checkDMCreditUsage(repId, dmId, currentMonth);
+      if (currentUsage >= 3) {
+        return {
+          success: false,
+          message: "Maximum credits (3) already earned from this Decision Maker this month"
+        };
+      }
+
+      // Check if credit already exists for this rep-dm pair this month
+      const existingCredit = await CallCredits.findOne({
+        repId: repId,
+        dmId: dmId,
+        month: currentMonth,
+        source: 'dm_onboarding'
+      });
+
+      if (existingCredit) {
+        return {
+          success: false,
+          message: "Credit already awarded for this Decision Maker's onboarding"
+        };
+      }
+
+      // Award credit
+      const creditData = {
+        repId: repId,
+        dmId: dmId,
+        month: currentMonth,
+        source: 'dm_onboarding',
+        creditAmount: 1,
+        earnedAt: new Date()
+      };
+
+      const credit = await CallCredits.create(creditData);
+      
+      // Update DM credit usage
+      await this.updateDMCreditUsage(repId, dmId, currentMonth);
+
+      return {
+        success: true,
+        message: "Credit successfully awarded for Decision Maker onboarding completion",
+        creditAwarded: this.toPlainObject(credit)
+      };
+    } catch (error) {
+      console.error('Error awarding DM completion credit:', error);
+      return {
+        success: false,
+        message: "Failed to award credit"
+      };
+    }
+  }
+
+  async checkDMCreditUsage(repId: string, dmId: string, month: string): Promise<number> {
+    try {
+      const usage = await DMRepCreditUsage.findOne({
+        repId: repId,
+        dmId: dmId,
+        month: month
+      });
+      return usage?.creditsUsed || 0;
+    } catch (error) {
+      console.error('Error checking DM credit usage:', error);
+      return 0;
+    }
+  }
+
+  async updateDMCreditUsage(repId: string, dmId: string, month: string): Promise<any> {
+    try {
+      const result = await DMRepCreditUsage.findOneAndUpdate(
+        { repId: repId, dmId: dmId, month: month },
+        { $inc: { creditsUsed: 1 } },
+        { upsert: true, new: true }
+      );
+      return this.toPlainObject(result);
+    } catch (error) {
+      console.error('Error updating DM credit usage:', error);
+      throw error;
+    }
+  }
+
+  async getRepCredits(repId: string): Promise<any[]> {
+    try {
+      const credits = await CallCredits.find({ repId: repId, isActive: true })
+        .populate('dmId', 'firstName lastName email company')
+        .sort({ earnedAt: -1 });
+      return this.toPlainObject(credits);
+    } catch (error) {
+      console.error('Error getting rep credits:', error);
+      return [];
+    }
+  }
+
+  async getRepTotalCredits(repId: string): Promise<number> {
+    try {
+      const total = await CallCredits.countDocuments({ repId: repId, isActive: true });
+      return total;
+    } catch (error) {
+      console.error('Error getting rep total credits:', error);
+      return 0;
+    }
+  }
+
+  async checkDatabaseAccess(repId: string): Promise<boolean> {
+    try {
+      // Check if rep has any credits (indicating at least one DM completed onboarding)
+      const creditCount = await this.getRepTotalCredits(repId);
+      return creditCount > 0;
+    } catch (error) {
+      console.error('Error checking database access:', error);
+      return false;
+    }
+  }
+
+  async markDMOnboardingComplete(dmId: string, invitedByRepId: string): Promise<{ success: boolean, message: string }> {
+    try {
+      // Update DM to mark onboarding as complete
+      await User.findByIdAndUpdate(dmId, {
+        onboardingComplete: true,
+        calendarIntegrationEnabled: true,
+        termsAccepted: true,
+        onboardingCompletedAt: new Date()
+      });
+
+      // Award credit to the inviting sales rep
+      const creditResult = await this.awardCreditToDMCompletion(invitedByRepId, dmId);
+
+      return {
+        success: true,
+        message: creditResult.success ? 
+          "DM onboarding completed and credit awarded to sales rep" :
+          `DM onboarding completed. Credit note: ${creditResult.message}`
+      };
+    } catch (error) {
+      console.error('Error marking DM onboarding complete:', error);
+      return {
+        success: false,
+        message: "Failed to complete DM onboarding process"
+      };
+    }
+  }
+
+  // Rep suspension methods (implementation needed)
+  async createRepSuspension(suspensionData: any): Promise<any> {
+    try {
+      await connectToMongoDB();
+      const suspension = await RepSuspension.create(suspensionData);
+      return this.toPlainObject(suspension);
+    } catch (error) {
+      console.error('Error creating rep suspension:', error);
+      throw error;
+    }
+  }
+
+  async getActiveRepSuspension(repId: string): Promise<any | undefined> {
+    try {
+      await connectToMongoDB();
+      const suspension = await RepSuspension.findOne({
+        salesRepId: repId,
+        isActive: true
+      });
+      return suspension ? this.toPlainObject(suspension) : undefined;
+    } catch (error) {
+      console.error('Error getting active rep suspension:', error);
+      return undefined;
+    }
+  }
+
+  async updateRepSuspension(suspensionId: string, updates: any): Promise<any | undefined> {
+    try {
+      await connectToMongoDB();
+      const suspension = await RepSuspension.findByIdAndUpdate(
+        suspensionId,
+        updates,
+        { new: true }
+      );
+      return suspension ? this.toPlainObject(suspension) : undefined;
+    } catch (error) {
+      console.error('Error updating rep suspension:', error);
+      return undefined;
+    }
+  }
+
+  async getRepSuspensionHistory(repId: string): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const suspensions = await RepSuspension.find({ salesRepId: repId })
+        .sort({ createdAt: -1 });
+      return suspensions.map(s => this.toPlainObject(s));
+    } catch (error) {
+      console.error('Error getting rep suspension history:', error);
+      return [];
+    }
+  }
+
+  async getCallsByRep(repId: string): Promise<any[]> {
+    try {
+      await connectToMongoDB();
+      const calls = await Call.find({ salesRepId: repId });
+      return calls.map(call => this.toPlainObject(call));
+    } catch (error) {
+      console.error('Error getting calls by rep:', error);
       return [];
     }
   }

@@ -66,6 +66,31 @@ export default function SalesDashboard() {
     }
   });
 
+  const simulateOnboardingMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/simulate/dm-onboarding-complete', {
+        dmEmail: 'dm@techize.com',
+        repId: user?.id || user?._id
+      });
+      return response;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/sales-rep'] });
+      toast({
+        title: "Success!",
+        description: data.message || "DM onboarding completed and credit awarded!",
+      });
+    },
+    onError: (error) => {
+      console.error('Onboarding simulation error:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to simulate onboarding completion",
+        variant: "destructive",
+      });
+    }
+  });
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'accepted':
