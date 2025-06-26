@@ -75,9 +75,26 @@ export default function Profile() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data) => {
-      return await apiRequest('PUT', '/api/current-user', data);
+      console.log('Updating profile with data:', data);
+      const response = await fetch('/api/current-user', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Profile update error:', errorData);
+        throw new Error(`HTTP ${response.status}: ${errorData}`);
+      }
+
+      return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Profile update successful:', data);
       toast({
         title: "Profile Updated",
         description: "Your profile has been successfully updated."
@@ -86,6 +103,7 @@ export default function Profile() {
       queryClient.invalidateQueries({ queryKey: ['/api/current-user'] });
     },
     onError: (error) => {
+      console.error('Profile update error:', error);
       toast({
         title: "Update Failed",
         description: error.message || "Failed to update profile",
