@@ -79,6 +79,9 @@ export default function SalesDashboard() {
     dmsLength: gatedDMs?.dms?.length
   });
 
+  // Force show DM list for debugging
+  const shouldShowDMList = true;
+
   const simulateAcceptanceMutation = useMutation({
     mutationFn: async () => {
       return { success: true };
@@ -270,7 +273,7 @@ export default function SalesDashboard() {
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Responsive Database Access Section */}
           <div className="lg:col-span-2 order-2 lg:order-1">
-            {!databaseUnlocked ? (
+            {!hasAccess ? (
               <Card className="shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center">
@@ -350,50 +353,53 @@ export default function SalesDashboard() {
                 </CardContent>
               </Card>
             ) : (
-              <Card className="shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Users className="text-green-500 mr-3" size={24} />
-                      Decision Maker Database
+              <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                      <Users className="w-6 h-6 text-green-600" />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge className="bg-green-100 text-green-800">
-                        {totalCredits} Credits Earned
-                      </Badge>
-                      <Badge className="bg-blue-100 text-blue-800">
-                        Access Unlocked
-                      </Badge>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900">Decision Maker Database</h2>
+                      <p className="text-sm text-gray-500">Access unlocked - Browse available profiles</p>
                     </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {gatedDMsLoading ? (
-                    <div className="text-center py-8">
-                      <Loader2 className="animate-spin h-8 w-8 mx-auto mb-4 text-blue-600" />
-                      <p className="text-gray-500">Loading decision makers...</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {/* Credit System Status */}
-                      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-200 mb-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-semibold text-green-800 mb-1">Database Access Unlocked!</h4>
-                            <p className="text-sm text-gray-600">
-                              You've earned <span className="font-semibold text-green-600">{totalCredits} credits</span> and can now browse {gatedDMs?.unlockedCount || 0} of {gatedDMs?.totalCount || 0} profiles
-                            </p>
-                          </div>
-                          <Button 
-                            onClick={() => simulateOnboardingMutation.mutate()}
-                            disabled={simulateOnboardingMutation.isPending}
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            {simulateOnboardingMutation.isPending ? 'Processing...' : 'Earn More Credits'}
-                          </Button>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge className="bg-green-100 text-green-800 border border-green-300">
+                      {gatedDMs?.totalCount || 0} Available
+                    </Badge>
+                    <Badge className="bg-blue-100 text-blue-800 border border-blue-300">
+                      {gatedDMs?.unlockedCount || 0} Unlocked
+                    </Badge>
+                  </div>
+                </div>
+
+                {gatedDMsLoading ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="animate-spin h-8 w-8 mx-auto mb-4 text-blue-600" />
+                    <p className="text-gray-500">Loading decision makers...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Credit System Status */}
+                    <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-200 mb-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-semibold text-green-800 mb-1">Database Access Unlocked!</h4>
+                          <p className="text-sm text-gray-600">
+                            You've earned <span className="font-semibold text-green-600">{totalCredits} credits</span> and can now browse {gatedDMs?.unlockedCount || 0} of {gatedDMs?.totalCount || 0} profiles
+                          </p>
                         </div>
+                        <Button 
+                          onClick={() => simulateOnboardingMutation.mutate()}
+                          disabled={simulateOnboardingMutation.isPending}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          {simulateOnboardingMutation.isPending ? 'Processing...' : 'Earn More Credits'}
+                        </Button>
                       </div>
+                    </div>
                       
                       <div className="space-y-3 max-h-96 overflow-y-auto">
                         {gatedDMs?.dms && Array.isArray(gatedDMs.dms) && gatedDMs.dms.length > 0 ? 
@@ -548,10 +554,9 @@ export default function SalesDashboard() {
                       </div>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
 
           {/* Responsive Sidebar */}
           <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
