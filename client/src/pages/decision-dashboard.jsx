@@ -135,6 +135,7 @@ export default function DecisionDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Fetch decision maker's calls
   const { data: calls = [], isLoading: callsLoading } = useQuery({
