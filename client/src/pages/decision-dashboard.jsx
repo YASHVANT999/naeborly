@@ -777,14 +777,6 @@ export default function DecisionDashboard() {
                     <FeedbackHistory onClose={() => setFeedbackOpen(false)} />
                   </DialogContent>
                 </Dialog>
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start p-3 hover:bg-purple-50"
-                  onClick={() => window.location.href = '/evaluation/dm'}
-                >
-                  <CheckCircle className="text-purple-500 mr-3" size={16} />
-                  <span className="text-sm font-medium">DM Evaluation</span>
-                </Button>
               </CardContent>
             </Card>
           </div>

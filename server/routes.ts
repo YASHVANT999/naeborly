@@ -4051,6 +4051,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Report issue endpoint for decision makers
+  app.post("/api/decision-maker/report-issue", authenticateToken, async (req, res) => {
+    try {
+      const { type, description, priority } = req.body;
+      
+      if (!type || !description) {
+        return res.status(400).json({ message: "Issue type and description are required" });
+      }
+
+      // Get current user
+      const currentUser = await storage.getUserById(req.user!.userId);
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Create issue report using the flag system for tracking
+      const issueReport = {
+        reportedBy: currentUser._id.toString(),
+        reporterEmail: currentUser.email,
+        reporterName: `${currentUser.firstName} ${currentUser.lastName}`,
+        company: currentUser.company,
+        type,
+        description,
+        priority,
+        status: 'open',
+        reportedAt: new Date(),
+        resolvedAt: null,
+        resolution: null
+      };
+
+      // Create a flag for tracking (reusing the flag system for issue tracking)
+      const flag = await storage.createDMFlag({
+        dmId: currentUser._id.toString(),
+        salesRepId: null, // No specific rep for general issues
+        flagType: 'issue_report',
+        reason: `${type}: ${description}`,
+        description: description,
+        flaggedBy: currentUser._id.toString(),
+        severity: priority,
+        status: 'open',
+        metadata: issueReport
+      });
+
+      // Log activity
+      await storage.createActivityLog({
+        action: 'REPORT_ISSUE',
+        performedBy: req.user!.userId,
+        details: `Reported issue: ${type}`,
+        metadata: {
+          issueType: type,
+          priority,
+          flagId: flag._id
+        }
+      });
+
+      res.json({
+        success: true,
+        message: "Issue reported successfully",
+        issueId: flag._id
+      });
+    } catch (error) {
+      console.error('Error reporting issue:', error);
+      res.status(500).json({ message: "Failed to report issue" });
+    }
+  });
+
+  // Get feedback history for decision makers
+  app.get("/api/decision-maker/feedback-history", authenticateToken, async (req, res) => {
+    try {
+      const currentUser = await storage.getUserById(req.user!.userId);
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get feedback where this DM provided evaluations
+      const feedback = await storage.getFeedbackByRep(currentUser._id.toString());
+      
+      // Format feedback for frontend
+      const formattedFeedback = feedback.map(item => ({
+        id: item._id,
+        callId: item.callId,
+        salesRepId: item.salesRepId,
+        salesRepName: item.salesRepName,
+        company: item.company,
+        rating: item.rating,
+        experience: item.experience,
+        experienceTitle: item.experienceTitle,
+        comments: item.comments,
+        callDate: item.callDate,
+        evaluatedAt: item.evaluatedAt,
+        isRedFlag: item.isRedFlag || false
+      }));
+
+      res.json(formattedFeedback);
+    } catch (error) {
+      console.error('Error fetching feedback history:', error);
+      res.status(500).json({ message: "Failed to fetch feedback history" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
