@@ -242,10 +242,23 @@ export default function DecisionDashboard() {
                 {metrics?.standing === 'good' ? 'Excellent Standing' : 'Standing: ' + metrics?.standing}
               </Badge>
               <FlagsBadge />
-              <Button variant="ghost" size="sm">
-                <Settings className="mr-2" size={16} />
-                Settings
-              </Button>
+              <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Settings className="mr-2" size={16} />
+                    Settings
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center">
+                      <Settings className="mr-2" size={20} />
+                      Account Settings
+                    </DialogTitle>
+                  </DialogHeader>
+                  <SettingsPanel user={user} onClose={() => setSettingsOpen(false)} />
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
