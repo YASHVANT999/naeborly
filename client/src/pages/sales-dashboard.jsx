@@ -81,6 +81,9 @@ export default function SalesDashboard() {
 
   // Force show DM list for debugging
   const shouldShowDMList = true;
+  
+  // Calculate total credits from API data
+  const totalCredits = credits?.credits?.reduce((sum, credit) => sum + (credit.amount || 0), 0) || 0;
 
   const simulateAcceptanceMutation = useMutation({
     mutationFn: async () => {
