@@ -19,6 +19,10 @@ export async function apiRequest(
   const { method = "GET", body, headers = {} } = options;
   const token = getToken();
   
+  console.log('apiRequest - URL:', url, 'Method:', method);
+  console.log('apiRequest - Token exists:', !!token);
+  console.log('apiRequest - Token expired:', token ? isTokenExpired(token) : 'N/A');
+  
   const requestHeaders: Record<string, string> = {
     "Content-Type": "application/json",
     ...headers,
@@ -27,6 +31,9 @@ export async function apiRequest(
   // Add authorization header if token exists and is valid
   if (token && !isTokenExpired(token)) {
     requestHeaders.Authorization = `Bearer ${token}`;
+    console.log('apiRequest - Authorization header added');
+  } else {
+    console.log('apiRequest - No valid token available');
   }
   
   const res = await fetch(url, {
@@ -34,6 +41,8 @@ export async function apiRequest(
     headers: requestHeaders,
     body,
   });
+
+  console.log('apiRequest - Response status:', res.status);
 
   if (res.status === 401 || res.status === 403) {
     // Token is invalid or expired, remove it

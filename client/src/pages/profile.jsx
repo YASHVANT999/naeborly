@@ -76,22 +76,15 @@ export default function Profile() {
   const updateProfileMutation = useMutation({
     mutationFn: async (data) => {
       console.log('Updating profile with data:', data);
-      const response = await fetch('/api/current-user', {
+      const token = localStorage.getItem('token');
+      console.log('Token from localStorage:', token ? 'Token exists' : 'No token found');
+      
+      const response = await apiRequest('/api/current-user', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
         body: JSON.stringify(data)
       });
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('Profile update error:', errorData);
-        throw new Error(`HTTP ${response.status}: ${errorData}`);
-      }
-
-      return await response.json();
+      return response;
     },
     onSuccess: (data) => {
       console.log('Profile update successful:', data);
