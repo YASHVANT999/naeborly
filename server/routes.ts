@@ -60,6 +60,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update current user profile
+  app.put("/api/current-user", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.userId;
+      const updates = req.body;
+
+      console.log('Profile update request for user:', userId, 'Updates:', updates);
+
+      // Remove sensitive fields that shouldn't be updated via this endpoint
+      delete updates.password;
+      delete updates.role;
+      delete updates._id;
+      delete updates.id;
+      delete updates.createdAt;
+      delete updates.__v;
+
+      const updatedUser = await storage.updateUser(userId, {
+        ...updates,
+        updatedAt: new Date()
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Return user data without password
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      console.log('Profile updated successfully for user:', userId);
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      res.status(500).json({ message: 'Failed to update profile', error: error.message });
+    }
+  });
+
   // Get invitations for current user
   app.get("/api/invitations", authenticateToken, async (req, res) => {
     try {
