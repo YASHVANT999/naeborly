@@ -61,8 +61,22 @@ export default function SalesDashboard() {
     queryKey: ['/api/sales-rep/database-access']
   });
 
-  const { data: gatedDMs, isLoading: gatedDMsLoading } = useQuery({
-    queryKey: ['/api/sales-rep/available-dms-gated']
+  const hasAccess = databaseAccess?.hasAccess;
+
+  const { data: gatedDMs, isLoading: gatedDMsLoading, error: gatedDMsError } = useQuery({
+    queryKey: ['/api/sales-rep/available-dms-gated'],
+    enabled: hasAccess,
+    retry: 3,
+    refetchOnWindowFocus: false
+  });
+
+  // Debug logging
+  console.log('Gated DMs Debug:', {
+    hasAccess,
+    gatedDMsLoading,
+    gatedDMs,
+    gatedDMsError,
+    dmsLength: gatedDMs?.dms?.length
   });
 
   const simulateAcceptanceMutation = useMutation({
