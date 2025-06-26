@@ -745,6 +745,451 @@ export default function DecisionDashboard() {
   );
 }
 
+// Settings Panel Component
+function SettingsPanel({ user, onClose }) {
+  const [activeTab, setActiveTab] = useState("profile");
+  const [profileData, setProfileData] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    jobTitle: user?.jobTitle || '',
+    company: user?.company || '',
+    phone: user?.phone || '',
+    linkedinUrl: user?.linkedinUrl || '',
+    bio: user?.bio || '',
+    timezone: user?.timezone || 'UTC'
+  });
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailNotifications: true,
+    smsNotifications: false,
+    meetingReminders: true,
+    weeklyDigest: true,
+    promotionalEmails: false
+  });
+  const [privacySettings, setPrivacySettings] = useState({
+    profileVisibility: 'public',
+    showCompanyInfo: true,
+    allowDirectContact: true,
+    shareCallHistory: false
+  });
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await apiRequest('/api/current-user', {
+        method: 'PUT',
+        body: JSON.stringify(profileData)
+      });
+      // Show success message
+      onClose();
+      window.location.reload();
+    } catch (error) {
+      console.error('Profile update failed:', error);
+    }
+  };
+
+  const handleNotificationUpdate = async () => {
+    try {
+      await apiRequest('/api/user/notifications', {
+        method: 'PUT',
+        body: JSON.stringify(notificationSettings)
+      });
+      // Show success message
+    } catch (error) {
+      console.error('Notification settings update failed:', error);
+    }
+  };
+
+  const handlePrivacyUpdate = async () => {
+    try {
+      await apiRequest('/api/user/privacy', {
+        method: 'PUT',
+        body: JSON.stringify(privacySettings)
+      });
+      // Show success message
+    } catch (error) {
+      console.error('Privacy settings update failed:', error);
+    }
+  };
+
+  return (
+    <div className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="profile" className="flex items-center">
+            <User className="mr-2" size={16} />
+            Profile
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center">
+            <Bell className="mr-2" size={16} />
+            Notifications
+          </TabsTrigger>
+          <TabsTrigger value="privacy" className="flex items-center">
+            <Shield className="mr-2" size={16} />
+            Privacy
+          </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center">
+            <Lock className="mr-2" size={16} />
+            Security
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Profile Tab */}
+        <TabsContent value="profile" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Edit className="mr-2" size={18} />
+                Personal Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleProfileUpdate} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      value={profileData.firstName}
+                      onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
+                      placeholder="Enter first name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      value={profileData.lastName}
+                      onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
+                      placeholder="Enter last name"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={profileData.email}
+                    onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                    placeholder="Enter email address"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="jobTitle">Job Title</Label>
+                    <Input
+                      id="jobTitle"
+                      value={profileData.jobTitle}
+                      onChange={(e) => setProfileData({...profileData, jobTitle: e.target.value})}
+                      placeholder="Enter job title"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="company">Company</Label>
+                    <Input
+                      id="company"
+                      value={profileData.company}
+                      onChange={(e) => setProfileData({...profileData, company: e.target.value})}
+                      placeholder="Enter company name"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      value={profileData.phone}
+                      onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                      placeholder="Enter phone number"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="timezone">Timezone</Label>
+                    <select
+                      id="timezone"
+                      value={profileData.timezone}
+                      onChange={(e) => setProfileData({...profileData, timezone: e.target.value})}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                    >
+                      <option value="UTC">UTC</option>
+                      <option value="America/New_York">Eastern Time</option>
+                      <option value="America/Chicago">Central Time</option>
+                      <option value="America/Denver">Mountain Time</option>
+                      <option value="America/Los_Angeles">Pacific Time</option>
+                      <option value="Europe/London">GMT</option>
+                      <option value="Europe/Paris">CET</option>
+                      <option value="Asia/Tokyo">JST</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="linkedinUrl">LinkedIn Profile</Label>
+                  <Input
+                    id="linkedinUrl"
+                    value={profileData.linkedinUrl}
+                    onChange={(e) => setProfileData({...profileData, linkedinUrl: e.target.value})}
+                    placeholder="https://linkedin.com/in/yourprofile"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="bio">Professional Bio</Label>
+                  <Textarea
+                    id="bio"
+                    value={profileData.bio}
+                    onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
+                    placeholder="Brief description of your professional background..."
+                    rows={4}
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={onClose}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    Save Changes
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Notifications Tab */}
+        <TabsContent value="notifications" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Bell className="mr-2" size={18} />
+                Notification Preferences
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="emailNotifications">Email Notifications</Label>
+                    <p className="text-sm text-gray-500">Receive notifications via email</p>
+                  </div>
+                  <Switch
+                    id="emailNotifications"
+                    checked={notificationSettings.emailNotifications}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings({...notificationSettings, emailNotifications: checked})
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="smsNotifications">SMS Notifications</Label>
+                    <p className="text-sm text-gray-500">Receive notifications via text message</p>
+                  </div>
+                  <Switch
+                    id="smsNotifications"
+                    checked={notificationSettings.smsNotifications}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings({...notificationSettings, smsNotifications: checked})
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="meetingReminders">Meeting Reminders</Label>
+                    <p className="text-sm text-gray-500">Get reminded about upcoming calls</p>
+                  </div>
+                  <Switch
+                    id="meetingReminders"
+                    checked={notificationSettings.meetingReminders}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings({...notificationSettings, meetingReminders: checked})
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="weeklyDigest">Weekly Digest</Label>
+                    <p className="text-sm text-gray-500">Weekly summary of your activity</p>
+                  </div>
+                  <Switch
+                    id="weeklyDigest"
+                    checked={notificationSettings.weeklyDigest}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings({...notificationSettings, weeklyDigest: checked})
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="promotionalEmails">Promotional Emails</Label>
+                    <p className="text-sm text-gray-500">Updates about new features and offers</p>
+                  </div>
+                  <Switch
+                    id="promotionalEmails"
+                    checked={notificationSettings.promotionalEmails}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings({...notificationSettings, promotionalEmails: checked})
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={handleNotificationUpdate}>
+                  Save Notification Settings
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Privacy Tab */}
+        <TabsContent value="privacy" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Shield className="mr-2" size={18} />
+                Privacy Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="profileVisibility">Profile Visibility</Label>
+                  <p className="text-sm text-gray-500 mb-2">Control who can see your profile information</p>
+                  <select
+                    id="profileVisibility"
+                    value={privacySettings.profileVisibility}
+                    onChange={(e) => setPrivacySettings({...privacySettings, profileVisibility: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="public">Public - Anyone can view</option>
+                    <option value="network">Network Only - Connected sales reps only</option>
+                    <option value="private">Private - Hidden from searches</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="showCompanyInfo">Show Company Information</Label>
+                    <p className="text-sm text-gray-500">Display your company and job title publicly</p>
+                  </div>
+                  <Switch
+                    id="showCompanyInfo"
+                    checked={privacySettings.showCompanyInfo}
+                    onCheckedChange={(checked) => 
+                      setPrivacySettings({...privacySettings, showCompanyInfo: checked})
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="allowDirectContact">Allow Direct Contact</Label>
+                    <p className="text-sm text-gray-500">Sales reps can contact you directly</p>
+                  </div>
+                  <Switch
+                    id="allowDirectContact"
+                    checked={privacySettings.allowDirectContact}
+                    onCheckedChange={(checked) => 
+                      setPrivacySettings({...privacySettings, allowDirectContact: checked})
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="shareCallHistory">Share Call History</Label>
+                    <p className="text-sm text-gray-500">Allow other DMs to see your call ratings</p>
+                  </div>
+                  <Switch
+                    id="shareCallHistory"
+                    checked={privacySettings.shareCallHistory}
+                    onCheckedChange={(checked) => 
+                      setPrivacySettings({...privacySettings, shareCallHistory: checked})
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={handlePrivacyUpdate}>
+                  Save Privacy Settings
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Security Tab */}
+        <TabsContent value="security" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Lock className="mr-2" size={18} />
+                Security Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium mb-2">Password Security</h4>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Keep your account secure with a strong password
+                  </p>
+                  <Button variant="outline">
+                    Change Password
+                  </Button>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium mb-2">Two-Factor Authentication</h4>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Add an extra layer of security to your account
+                  </p>
+                  <Button variant="outline">
+                    Enable 2FA
+                  </Button>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium mb-2">Active Sessions</h4>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Manage your active login sessions
+                  </p>
+                  <Button variant="outline">
+                    View Sessions
+                  </Button>
+                </div>
+
+                <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                  <h4 className="font-medium mb-2 text-red-800">Danger Zone</h4>
+                  <p className="text-sm text-red-600 mb-3">
+                    Permanently delete your account and all associated data
+                  </p>
+                  <Button variant="destructive">
+                    Delete Account
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
 // Meeting Card Component
 function MeetingCard({ meeting, compact = false }) {
   const formatDate = (dateString) => {
