@@ -1241,7 +1241,7 @@ export class SimpleMongoDBStorage implements IStorage {
       const credits = await CallCredits.find({ repId: repId, isActive: true })
         .populate('dmId', 'firstName lastName email company')
         .sort({ earnedAt: -1 });
-      return this.toPlainObject(credits);
+      return credits.map(credit => this.toPlainObject(credit));
     } catch (error) {
       console.error('Error getting rep credits:', error);
       return [];
