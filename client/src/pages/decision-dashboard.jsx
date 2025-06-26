@@ -223,6 +223,17 @@ export default function DecisionDashboard() {
     }
   });
 
+  const handleRateLastCall = () => {
+    const lastCall = calls?.find(call => call.status === 'completed' && !call.rating);
+    if (lastCall) {
+      // Navigate to evaluation with call ID
+      window.location.href = `/post-call-evaluation?callId=${lastCall._id}`;
+    } else {
+      // Navigate to general evaluation page
+      window.location.href = '/post-call-evaluation';
+    }
+  };
+
   if (!user || metricsLoading || callsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
