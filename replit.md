@@ -124,6 +124,19 @@ The application uses MongoDB with the following main collections:
 
 ## Changelog
 
+- June 30, 2025. Completed super admin dashboard with flags and credits tabs
+  - Added Flags tab for behavior reports with comprehensive filtering and moderation actions
+  - Added Credits tab for access management with enterprise features and credit allocations
+  - Reordered tabs to user-specified sequence: Overview, User Management, Flags, Credits, Subscriptions, Analytics, Activity Logs, Settings, System
+  - Removed revenue tab as not included in final tab structure
+  - Implemented fully responsive tab navigation for all screen sizes (mobile to desktop)
+  - Applied consistent global light theme styling across all new interfaces
+- June 30, 2025. Completed user management functionality with global theme consistency
+  - Converted dark theme user management interface to global light theme
+  - Implemented full user management action handlers (suspend, remove, credits, message)
+  - Added functional modals for user suspension, credit management, and messaging
+  - Created backend API endpoints for user suspension and management operations
+  - Applied consistent styling across all platform interfaces
 - June 24, 2025. Initial setup
 
 ## User Preferences

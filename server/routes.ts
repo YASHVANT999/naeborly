@@ -617,6 +617,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Suspend user endpoint
+  app.post("/api/super-admin/users/:id/suspend", requireSuperAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { reason, suspendedBy } = req.body;
+
+      // Update user status to suspended
+      const updatedUser = await storage.updateUser(id, {
+        standing: 'suspended',
+        isActive: false,
+        suspensionReason: reason,
+        suspendedAt: new Date(),
+        suspendedBy
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Create suspension record
+      await storage.createRepSuspension({
+        repId: id,
+        reason,
+        suspendedBy,
+        suspendedAt: new Date(),
+        status: 'active'
+      });
+
+      // Log activity
+      await storage.createActivityLog({
+        userId: req.user!.userId,
+        action: 'SUSPEND_USER',
+        entityType: 'user',
+        entityId: id,
+        details: `Suspended user: ${reason}`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      res.json({ success: true, message: "User suspended successfully" });
+    } catch (error) {
+      console.error('Error suspending user:', error);
+      res.status(500).json({ message: "Failed to suspend user" });
+    }
+  });
+
   // Subscription Plan Management Routes
   app.get("/api/super-admin/subscription-plans", requireSuperAdmin, async (req, res) => {
     try {

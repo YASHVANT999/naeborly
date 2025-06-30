@@ -20,7 +20,8 @@ import {
   Star,
   Crown,
   BarChart3,
-  Settings
+  Settings,
+  HelpCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
@@ -272,30 +273,30 @@ export default function SalesDashboard() {
   const databaseUnlocked = metrics?.databaseUnlocked || false;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Responsive Dashboard Header */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
-            <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Sales Rep Dashboard</h1>
-              <p className="text-sm sm:text-base text-gray-600 mt-1">Welcome back, {user?.firstName}!</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Dashboard Header */}
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Sales Rep Dashboard</h1>
+              <p className="text-gray-600 mt-1">Welcome back, {user?.firstName}!</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-              <Badge className="bg-green-100 text-green-800 text-xs sm:text-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className="bg-green-100 text-green-800">
                 {getPackageDisplayName(user?.packageType)}
               </Badge>
-              <Badge className="bg-blue-100 text-blue-800 text-xs sm:text-sm">
+              <Badge className="bg-blue-100 text-blue-800">
                 {metrics?.standing === 'good' ? 'Good Standing' : 'Standing: ' + metrics?.standing}
               </Badge>
               <FlagsBadge />
-              <div className="hidden sm:flex items-center space-x-2">
+              <div className="hidden sm:flex items-center gap-2">
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => window.location.href = '/analytics'}
                 >
-                  <TrendingUp className="mr-2" size={16} />
+                  <TrendingUp className="w-4 h-4 mr-2" />
                   Analytics
                 </Button>
                 <Button 
@@ -303,112 +304,111 @@ export default function SalesDashboard() {
                   size="sm"
                   onClick={() => window.location.href = '/profile'}
                 >
-                  <Users className="mr-2" size={16} />
+                  <Users className="w-4 h-4 mr-2" />
                   Profile
                 </Button>
               </div>
-              {/* Mobile Menu Button */}
               <div className="sm:hidden">
                 <Button variant="ghost" size="sm">
-                  <Menu size={20} />
+                  <Menu className="w-5 h-5" />
                 </Button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Responsive Metrics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        {/* Metrics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-100 text-sm font-medium">Call Credits</p>
-                  <p className="text-3xl font-bold">{metrics?.callCredits || 0}</p>
+                  <p className="text-2xl font-bold">{metrics?.callCredits || 0}</p>
                   <p className="text-blue-100 text-xs">this month</p>
                 </div>
-                <Phone className="text-blue-200" size={32} />
+                <Phone className="text-blue-200 w-6 h-6" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-100 text-sm font-medium">DM Invitations</p>
-                  <p className="text-3xl font-bold">{metrics?.dmInvitations || 0}/{metrics?.maxDmInvitations || 1}</p>
+                  <p className="text-2xl font-bold">{metrics?.dmInvitations || 0}/{metrics?.maxDmInvitations || 1}</p>
                 </div>
-                <Users className="text-green-200" size={32} />
+                <Users className="text-green-200 w-6 h-6" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm font-medium">Upcoming Calls</p>
-                  <p className="text-3xl font-bold text-gray-900">{metrics?.upcomingCalls || 0}</p>
+                  <p className="text-2xl font-bold text-gray-900">{metrics?.upcomingCalls || 0}</p>
                 </div>
-                <Calendar className="text-gray-400" size={32} />
+                <Calendar className="text-gray-400 w-6 h-6" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm font-medium">Accepted Invitations</p>
-                  <p className="text-3xl font-bold text-gray-900">{metrics?.acceptedInvitations || 0}</p>
+                  <p className="text-2xl font-bold text-gray-900">{metrics?.acceptedInvitations || 0}</p>
                 </div>
-                <Plus className="text-gray-400" size={32} />
+                <Plus className="text-gray-400 w-6 h-6" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm font-medium">Success Rate</p>
-                  <p className="text-3xl font-bold text-gray-900">{metrics?.successRate ? `${metrics.successRate}%` : '-'}</p>
+                  <p className="text-2xl font-bold text-gray-900">{metrics?.successRate ? `${metrics.successRate}%` : '-'}</p>
                 </div>
-                <TrendingUp className="text-gray-400" size={32} />
+                <TrendingUp className="text-gray-400 w-6 h-6" />
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          {/* Responsive Database Access Section */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Database Access Section */}
           <div className="lg:col-span-2 order-2 lg:order-1">
             {!hasAccess ? (
-              <Card className="shadow-lg">
-                <CardHeader>
+              <Card>
+                <CardHeader className="pb-4">
                   <CardTitle className="flex items-center">
-                    <Lock className="text-blue-500 mr-3" size={24} />
+                    <Lock className="text-blue-500 mr-3 w-5 h-5" />
                     Database Access Locked
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12">
-                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Lock className="text-gray-400" size={48} />
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Lock className="text-gray-400 w-8 h-8" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-4">Waiting for DM Acceptance</h3>
-                    <p className="text-gray-600 mb-8">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">Waiting for DM Acceptance</h3>
+                    <p className="text-gray-600 mb-6">
                       At least one of your invited decision makers must accept to unlock the database.
                     </p>
 
-                    <div className="bg-gray-50 rounded-lg p-6 mb-8">
-                      <h4 className="font-semibold text-gray-900 mb-4">Invitation Status:</h4>
+                    <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                      <h4 className="font-semibold text-gray-900 mb-3">Invitation Status:</h4>
                       
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         {invitations.length > 0 ? invitations.map((invitation) => (
-                          <div key={invitation._id || invitation.id} className="flex items-center justify-between p-4 bg-white rounded-lg border">
-                            <div className="flex items-center space-x-3">
+                          <div key={invitation._id || invitation.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                            <div className="flex items-center gap-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
                                 invitation.status === 'accepted' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
                               }`}>
@@ -422,14 +422,14 @@ export default function SalesDashboard() {
                             {getStatusBadge(invitation.status)}
                           </div>
                         )) : (
-                          <div className="text-center py-8">
+                          <div className="text-center py-6">
                             <p className="text-gray-500">No invitations sent yet</p>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <Button 
                         onClick={() => simulateAcceptanceMutation.mutate()}
                         disabled={simulateAcceptanceMutation.isPending}
@@ -464,187 +464,189 @@ export default function SalesDashboard() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
-                {/* Header with Search and Filters */}
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-green-600 text-sm font-medium">
-                        {filteredDMs.length} of {gatedDMs?.dms?.length || 0} Decision Makers
-                        {(searchTerm || selectedIndustry || selectedRating || selectedEngagement) && ' (filtered)'}
-                      </span>
+              <Card>
+                <CardContent className="p-4">
+                  {/* Header with Search and Filters */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-green-600 text-sm font-medium">
+                          {filteredDMs.length} of {gatedDMs?.dms?.length || 0} Decision Makers
+                          {(searchTerm || selectedIndustry || selectedRating || selectedEngagement) && ' (filtered)'}
+                        </span>
+                      </div>
+                      <button 
+                        onClick={clearAllFilters}
+                        className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-md text-sm transition-colors flex items-center gap-2"
+                      >
+                        <Search className="w-4 h-4" />
+                        <span>Clear Filters</span>
+                      </button>
                     </div>
-                    <button 
-                      onClick={clearAllFilters}
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-md text-sm transition-colors flex items-center space-x-2"
-                    >
-                      <Search className="w-4 h-4" />
-                      <span>Clear Filters</span>
-                    </button>
-                  </div>
-                  
-                  {/* Search Bar */}
-                  <div className="relative mb-4">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Search className="h-5 w-5 text-gray-400" />
+                    
+                    {/* Search Bar */}
+                    <div className="relative mb-3">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search by name, company, or title..."
+                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                      />
                     </div>
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search by name, company, or title..."
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    />
+                    
+                    {/* Filter Dropdowns */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <select 
+                        value={selectedIndustry} 
+                        onChange={(e) => setSelectedIndustry(e.target.value)}
+                        className="bg-white border border-gray-300 text-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                      >
+                        <option value="">Industry</option>
+                        {availableIndustries.map(industry => (
+                          <option key={industry} value={industry}>{industry}</option>
+                        ))}
+                      </select>
+                      <select 
+                        value={selectedCompanySize} 
+                        onChange={(e) => setSelectedCompanySize(e.target.value)}
+                        className="bg-white border border-gray-300 text-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                      >
+                        <option value="">Company Size</option>
+                        <option value="1-50">1-50</option>
+                        <option value="51-200">51-200</option>
+                        <option value="201-1000">201-1000</option>
+                        <option value="1000+">1000+</option>
+                      </select>
+                      <select 
+                        value={selectedRating} 
+                        onChange={(e) => setSelectedRating(e.target.value)}
+                        className="bg-white border border-gray-300 text-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                      >
+                        <option value="">Rating</option>
+                        <option value="4.5+">4.5+</option>
+                        <option value="4.0+">4.0+</option>
+                        <option value="3.5+">3.5+</option>
+                      </select>
+                      <select 
+                        value={selectedEngagement} 
+                        onChange={(e) => setSelectedEngagement(e.target.value)}
+                        className="bg-white border border-gray-300 text-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                      >
+                        <option value="">Engagement</option>
+                        <option value="90+">90%+</option>
+                        <option value="80+">80%+</option>
+                        <option value="70+">70%+</option>
+                      </select>
+                    </div>
                   </div>
-                  
-                  {/* Filter Dropdowns */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                    <select 
-                      value={selectedIndustry} 
-                      onChange={(e) => setSelectedIndustry(e.target.value)}
-                      className="bg-white border border-gray-300 text-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    >
-                      <option value="">Industry</option>
-                      {availableIndustries.map(industry => (
-                        <option key={industry} value={industry}>{industry}</option>
-                      ))}
-                    </select>
-                    <select 
-                      value={selectedCompanySize} 
-                      onChange={(e) => setSelectedCompanySize(e.target.value)}
-                      className="bg-white border border-gray-300 text-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    >
-                      <option value="">Company Size</option>
-                      <option value="1-50">1-50</option>
-                      <option value="51-200">51-200</option>
-                      <option value="201-1000">201-1000</option>
-                      <option value="1000+">1000+</option>
-                    </select>
-                    <select 
-                      value={selectedRating} 
-                      onChange={(e) => setSelectedRating(e.target.value)}
-                      className="bg-white border border-gray-300 text-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    >
-                      <option value="">Rating</option>
-                      <option value="4.5+">4.5+</option>
-                      <option value="4.0+">4.0+</option>
-                      <option value="3.5+">3.5+</option>
-                    </select>
-                    <select 
-                      value={selectedEngagement} 
-                      onChange={(e) => setSelectedEngagement(e.target.value)}
-                      className="bg-white border border-gray-300 text-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    >
-                      <option value="">Engagement</option>
-                      <option value="90+">90%+</option>
-                      <option value="80+">80%+</option>
-                      <option value="70+">70%+</option>
-                    </select>
-                  </div>
-                </div>
 
-                {gatedDMsLoading ? (
-                  <div className="text-center py-8">
-                    <Loader2 className="animate-spin h-8 w-8 mx-auto mb-4 text-blue-500" />
-                    <p className="text-gray-600">Loading decision makers...</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredDMs && Array.isArray(filteredDMs) && filteredDMs.length > 0 ? 
-                     filteredDMs.slice(0, 6).map((dm) => (
-                      <div key={dm.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200">
-                        {/* Status Indicators */}
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="text-xs text-gray-500">3 calls available</span>
-                          </div>
-                        </div>
-                        
-                        {/* Title and Company */}
-                        <div className="mb-3">
-                          <h3 className="text-gray-900 font-semibold text-lg mb-1">
-                            {dm.jobTitle || dm.name || 'Chief Revenue Officer'}
-                          </h3>
-                          <p className="text-blue-600 text-sm font-medium">{dm.company}</p>
-                        </div>
-                        
-                        {/* Location */}
-                        <div className="flex items-center text-gray-600 text-sm mb-3">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          <span>San Francisco, CA</span>
-                        </div>
-                        
-                        {/* Tags */}
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-medium">
-                            {dm.industry}
-                          </span>
-                          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium">
-                            201-1000
-                          </span>
-                        </div>
-                        
-                        {/* Rating and Engagement */}
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                              <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
-                              <span className="text-gray-900 font-medium">4.8</span>
+                  {gatedDMsLoading ? (
+                    <div className="text-center py-6">
+                      <Loader2 className="animate-spin h-6 w-6 mx-auto mb-3 text-blue-500" />
+                      <p className="text-gray-600">Loading decision makers...</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {filteredDMs && Array.isArray(filteredDMs) && filteredDMs.length > 0 ? 
+                       filteredDMs.slice(0, 6).map((dm) => (
+                        <div key={dm.id} className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all duration-200">
+                          {/* Status Indicators */}
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="text-xs text-gray-500">3 calls available</span>
                             </div>
-                            <span className="text-green-600 text-sm font-medium">{dm.engagementScore}% engagement</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${dm.engagementScore}%` }}
-                            ></div>
+                          
+                          {/* Title and Company */}
+                          <div className="mb-2">
+                            <h3 className="text-gray-900 font-semibold text-base mb-1">
+                              {dm.jobTitle || dm.name || 'Chief Revenue Officer'}
+                            </h3>
+                            <p className="text-blue-600 text-sm font-medium">{dm.company}</p>
+                          </div>
+                          
+                          {/* Location */}
+                          <div className="flex items-center text-gray-600 text-sm mb-2">
+                            <MapPin className="w-3 h-3 mr-1" />
+                            <span>San Francisco, CA</span>
+                          </div>
+                          
+                          {/* Tags */}
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-medium">
+                              {dm.industry}
+                            </span>
+                            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium">
+                              201-1000
+                            </span>
+                          </div>
+                          
+                          {/* Rating and Engagement */}
+                          <div className="space-y-2 mb-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center">
+                                <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
+                                <span className="text-gray-900 font-medium">4.8</span>
+                              </div>
+                              <span className="text-green-600 text-sm font-medium">{dm.engagementScore}% engagement</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-1.5">
+                              <div 
+                                className="bg-green-500 h-1.5 rounded-full transition-all duration-300"
+                                style={{ width: `${dm.engagementScore}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          
+                          {/* Action Buttons */}
+                          <div className="flex gap-2">
+                            <button className="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-2 px-3 rounded-lg text-sm transition-colors font-medium">
+                              View Contact
+                            </button>
+                            <button 
+                              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg text-sm transition-colors font-medium"
+                              onClick={() => handleOpenBookingModal(dm)}
+                            >
+                              Request Call
+                            </button>
                           </div>
                         </div>
-                        
-                        {/* Action Buttons */}
-                        <div className="flex space-x-2">
-                          <button className="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-2 px-3 rounded-lg text-sm transition-colors font-medium">
-                            View Contact
-                          </button>
-                          <button 
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg text-sm transition-colors font-medium"
-                            onClick={() => handleOpenBookingModal(dm)}
-                          >
-                            Request Call
-                          </button>
+                      )) : (
+                        <div className="col-span-full text-center py-6">
+                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <Users className="w-6 h-6 text-gray-400" />
+                          </div>
+                          <h3 className="text-base font-semibold text-gray-900 mb-2">No Decision Makers Available</h3>
+                          <p className="text-gray-600 text-sm">Check back later for new opportunities</p>
                         </div>
-                      </div>
-                    )) : (
-                      <div className="col-span-full text-center py-8">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Users className="w-8 h-8 text-gray-400" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No Decision Makers Available</h3>
-                        <p className="text-gray-600">Check back later for new opportunities</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             )}
-            </div>
+          </div>
 
-          {/* Responsive Sidebar */}
-          <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
+          {/* Sidebar */}
+          <div className="space-y-4 order-1 lg:order-2">
             {/* Package Status Card */}
-            <Card className="shadow-lg border border-gray-200">
+            <Card>
               <CardHeader className="pb-3">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <Crown className="w-5 h-5 text-purple-600" />
-                  <CardTitle className="text-gray-900 text-lg">Package Status</CardTitle>
+                  <CardTitle className="text-gray-900">Package Status</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600 text-sm">Current Plan</span>
-                  <Badge className="bg-purple-100 text-purple-700 border border-purple-200">Premium</Badge>
+                  <Badge className="bg-purple-100 text-purple-700">Premium</Badge>
                 </div>
                 
                 <div className="space-y-2">
@@ -678,18 +680,18 @@ export default function SalesDashboard() {
             </Card>
             
             {/* Your Active DMs */}
-            <Card className="shadow-lg border border-gray-200">
+            <Card>
               <CardHeader className="pb-3">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <Users className="w-5 h-5 text-blue-600" />
-                  <CardTitle className="text-gray-900 text-lg">Your Active DMs</CardTitle>
+                  <CardTitle className="text-gray-900">Your Active DMs</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 {calls && calls.length > 0 ? calls.slice(0, 3).map((call) => (
                   <div key={call.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1">
                         <span className="text-gray-900 font-medium text-sm">
                           {call.decisionMakerName || 'Sarah Chen'}
                         </span>
@@ -715,7 +717,7 @@ export default function SalesDashboard() {
                   <>
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1">
                           <span className="text-gray-900 font-medium text-sm">Sarah Chen</span>
                           <Badge className="bg-blue-100 text-blue-700 text-xs">upcoming</Badge>
                         </div>
@@ -730,7 +732,7 @@ export default function SalesDashboard() {
                     
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1">
                           <span className="text-gray-900 font-medium text-sm">Mike Rodriguez</span>
                           <Badge className="bg-green-100 text-green-700 text-xs">completed</Badge>
                         </div>
@@ -745,7 +747,7 @@ export default function SalesDashboard() {
                     
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1">
                           <span className="text-gray-900 font-medium text-sm">Emily Johnson</span>
                           <Badge className="bg-yellow-100 text-yellow-700 text-xs">booked</Badge>
                         </div>
@@ -763,14 +765,14 @@ export default function SalesDashboard() {
             </Card>
             
             {/* Quick Actions */}
-            <Card className="shadow-lg border border-gray-200">
+            <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-gray-900 text-lg">Quick Actions</CardTitle>
+                <CardTitle className="text-gray-900">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 <Button 
                   variant="outline"
-                  className="w-full justify-start text-left border-gray-300 hover:bg-gray-50"
+                  className="w-full justify-start border-gray-300 hover:bg-gray-50"
                   onClick={() => window.location.href = '/analytics'}
                 >
                   <BarChart3 className="w-4 h-4 mr-2" />
@@ -778,11 +780,19 @@ export default function SalesDashboard() {
                 </Button>
                 <Button 
                   variant="outline"
-                  className="w-full justify-start text-left border-gray-300 hover:bg-gray-50"
+                  className="w-full justify-start border-gray-300 hover:bg-gray-50"
                   onClick={() => window.location.href = '/settings'}
                 >
                   <Settings className="w-4 h-4 mr-2" />
                   Account Settings
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="w-full justify-start border-gray-300 hover:bg-gray-50"
+                  onClick={() => window.location.href = '/help'}
+                >
+                  <HelpCircle className="w-4 h-4 mr-2" />
+                  Help & Support
                 </Button>
               </CardContent>
             </Card>
