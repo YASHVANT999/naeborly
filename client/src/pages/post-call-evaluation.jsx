@@ -166,7 +166,7 @@ export default function PostCallEvaluation() {
         </div>
 
         {/* Call Info Card */}
-        <Card className="mb-8 shadow-lg">
+        <Card className="mb-8 shadow-lg border border-gray-200 bg-white">
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -179,7 +179,7 @@ export default function PostCallEvaluation() {
                     <Building className="mr-1" size={14} />
                     <span className="text-sm">{callData.company}</span>
                   </div>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge className="bg-blue-100 text-blue-700 border border-blue-200 text-xs">
                     {callData.role}
                   </Badge>
                   <div className="flex items-center text-gray-600">
@@ -193,7 +193,7 @@ export default function PostCallEvaluation() {
         </Card>
 
         {/* Evaluation Form */}
-        <Card className="shadow-lg">
+        <Card className="shadow-lg border border-gray-200 bg-white">
           <CardContent className="p-8">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Call Experience</h2>

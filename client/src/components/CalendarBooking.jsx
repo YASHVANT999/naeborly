@@ -302,73 +302,186 @@ export default function CalendarBooking() {
                   Select Decision Maker
                 </Button>
               </DialogTrigger>
-              <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] sm:max-h-[80vh]">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center text-base sm:text-lg">
-                    <User className="text-blue-600 mr-2 flex-shrink-0" size={20} />
-                    <span className="truncate">Select Decision Maker</span>
+              <DialogContent className="w-[95vw] max-w-7xl max-h-[90vh] sm:max-h-[85vh]">
+                <DialogHeader className="border-b border-gray-200 pb-4">
+                  <DialogTitle className="flex items-center text-sm sm:text-lg font-mono">
+                    <div className="flex items-center space-x-1 sm:space-x-2">
+                      <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full"></div>
+                      <span className="text-gray-600 text-xs sm:text-sm">DATABASE:</span>
+                      <span className="text-blue-600 text-xs sm:text-sm">decision_makers</span>
+                    </div>
                   </DialogTitle>
-                  <DialogDescription className="text-sm">
-                    Choose a decision maker to view their availability and schedule a meeting.
+                  <DialogDescription className="text-xs sm:text-sm font-mono text-gray-500 break-all">
+                    SELECT * FROM decision_makers WHERE status = 'available' ORDER BY engagement_score DESC;
                   </DialogDescription>
                 </DialogHeader>
                 
-                <div className="py-4 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
+                <div className="py-4 max-h-[65vh] overflow-auto">
                   {dmsLoading ? (
                     <div className="flex items-center justify-center py-12">
-                      <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
-                      <span className="ml-3">Loading decision makers...</span>
+                      <Loader2 className="animate-spin h-6 w-6 text-blue-600" />
+                      <span className="ml-3 font-mono text-sm">Executing query...</span>
                     </div>
                   ) : availableDMs.length > 0 ? (
-                    <div className="space-y-3">
-                      {availableDMs.map((dm) => (
-                        <div
-                          key={dm.id}
-                          onClick={() => {
-                            setSelectedDM(dm);
-                            setIsDMSelectionOpen(false);
-                          }}
-                          className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                            selectedDM?.id === dm.id
-                              ? 'border-blue-500 bg-blue-50 shadow-sm'
-                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                          }`}
-                        >
-                          <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                              <User className="h-6 w-6 text-white" />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-gray-900">{dm.name}</h4>
-                              <p className="text-sm text-gray-600">{dm.title}</p>
-                              <p className="text-xs text-gray-500">{dm.company}</p>
-                              {dm.industry && (
-                                <Badge variant="secondary" className="mt-1 text-xs">
-                                  {dm.industry}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex flex-col items-end space-y-1">
-                              <Badge className="bg-green-100 text-green-800 text-xs">
-                                Available
-                              </Badge>
-                              {selectedDM?.id === dm.id && (
-                                <CheckCircle className="h-5 w-5 text-blue-600" />
-                              )}
-                            </div>
+                    <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+                      {/* Mobile View - Stacked Cards */}
+                      <div className="block md:hidden">
+                        <div className="bg-gray-100 border-b border-gray-300 p-3">
+                          <div className="font-mono text-xs font-semibold text-gray-700 uppercase">
+                            {availableDMs.length} RECORDS FOUND
                           </div>
                         </div>
-                      ))}
+                        <div className="divide-y divide-gray-200">
+                          {availableDMs.map((dm, index) => (
+                            <div
+                              key={dm.id}
+                              onClick={() => {
+                                setSelectedDM(dm);
+                                setIsDMSelectionOpen(false);
+                              }}
+                              className={`p-4 cursor-pointer transition-colors hover:bg-blue-50 ${
+                                selectedDM?.id === dm.id ? 'bg-blue-100 border-l-4 border-l-blue-500' : ''
+                              }`}
+                            >
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="font-mono text-xs text-gray-500">
+                                    ID: {String(index + 1).padStart(3, '0')}
+                                  </div>
+                                  {selectedDM?.id === dm.id ? (
+                                    <CheckCircle className="h-4 w-4 text-blue-600" />
+                                  ) : (
+                                    <div className="w-4 h-4 border border-gray-300 rounded"></div>
+                                  )}
+                                </div>
+                                <div className="font-mono text-sm font-semibold text-gray-900">
+                                  {dm.name}
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                                  <div>
+                                    <span className="text-gray-500">TITLE:</span>
+                                    <div className="text-gray-700 truncate">{dm.title}</div>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">SCORE:</span>
+                                    <div className="text-green-600 font-semibold">{dm.engagementScore || 0}</div>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                                  <div>
+                                    <span className="text-gray-500">COMPANY:</span>
+                                    <div className="text-gray-700 truncate">{dm.company}</div>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">INDUSTRY:</span>
+                                    <div className="text-gray-600 truncate">{dm.industry || 'NULL'}</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <div className="inline-flex items-center">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <span className="ml-1 font-mono text-xs text-green-600">ACTIVE</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Desktop View - Table */}
+                      <div className="hidden md:block">
+                        {/* Database Table Header */}
+                        <div className="bg-gray-100 border-b border-gray-300">
+                          <div className="grid grid-cols-12 gap-0 text-xs font-mono font-semibold text-gray-700 uppercase tracking-wide">
+                            <div className="col-span-1 p-2 lg:p-3 border-r border-gray-300 text-center">ID</div>
+                            <div className="col-span-2 p-2 lg:p-3 border-r border-gray-300">NAME</div>
+                            <div className="col-span-2 p-2 lg:p-3 border-r border-gray-300">TITLE</div>
+                            <div className="col-span-2 p-2 lg:p-3 border-r border-gray-300">COMPANY</div>
+                            <div className="col-span-2 p-2 lg:p-3 border-r border-gray-300">INDUSTRY</div>
+                            <div className="col-span-1 p-2 lg:p-3 border-r border-gray-300 text-center">SCORE</div>
+                            <div className="col-span-1 p-2 lg:p-3 border-r border-gray-300 text-center">STATUS</div>
+                            <div className="col-span-1 p-2 lg:p-3 text-center">ACTION</div>
+                          </div>
+                        </div>
+
+                        {/* Database Table Body */}
+                        <div className="divide-y divide-gray-200">
+                          {availableDMs.map((dm, index) => (
+                            <div
+                              key={dm.id}
+                              onClick={() => {
+                                setSelectedDM(dm);
+                                setIsDMSelectionOpen(false);
+                              }}
+                              className={`grid grid-cols-12 gap-0 cursor-pointer transition-colors hover:bg-blue-50 ${
+                                selectedDM?.id === dm.id ? 'bg-blue-100 border-l-4 border-l-blue-500' : ''
+                              }`}
+                            >
+                              <div className="col-span-1 p-2 lg:p-3 border-r border-gray-200 text-center">
+                                <span className="font-mono text-xs text-gray-600">
+                                  {String(index + 1).padStart(3, '0')}
+                                </span>
+                              </div>
+                              <div className="col-span-2 p-2 lg:p-3 border-r border-gray-200">
+                                <div className="font-mono text-xs lg:text-sm text-gray-900 truncate">
+                                  {dm.name}
+                                </div>
+                              </div>
+                              <div className="col-span-2 p-2 lg:p-3 border-r border-gray-200">
+                                <div className="font-mono text-xs lg:text-sm text-gray-700 truncate">
+                                  {dm.title}
+                                </div>
+                              </div>
+                              <div className="col-span-2 p-2 lg:p-3 border-r border-gray-200">
+                                <div className="font-mono text-xs lg:text-sm text-gray-700 truncate">
+                                  {dm.company}
+                                </div>
+                              </div>
+                              <div className="col-span-2 p-2 lg:p-3 border-r border-gray-200">
+                                <div className="font-mono text-xs lg:text-sm text-gray-600 truncate">
+                                  {dm.industry || 'NULL'}
+                                </div>
+                              </div>
+                              <div className="col-span-1 p-2 lg:p-3 border-r border-gray-200 text-center">
+                                <div className="font-mono text-xs lg:text-sm font-semibold text-green-600">
+                                  {dm.engagementScore || 0}
+                                </div>
+                              </div>
+                              <div className="col-span-1 p-2 lg:p-3 border-r border-gray-200 text-center">
+                                <div className="inline-flex items-center">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                  <span className="ml-1 font-mono text-xs text-green-600 hidden lg:inline">ACTIVE</span>
+                                </div>
+                              </div>
+                              <div className="col-span-1 p-2 lg:p-3 text-center">
+                                {selectedDM?.id === dm.id ? (
+                                  <CheckCircle className="h-3 w-3 lg:h-4 lg:w-4 text-blue-600 mx-auto" />
+                                ) : (
+                                  <div className="w-3 h-3 lg:w-4 lg:h-4 border border-gray-300 rounded mx-auto cursor-pointer hover:border-blue-500"></div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Database Footer */}
+                      <div className="bg-gray-50 border-t border-gray-300 p-3">
+                        <div className="flex items-center justify-between text-xs font-mono text-gray-600">
+                          <span>Query executed successfully</span>
+                          <span>{availableDMs.length} rows returned</span>
+                        </div>
+                      </div>
                     </div>
                   ) : (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <User className="text-gray-400" size={32} />
+                    <div className="text-center py-12 border border-gray-300 rounded-lg bg-gray-50">
+                      <div className="font-mono text-sm text-gray-600 mb-2">
+                        Query result: 0 rows
                       </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No decision makers available</h3>
-                      <p className="text-gray-500 text-sm">
-                        There are currently no decision makers available for booking. Please check back later.
-                      </p>
+                      <div className="font-mono text-xs text-gray-500">
+                        No records found in decision_makers table
+                      </div>
                     </div>
                   )}
                 </div>
@@ -378,41 +491,132 @@ export default function CalendarBooking() {
         </CardHeader>
         <CardContent>
           {selectedDM ? (
-            <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                  <User className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h4 className="font-medium text-blue-900">{selectedDM.name}</h4>
-                  <p className="text-sm text-blue-700">{selectedDM.title}</p>
-                  <p className="text-xs text-blue-600">{selectedDM.company}</p>
+            <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+              {/* Database Query Header */}
+              <div className="bg-gray-100 border-b border-gray-300 p-2 sm:p-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                  <div className="flex items-center space-x-1 sm:space-x-2 font-mono text-xs sm:text-sm">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-gray-600">SELECTED:</span>
+                    <span className="text-blue-600 truncate">id = {selectedDM.id}</span>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setIsDMSelectionOpen(true)}
+                    className="font-mono text-xs bg-white hover:bg-gray-50 border-gray-400 w-full sm:w-auto"
+                  >
+                    MODIFY
+                  </Button>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setIsDMSelectionOpen(true)}
-                className="text-blue-600 border-blue-300 hover:bg-blue-100"
-              >
-                Change
-              </Button>
+
+              {/* Mobile View - Stacked Layout */}
+              <div className="block md:hidden p-3 space-y-3">
+                <div className="space-y-2">
+                  <div className="font-mono text-xs text-gray-500 uppercase">NAME</div>
+                  <div className="font-mono text-sm text-gray-900">{selectedDM.name}</div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <div className="font-mono text-xs text-gray-500 uppercase">TITLE</div>
+                    <div className="font-mono text-sm text-gray-900">{selectedDM.title}</div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="font-mono text-xs text-gray-500 uppercase">SCORE</div>
+                    <div className="font-mono text-sm font-semibold text-green-600">{selectedDM.engagementScore || 0}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <div className="font-mono text-xs text-gray-500 uppercase">COMPANY</div>
+                    <div className="font-mono text-sm text-gray-900">{selectedDM.company}</div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="font-mono text-xs text-gray-500 uppercase">INDUSTRY</div>
+                    <div className="font-mono text-sm text-gray-700">{selectedDM.industry || 'NULL'}</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="font-mono text-xs text-gray-500 uppercase">STATUS</div>
+                  <div className="inline-flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="ml-2 font-mono text-sm text-green-600">ACTIVE</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Desktop View - Table Layout */}
+              <div className="hidden md:block">
+                <div className="divide-y divide-gray-200">
+                  <div className="grid grid-cols-4 gap-0">
+                    <div className="p-2 lg:p-3 bg-gray-50 border-r border-gray-200 font-mono text-xs font-semibold text-gray-700 uppercase">
+                      NAME
+                    </div>
+                    <div className="p-2 lg:p-3 font-mono text-xs lg:text-sm text-gray-900">
+                      {selectedDM.name}
+                    </div>
+                    <div className="p-2 lg:p-3 bg-gray-50 border-r border-gray-200 font-mono text-xs font-semibold text-gray-700 uppercase">
+                      TITLE
+                    </div>
+                    <div className="p-2 lg:p-3 font-mono text-xs lg:text-sm text-gray-900">
+                      {selectedDM.title}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-0">
+                    <div className="p-2 lg:p-3 bg-gray-50 border-r border-gray-200 font-mono text-xs font-semibold text-gray-700 uppercase">
+                      COMPANY
+                    </div>
+                    <div className="p-2 lg:p-3 font-mono text-xs lg:text-sm text-gray-900">
+                      {selectedDM.company}
+                    </div>
+                    <div className="p-2 lg:p-3 bg-gray-50 border-r border-gray-200 font-mono text-xs font-semibold text-gray-700 uppercase">
+                      INDUSTRY
+                    </div>
+                    <div className="p-2 lg:p-3 font-mono text-xs lg:text-sm text-gray-700">
+                      {selectedDM.industry || 'NULL'}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-0">
+                    <div className="p-2 lg:p-3 bg-gray-50 border-r border-gray-200 font-mono text-xs font-semibold text-gray-700 uppercase">
+                      SCORE
+                    </div>
+                    <div className="p-2 lg:p-3 font-mono text-xs lg:text-sm font-semibold text-green-600">
+                      {selectedDM.engagementScore || 0}
+                    </div>
+                    <div className="p-2 lg:p-3 bg-gray-50 border-r border-gray-200 font-mono text-xs font-semibold text-gray-700 uppercase">
+                      STATUS
+                    </div>
+                    <div className="p-2 lg:p-3">
+                      <div className="inline-flex items-center">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="ml-2 font-mono text-xs lg:text-sm text-green-600">ACTIVE</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Database Footer */}
+              <div className="bg-gray-50 border-t border-gray-300 p-2 sm:p-3">
+                <div className="font-mono text-xs text-gray-600">
+                  Record loaded successfully • Ready for calendar operations
+                </div>
+              </div>
             </div>
           ) : (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <User className="text-gray-400" size={32} />
+            <div className="text-center py-8 border border-gray-300 rounded-lg bg-gray-50">
+              <div className="font-mono text-sm text-gray-600 mb-2">
+                No active selection
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Decision Maker Selected</h3>
-              <p className="text-gray-500 mb-4 text-sm">
-                Please select a decision maker to view their availability and schedule meetings.
-              </p>
+              <div className="font-mono text-xs text-gray-500 mb-4">
+                Please execute a SELECT query to choose a decision maker
+              </div>
               <Button 
                 onClick={() => setIsDMSelectionOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 font-mono text-sm"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Select Decision Maker
+                EXECUTE QUERY
               </Button>
             </div>
           )}
@@ -422,27 +626,118 @@ export default function CalendarBooking() {
       {/* Calendar View */}
       {selectedDM && (
         <Card>
-          <CardHeader>
-            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-              <CardTitle className="flex items-center min-w-0">
-                <Calendar className="text-blue-600 mr-2 flex-shrink-0" size={20} />
-                <span className="truncate">Availability for {selectedDM.name}</span>
-              </CardTitle>
-              <div className="flex items-center justify-between sm:justify-end space-x-2">
-                <Button variant="outline" size="sm" onClick={() => navigateDate('prev')} className="flex-shrink-0">
-                  <ChevronLeft className="h-4 w-4" />
-                  <span className="sr-only">Previous</span>
-                </Button>
-                <span className="font-medium text-sm sm:text-base text-center min-w-0 flex-1 sm:min-w-[200px] sm:flex-none px-2">
-                  {viewType === 'week' || viewType === 'agenda'
-                    ? `Week of ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
-                    : currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-                  }
-                </span>
-                <Button variant="outline" size="sm" onClick={() => navigateDate('next')} className="flex-shrink-0">
-                  <ChevronRight className="h-4 w-4" />
-                  <span className="sr-only">Next</span>
-                </Button>
+          <CardHeader className="border-b border-gray-200 p-3 sm:p-4 lg:p-6">
+            {/* Mobile Layout (up to md) */}
+            <div className="block lg:hidden">
+              <div className="flex flex-col space-y-3">
+                {/* Header row with table info and navigation */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1 font-mono text-xs sm:text-sm">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-gray-600">TABLE:</span>
+                    <span className="text-blue-600 hidden sm:inline">availability_slots</span>
+                    <span className="text-blue-600 sm:hidden">slots</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" onClick={() => navigateDate('prev')} className="font-mono text-xs px-2 py-1.5 h-8">
+                      <ChevronLeft className="h-3 w-3" />
+                      <span className="hidden md:inline ml-1">PREV</span>
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => navigateDate('next')} className="font-mono text-xs px-2 py-1.5 h-8">
+                      <span className="hidden md:inline mr-1">NEXT</span>
+                      <ChevronRight className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Date display */}
+                <div className="text-center">
+                  <span className="font-mono text-sm md:text-base font-semibold text-gray-700">
+                    <span className="md:hidden">
+                      {viewType === 'week' || viewType === 'agenda'
+                        ? `WEEK: ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                        : `MONTH: ${currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
+                      }
+                    </span>
+                    <span className="hidden md:block">
+                      {viewType === 'week' || viewType === 'agenda'
+                        ? `WEEK: ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                        : `MONTH: ${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`
+                      }
+                    </span>
+                  </span>
+                </div>
+                
+                {/* SQL Query */}
+                <div className="font-mono text-xs md:text-sm text-gray-500 break-all bg-gray-50 p-2 md:p-3 rounded border">
+                  <span className="block sm:hidden">
+                    SELECT * FROM availability_slots WHERE dm_id = '{selectedDM.id}';
+                  </span>
+                  <span className="hidden sm:block">
+                    SELECT * FROM availability_slots WHERE dm_id = '{selectedDM.id}' AND date_range = '{viewType === 'week' || viewType === 'agenda' ? 'current_week' : 'current_month'}';
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop Layout (lg and above) */}
+            <div className="hidden lg:block">
+              <div className="space-y-5">
+                {/* Header with table info and navigation */}
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center font-mono text-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full shadow-sm"></div>
+                      <span className="text-gray-500 text-base">CONNECTION:</span>
+                      <span className="text-blue-600 font-semibold">availability_slots</span>
+                    </div>
+                  </CardTitle>
+                  
+                  <div className="flex items-center bg-gray-50 rounded-lg p-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => navigateDate('prev')} 
+                      className="font-mono text-sm px-4 py-2 hover:bg-white transition-colors"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-2" />
+                      PREVIOUS
+                    </Button>
+                    
+                    <div className="mx-4 px-6 py-2 bg-white rounded border shadow-sm">
+                      <span className="font-mono text-lg font-bold text-gray-800 tracking-wide">
+                        {viewType === 'week' || viewType === 'agenda'
+                          ? `${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()} - ${new Date(currentDate.getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}`
+                          : `${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()}`
+                        }
+                      </span>
+                    </div>
+                    
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => navigateDate('next')} 
+                      className="font-mono text-sm px-4 py-2 hover:bg-white transition-colors"
+                    >
+                      NEXT
+                      <ChevronRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Query section */}
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="font-mono text-xs text-gray-600 uppercase tracking-wide">Active Query</span>
+                  </div>
+                  <div className="font-mono text-sm text-gray-700 leading-relaxed">
+                    <span className="text-blue-600 font-semibold">SELECT</span> * <span className="text-blue-600 font-semibold">FROM</span> availability_slots 
+                    <br />
+                    <span className="text-blue-600 font-semibold">WHERE</span> dm_id = '<span className="text-green-600">{selectedDM.id}</span>' 
+                    <span className="text-blue-600 font-semibold">AND</span> date_range = '<span className="text-green-600">{viewType === 'week' || viewType === 'agenda' ? 'current_week' : 'current_month'}</span>';
+                  </div>
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -454,73 +749,82 @@ export default function CalendarBooking() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Responsive Legend */}
-                <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs sm:text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-100 border border-green-300 rounded"></div>
-                    <span>Available</span>
+                {/* Database Schema Legend */}
+                <div className="border border-gray-300 rounded-lg bg-white overflow-hidden">
+                  <div className="bg-gray-100 border-b border-gray-300 p-2 sm:p-3">
+                    <div className="font-mono text-xs sm:text-sm font-semibold text-gray-700">SCHEMA: slot_status</div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-red-100 border border-red-300 rounded"></div>
-                    <span>Booked</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-100 border border-gray-300 rounded"></div>
-                    <span>Unavailable</span>
+                  <div className="p-2 sm:p-3 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-xs font-mono">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>
+                      <span className="text-gray-700">STATUS = 'AVAILABLE'</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div>
+                      <span className="text-gray-700">STATUS = 'BOOKED'</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded"></div>
+                      <span className="text-gray-700">STATUS = 'UNAVAILABLE'</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Responsive Calendar Views */}
+                {/* Database Table Views */}
                 {viewType === 'agenda' ? (
                   <div className="space-y-3">
-                    {weekDays.map((day) => (
-                      <Card key={day.toISOString()} className="border border-gray-200">
-                        <CardHeader className="pb-3">
-                          <h3 className="text-base font-semibold text-gray-900">
-                            {day.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-                          </h3>
-                        </CardHeader>
-                        <CardContent className="pt-0">
+                    {weekDays.map((day, dayIndex) => (
+                      <div key={day.toISOString()} className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+                        <div className="bg-gray-100 border-b border-gray-300 p-3">
+                          <div className="font-mono text-sm font-semibold text-gray-700">
+                            DATE: {day.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
+                          </div>
+                        </div>
+                        <div className="p-3">
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                            {timeSlots.map((time) => {
+                            {timeSlots.map((time, timeIndex) => {
                               const slot = getSlotForDateTime(day, time);
                               return (
                                 <button
                                   key={`${day.toISOString()}-${time}`}
                                   onClick={() => handleSlotClick(slot)}
                                   disabled={!slot || !slot.available}
-                                  className={`p-3 rounded-lg text-sm font-medium transition-all duration-200 min-h-[48px] flex items-center justify-center ${getSlotClassName(slot)} ${slot && slot.available ? 'hover:scale-105 active:scale-95' : ''}`}
+                                  className={`p-3 border border-gray-300 font-mono text-xs transition-all duration-200 min-h-[48px] flex items-center justify-center ${getSlotClassName(slot)} ${slot && slot.available ? 'hover:border-blue-500 cursor-pointer' : 'cursor-not-allowed'}`}
                                 >
                                   <div className="text-center">
-                                    <div className="text-xs">{time}</div>
-                                    <div className="text-lg">{getSlotContent(slot)}</div>
+                                    <div className="text-xs mb-1">{time}</div>
+                                    <div className="text-sm font-semibold">{getSlotContent(slot)}</div>
                                   </div>
                                 </button>
                               );
                             })}
                           </div>
-                        </CardContent>
-                      </Card>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="border rounded-lg overflow-hidden">
+                  <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
                     <div className="overflow-x-auto">
                       <div className="min-w-[640px] lg:min-w-0">
-                        <div className={`grid ${isMobileView ? 'grid-cols-3' : 'grid-cols-6'} gap-0`}>
-                          <div className="p-2 sm:p-3 bg-gray-50 border-b font-medium text-xs sm:text-sm text-center">
-                            Time
+                        {/* Database Table Header */}
+                        <div className={`grid ${isMobileView ? 'grid-cols-3' : 'grid-cols-6'} gap-0 bg-gray-100 border-b border-gray-300`}>
+                          <div className="p-2 sm:p-3 border-r border-gray-300 font-mono text-xs font-semibold text-gray-700 uppercase text-center">
+                            TIME_SLOT
                           </div>
                           {(isMobileView ? weekDays.slice(0, 2) : weekDays).map((day) => (
-                            <div key={day.toISOString()} className="p-2 sm:p-3 bg-gray-50 border-b border-l font-medium text-xs sm:text-sm text-center">
-                              <div>{day.toLocaleDateString('en-US', { weekday: 'short' })}</div>
-                              <div className="text-sm sm:text-lg font-bold">{day.getDate()}</div>
+                            <div key={day.toISOString()} className="p-2 sm:p-3 border-r border-gray-300 font-mono text-xs font-semibold text-gray-700 uppercase text-center">
+                              <div>{day.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}</div>
+                              <div className="text-sm font-bold">{String(day.getDate()).padStart(2, '0')}</div>
                             </div>
                           ))}
-                          
+                        </div>
+                        
+                        {/* Database Table Body */}
+                        <div className="divide-y divide-gray-200">
                           {timeSlots.map((time) => (
                             <div key={time} className="contents">
-                              <div className="p-1 sm:p-2 border-b border-r bg-gray-50 text-xs sm:text-sm font-medium text-center">
+                              <div className="p-1 sm:p-2 border-r border-gray-300 bg-gray-50 font-mono text-xs font-medium text-center flex items-center justify-center">
                                 {time}
                               </div>
                               {(isMobileView ? weekDays.slice(0, 2) : weekDays).map((day) => {
@@ -529,7 +833,7 @@ export default function CalendarBooking() {
                                   <div
                                     key={`${day.toISOString()}-${time}`}
                                     onClick={() => handleSlotClick(slot)}
-                                    className={`p-1 sm:p-2 border-b border-l h-10 sm:h-12 flex items-center justify-center text-xs sm:text-sm font-medium transition-all duration-200 ${getSlotClassName(slot)} ${slot && slot.available ? 'hover:scale-105 active:scale-95' : ''}`}
+                                    className={`p-1 sm:p-2 border-r border-gray-300 h-10 sm:h-12 flex items-center justify-center font-mono text-xs font-medium transition-all duration-200 ${getSlotClassName(slot)} ${slot && slot.available ? 'hover:border-blue-500 cursor-pointer' : 'cursor-not-allowed'}`}
                                   >
                                     {getSlotContent(slot)}
                                   </div>
@@ -537,6 +841,14 @@ export default function CalendarBooking() {
                               })}
                             </div>
                           ))}
+                        </div>
+
+                        {/* Database Table Footer */}
+                        <div className="bg-gray-50 border-t border-gray-300 p-2 sm:p-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs font-mono text-gray-600 space-y-1 sm:space-y-0">
+                            <span>Query: {timeSlots.length} slots × {isMobileView ? 2 : weekDays.length} days</span>
+                            <span>{timeSlots.length * (isMobileView ? 2 : weekDays.length)} records</span>
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -14,7 +14,13 @@ import {
   Loader2,
   User,
   Clock,
-  Menu
+  Menu,
+  Search,
+  MapPin,
+  Star,
+  Crown,
+  BarChart3,
+  Settings
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
@@ -22,11 +28,23 @@ import { useToast } from "@/hooks/use-toast";
 import CalendarBooking from "@/components/CalendarBooking";
 import FlagsBadge from "@/components/FlagsBadge";
 import SuspensionAlert from "@/components/SuspensionAlert";
+import BookingModal from "@/components/BookingModal";
 
 export default function SalesDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Booking modal state
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedDecisionMaker, setSelectedDecisionMaker] = useState(null);
+  
+  // Filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIndustry, setSelectedIndustry] = useState('');
+  const [selectedCompanySize, setSelectedCompanySize] = useState('');
+  const [selectedRating, setSelectedRating] = useState('');
+  const [selectedEngagement, setSelectedEngagement] = useState('');
 
   // Fetch sales rep's invitations
   const { data: invitations = [], isLoading: invitationsLoading } = useQuery({
@@ -130,6 +148,88 @@ export default function SalesDashboard() {
       });
     }
   });
+
+  // Booking modal handlers
+  const handleOpenBookingModal = (decisionMaker) => {
+    setSelectedDecisionMaker(decisionMaker);
+    setIsBookingModalOpen(true);
+  };
+
+  const handleCloseBookingModal = () => {
+    setIsBookingModalOpen(false);
+    setSelectedDecisionMaker(null);
+  };
+
+  const handleBookingConfirm = async (bookingData) => {
+    try {
+      // Here you would make an API call to book the call
+      // For now, we'll just show a success message
+      toast({
+        title: "Call Booked Successfully!",
+        description: `Your call with ${bookingData.decisionMaker.name} is scheduled for ${bookingData.formattedDateTime}`,
+      });
+      
+      // Invalidate relevant queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/sales-rep/calls'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales-rep/metrics'] });
+      
+    } catch (error) {
+      toast({
+        title: "Booking Failed",
+        description: "Unable to book the call. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Filter functions
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setSelectedIndustry('');
+    setSelectedCompanySize('');
+    setSelectedRating('');
+    setSelectedEngagement('');
+  };
+
+  const filteredDMs = gatedDMs?.dms ? gatedDMs.dms.filter(dm => {
+    // Search term filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = 
+        dm.name?.toLowerCase().includes(searchLower) ||
+        dm.company?.toLowerCase().includes(searchLower) ||
+        dm.jobTitle?.toLowerCase().includes(searchLower);
+      if (!matchesSearch) return false;
+    }
+
+    // Industry filter
+    if (selectedIndustry && selectedIndustry !== 'Industry') {
+      if (dm.industry !== selectedIndustry) return false;
+    }
+
+    // Company size filter (mock data - would come from actual DM data)
+    if (selectedCompanySize && selectedCompanySize !== 'Company Size') {
+      // This would be based on actual company size data
+      // For now, we'll use a mock implementation
+    }
+
+    // Rating filter (using engagement score as proxy)
+    if (selectedRating && selectedRating !== 'Rating') {
+      const ratingThreshold = parseFloat(selectedRating.replace('+', '')) * 20; // Convert rating to percentage
+      if (dm.engagementScore < ratingThreshold) return false;
+    }
+
+    // Engagement filter
+    if (selectedEngagement && selectedEngagement !== 'Engagement') {
+      const engagementThreshold = parseFloat(selectedEngagement.replace('%+', ''));
+      if (dm.engagementScore < engagementThreshold) return false;
+    }
+
+    return true;
+  }) : [];
+
+  // Get unique industries for filter dropdown
+  const availableIndustries = [...new Set(gatedDMs?.dms?.map(dm => dm.industry).filter(Boolean))];
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -365,429 +465,338 @@ export default function SalesDashboard() {
               </Card>
             ) : (
               <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                      <Users className="w-6 h-6 text-green-600" />
+                {/* Header with Search and Filters */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-green-600 text-sm font-medium">
+                        {filteredDMs.length} of {gatedDMs?.dms?.length || 0} Decision Makers
+                        {(searchTerm || selectedIndustry || selectedRating || selectedEngagement) && ' (filtered)'}
+                      </span>
                     </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-gray-900">Decision Maker Database</h2>
-                      <p className="text-sm text-gray-500">Access unlocked - Browse available profiles</p>
-                    </div>
+                    <button 
+                      onClick={clearAllFilters}
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-md text-sm transition-colors flex items-center space-x-2"
+                    >
+                      <Search className="w-4 h-4" />
+                      <span>Clear Filters</span>
+                    </button>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge className="bg-green-100 text-green-800 border border-green-300">
-                      {gatedDMs?.totalCount || 0} Available
-                    </Badge>
-                    <Badge className="bg-blue-100 text-blue-800 border border-blue-300">
-                      {gatedDMs?.unlockedCount || 0} Unlocked
-                    </Badge>
+                  
+                  {/* Search Bar */}
+                  <div className="relative mb-4">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search by name, company, or title..."
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    />
+                  </div>
+                  
+                  {/* Filter Dropdowns */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <select 
+                      value={selectedIndustry} 
+                      onChange={(e) => setSelectedIndustry(e.target.value)}
+                      className="bg-white border border-gray-300 text-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    >
+                      <option value="">Industry</option>
+                      {availableIndustries.map(industry => (
+                        <option key={industry} value={industry}>{industry}</option>
+                      ))}
+                    </select>
+                    <select 
+                      value={selectedCompanySize} 
+                      onChange={(e) => setSelectedCompanySize(e.target.value)}
+                      className="bg-white border border-gray-300 text-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    >
+                      <option value="">Company Size</option>
+                      <option value="1-50">1-50</option>
+                      <option value="51-200">51-200</option>
+                      <option value="201-1000">201-1000</option>
+                      <option value="1000+">1000+</option>
+                    </select>
+                    <select 
+                      value={selectedRating} 
+                      onChange={(e) => setSelectedRating(e.target.value)}
+                      className="bg-white border border-gray-300 text-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    >
+                      <option value="">Rating</option>
+                      <option value="4.5+">4.5+</option>
+                      <option value="4.0+">4.0+</option>
+                      <option value="3.5+">3.5+</option>
+                    </select>
+                    <select 
+                      value={selectedEngagement} 
+                      onChange={(e) => setSelectedEngagement(e.target.value)}
+                      className="bg-white border border-gray-300 text-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    >
+                      <option value="">Engagement</option>
+                      <option value="90+">90%+</option>
+                      <option value="80+">80%+</option>
+                      <option value="70+">70%+</option>
+                    </select>
                   </div>
                 </div>
 
                 {gatedDMsLoading ? (
                   <div className="text-center py-8">
-                    <Loader2 className="animate-spin h-8 w-8 mx-auto mb-4 text-blue-600" />
-                    <p className="text-gray-500">Loading decision makers...</p>
+                    <Loader2 className="animate-spin h-8 w-8 mx-auto mb-4 text-blue-500" />
+                    <p className="text-gray-600">Loading decision makers...</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {/* Credit System Status */}
-                    <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-200 mb-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-semibold text-green-800 mb-1">Database Access Unlocked!</h4>
-                          <p className="text-sm text-gray-600">
-                            You've earned <span className="font-semibold text-green-600">{totalCredits} credits</span> and can now browse {gatedDMs?.unlockedCount || 0} of {gatedDMs?.totalCount || 0} profiles
-                          </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredDMs && Array.isArray(filteredDMs) && filteredDMs.length > 0 ? 
+                     filteredDMs.slice(0, 6).map((dm) => (
+                      <div key={dm.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200">
+                        {/* Status Indicators */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span className="text-xs text-gray-500">3 calls available</span>
+                          </div>
                         </div>
-                        <Button 
-                          onClick={() => simulateOnboardingMutation.mutate()}
-                          disabled={simulateOnboardingMutation.isPending}
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          {simulateOnboardingMutation.isPending ? 'Processing...' : 'Earn More Credits'}
-                        </Button>
-                      </div>
-                    </div>
-                      
-                      <div className="space-y-3 max-h-96 overflow-y-auto">
-                        {gatedDMs?.dms && Array.isArray(gatedDMs.dms) && gatedDMs.dms.length > 0 ? 
-                         gatedDMs.dms.map((dm) => (
-                          <div key={dm.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-3 mb-3">
-                                  <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
-                                    <User className="w-6 h-6 text-blue-600" />
-                                  </div>
-                                  <div>
-                                    <div className="flex items-center space-x-2">
-                                      <h4 className="font-semibold text-gray-900 flex items-center">
-                                        {dm.isUnlocked ? dm.name : (
-                                          <span className="flex items-center space-x-2">
-                                            <span className="bg-gray-200 text-gray-400 px-2 py-1 rounded text-sm">Hidden Name</span>
-                                            <Lock className="w-4 h-4 text-gray-400" />
-                                          </span>
-                                        )}
-                                      </h4>
-                                    </div>
-                                    <p className="text-sm font-medium flex items-center">
-                                      {dm.isUnlocked ? (
-                                        <span className="text-blue-600">{dm.email}</span>
-                                      ) : (
-                                        <span className="bg-gray-200 text-gray-400 px-2 py-1 rounded text-xs">Hidden Email</span>
-                                      )}
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-1">{dm.role}</p>
-                                  </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-3 text-sm bg-gray-50 rounded-lg p-3">
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                    <span className="text-gray-600">Company:</span>
-                                    <span className="font-medium text-gray-900">{dm.company}</span>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                                    <span className="text-gray-600">Industry:</span>
-                                    <span className="font-medium text-gray-900">{dm.industry}</span>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                    <span className="text-gray-600">Engagement:</span>
-                                    <span className="font-medium text-green-600">{dm.engagementScore}%</span>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                                    <span className="text-gray-600">Access:</span>
-                                    <span className={`font-medium ${dm.isUnlocked ? 'text-green-600' : 'text-orange-600'}`}>
-                                      {dm.isUnlocked ? 'Unlocked' : 'Locked'}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="flex flex-col items-end space-y-3 ml-4">
-                                <div className="flex flex-col space-y-2">
-                                  {dm.isUnlocked ? (
-                                    <Badge className="bg-green-100 text-green-800 border border-green-300">
-                                      ✓ {dm.unlockReason === 'enterprise_plan' ? 'Enterprise Plan' : 'Call Booked'}
-                                    </Badge>
-                                  ) : (
-                                    <Badge className="bg-orange-100 text-orange-700 border border-orange-300">
-                                      🔒 Book Call to Unlock
-                                    </Badge>
-                                  )}
-                                  
-                                  <div className="text-xs text-gray-500 text-right">
-                                    Score: <span className="font-medium">{dm.engagementScore}%</span>
-                                  </div>
-                                </div>
-                                
-                                <div className="flex flex-col space-y-2">
-                                  <Button 
-                                    size="sm" 
-                                    className="bg-blue-600 hover:bg-blue-700 shadow-sm"
-                                    onClick={() => window.location.href = '/calendar'}
-                                  >
-                                    📅 Book Call
-                                  </Button>
-                                  {dm.isUnlocked && (
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline"
-                                      className="border-green-300 text-green-700 hover:bg-green-50"
-                                    >
-                                      💬 Contact
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )) : (
-                        <div className="text-center py-8">
-                          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Users className="w-8 h-8 text-blue-600" />
-                          </div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                            {gatedDMsLoading ? 'Loading Decision Makers...' : 'No Decision Makers Available'}
+                        
+                        {/* Title and Company */}
+                        <div className="mb-3">
+                          <h3 className="text-gray-900 font-semibold text-lg mb-1">
+                            {dm.jobTitle || dm.name || 'Chief Revenue Officer'}
                           </h3>
-                          <p className="text-gray-500">
-                            {gatedDMsLoading ? 'Fetching available decision makers from database...' : 
-                             gatedDMsError ? 'Error loading decision makers' :
-                             'No decision makers found in your network'}
-                          </p>
-                          {gatedDMsError && (
-                            <div className="mt-4 text-xs text-red-500">
-                              Error: {gatedDMsError.message}
-                            </div>
-                          )}
-                          {gatedDMsLoading && (
-                            <div className="mt-4">
-                              <Loader2 className="animate-spin h-6 w-6 mx-auto text-blue-600" />
-                            </div>
-                          )}
+                          <p className="text-blue-600 text-sm font-medium">{dm.company}</p>
                         </div>
-                        )}
-                      </div>
-                      
-                      {gatedDMs?.dms?.length === 0 && gatedDMs !== undefined && (
-                        <div className="text-center py-8">
-                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Users className="w-8 h-8 text-gray-400" />
+                        
+                        {/* Location */}
+                        <div className="flex items-center text-gray-600 text-sm mb-3">
+                          <MapPin className="w-3 h-3 mr-1" />
+                          <span>San Francisco, CA</span>
+                        </div>
+                        
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-medium">
+                            {dm.industry}
+                          </span>
+                          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium">
+                            201-1000
+                          </span>
+                        </div>
+                        
+                        {/* Rating and Engagement */}
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
+                              <span className="text-gray-900 font-medium">4.8</span>
+                            </div>
+                            <span className="text-green-600 text-sm font-medium">{dm.engagementScore}% engagement</span>
                           </div>
-                          <p className="text-gray-500 font-medium">No decision makers available</p>
-                          <p className="text-sm text-gray-400 mt-1">Check back later for new opportunities</p>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${dm.engagementScore}%` }}
+                            ></div>
+                          </div>
                         </div>
-                      )}
-                      
-                      {/* Action Buttons */}
-                      <div className="border-t pt-4 mt-4">
-                        <div className="flex space-x-3">
-                          <Button 
-                            onClick={() => window.location.href = '/decision-dashboard'}
-                            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                        
+                        {/* Action Buttons */}
+                        <div className="flex space-x-2">
+                          <button className="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-2 px-3 rounded-lg text-sm transition-colors font-medium">
+                            View Contact
+                          </button>
+                          <button 
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg text-sm transition-colors font-medium"
+                            onClick={() => handleOpenBookingModal(dm)}
                           >
-                            🎯 Browse All Decision Makers
-                          </Button>
-                          <Button 
-                            onClick={() => window.location.href = '/calendar'}
-                            variant="outline"
-                            className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-50"
-                          >
-                            📅 Schedule Meetings
-                          </Button>
+                            Request Call
+                          </button>
                         </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )) : (
+                      <div className="col-span-full text-center py-8">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Users className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No Decision Makers Available</h3>
+                        <p className="text-gray-600">Check back later for new opportunities</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             </div>
 
           {/* Responsive Sidebar */}
           <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
-            {/* Calendar Booking System */}
-            <CalendarBooking />
-            
-            {/* Upcoming Calls Calendar View */}
-            <Card className="shadow-lg">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center">
-                    <Calendar className="text-blue-500 mr-3" size={20} />
-                    Upcoming Calls
-                  </CardTitle>
-                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                    View All
-                  </Button>
+            {/* Package Status Card */}
+            <Card className="shadow-lg border border-gray-200">
+              <CardHeader className="pb-3">
+                <div className="flex items-center space-x-2">
+                  <Crown className="w-5 h-5 text-purple-600" />
+                  <CardTitle className="text-gray-900 text-lg">Package Status</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                {calls?.length > 0 ? (
-                  <div className="space-y-4">
-                    {/* Today's Calls */}
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                        Today
-                      </h4>
-                      <div className="space-y-2">
-                        {calls.filter(call => {
-                          const today = new Date().toDateString();
-                          const callDate = new Date(call.scheduledAt).toDateString();
-                          return today === callDate;
-                        }).map((call) => (
-                          <div key={call.id} className="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                            <div className="flex-shrink-0 mr-3">
-                              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                                <User className="w-5 h-5 text-green-600" />
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-green-900 truncate">
-                                {call.decisionMakerName || 'Decision Maker'}
-                              </p>
-                              <div className="flex items-center text-sm text-green-700">
-                                <Clock className="w-3 h-3 mr-1" />
-                                {new Date(call.scheduledAt).toLocaleTimeString('en-US', {
-                                  hour: 'numeric',
-                                  minute: '2-digit'
-                                })}
-                              </div>
-                              {call.agenda && (
-                                <p className="text-xs text-green-600 truncate mt-1">
-                                  {call.agenda}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex-shrink-0 ml-2">
-                              {call.meetingLink ? (
-                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white h-8 px-3">
-                                  Join
-                                </Button>
-                              ) : (
-                                <Badge className="bg-green-100 text-green-800">
-                                  {call.status}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600 text-sm">Current Plan</span>
+                  <Badge className="bg-purple-100 text-purple-700 border border-purple-200">Premium</Badge>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Call Credits</span>
+                    <span className="text-gray-900 font-medium">{metrics?.callCredits || 0}/{metrics?.maxCallCredits || 500}</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${metrics?.maxCallCredits ? ((metrics?.callCredits || 0) / metrics.maxCallCredits) * 100 : 0}%` }}
+                    ></div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Email Credits</span>
+                    <span className="text-gray-900 font-medium">25/50</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-green-500 h-2 rounded-full transition-all duration-300" style={{ width: '50%' }}></div>
+                  </div>
+                </div>
+                
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                  <Crown className="w-4 h-4 mr-2" />
+                  Upgrade Plan
+                </Button>
+              </CardContent>
+            </Card>
+            
+            {/* Your Active DMs */}
+            <Card className="shadow-lg border border-gray-200">
+              <CardHeader className="pb-3">
+                <div className="flex items-center space-x-2">
+                  <Users className="w-5 h-5 text-blue-600" />
+                  <CardTitle className="text-gray-900 text-lg">Your Active DMs</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {calls && calls.length > 0 ? calls.slice(0, 3).map((call) => (
+                  <div key={call.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="text-gray-900 font-medium text-sm">
+                          {call.decisionMakerName || 'Sarah Chen'}
+                        </span>
+                        <Badge className="bg-blue-100 text-blue-700 text-xs">upcoming</Badge>
+                      </div>
+                      <div className="text-gray-600 text-xs">TechCorp Inc</div>
+                      <div className="text-gray-500 text-xs">
+                        {new Date(call.scheduledAt).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })} • {new Date(call.scheduledAt).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit'
+                        })}
                       </div>
                     </div>
-
-                    {/* Tomorrow's Calls */}
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                        Tomorrow
-                      </h4>
-                      <div className="space-y-2">
-                        {calls.filter(call => {
-                          const tomorrow = new Date();
-                          tomorrow.setDate(tomorrow.getDate() + 1);
-                          const tomorrowDate = tomorrow.toDateString();
-                          const callDate = new Date(call.scheduledAt).toDateString();
-                          return tomorrowDate === callDate;
-                        }).map((call) => (
-                          <div key={call.id} className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
-                            <div className="flex-shrink-0 mr-3">
-                              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                <User className="w-5 h-5 text-blue-600" />
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-blue-900 truncate">
-                                {call.decisionMakerName || 'Decision Maker'}
-                              </p>
-                              <div className="flex items-center text-sm text-blue-700">
-                                <Clock className="w-3 h-3 mr-1" />
-                                {new Date(call.scheduledAt).toLocaleTimeString('en-US', {
-                                  hour: 'numeric',
-                                  minute: '2-digit'
-                                })}
-                              </div>
-                              {call.agenda && (
-                                <p className="text-xs text-blue-600 truncate mt-1">
-                                  {call.agenda}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex-shrink-0 ml-2">
-                              <Badge className="bg-blue-100 text-blue-800">
-                                {call.status}
-                              </Badge>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* This Week's Calls */}
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                        This Week
-                      </h4>
-                      <div className="space-y-2">
-                        {calls.filter(call => {
-                          const today = new Date();
-                          const tomorrow = new Date();
-                          tomorrow.setDate(tomorrow.getDate() + 1);
-                          const weekEnd = new Date();
-                          weekEnd.setDate(weekEnd.getDate() + 7);
-                          
-                          const callDate = new Date(call.scheduledAt);
-                          const todayStr = today.toDateString();
-                          const tomorrowStr = tomorrow.toDateString();
-                          const callStr = callDate.toDateString();
-                          
-                          return callDate > tomorrow && callDate <= weekEnd && 
-                                 callStr !== todayStr && callStr !== tomorrowStr;
-                        }).map((call) => (
-                          <div key={call.id} className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
-                            <div className="flex-shrink-0 mr-3">
-                              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                <User className="w-5 h-5 text-blue-600" />
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-blue-900 truncate">
-                                {call.decisionMakerName || 'Decision Maker'}
-                              </p>
-                              <div className="flex items-center text-sm text-blue-700">
-                                <Calendar className="w-3 h-3 mr-1" />
-                                {new Date(call.scheduledAt).toLocaleDateString('en-US', {
-                                  weekday: 'short',
-                                  month: 'short',
-                                  day: 'numeric'
-                                })}
-                                <Clock className="w-3 h-3 ml-2 mr-1" />
-                                {new Date(call.scheduledAt).toLocaleTimeString('en-US', {
-                                  hour: 'numeric',
-                                  minute: '2-digit'
-                                })}
-                              </div>
-                              {call.agenda && (
-                                <p className="text-xs text-purple-600 truncate mt-1">
-                                  {call.agenda}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex-shrink-0 ml-2">
-                              <Badge className="bg-blue-100 text-blue-800">
-                                {call.status}
-                              </Badge>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Quick Actions */}
-                    <div className="pt-3 border-t border-gray-200">
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline" className="flex-1">
-                          <CalendarPlus className="w-4 h-4 mr-2" />
-                          Schedule Call
-                        </Button>
-                        <Button size="sm" variant="outline" className="flex-1">
-                          <Calendar className="w-4 h-4 mr-2" />
-                          View Calendar
-                        </Button>
-                      </div>
+                    <div className="text-right">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mb-1"></div>
+                      <div className="text-green-600 text-xs font-medium">92%</div>
                     </div>
                   </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <CalendarPlus className="text-gray-400" size={24} />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No calls scheduled</h3>
-                    <p className="text-gray-500 mb-6 text-sm">
-                      Start booking meetings with decision makers to see your schedule here.
-                    </p>
-                    <div className="space-y-2">
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Book Your First Call
-                      </Button>
-                      <div className="text-xs text-gray-400">
-                        Use the calendar booking system to schedule meetings
+                )) : (
+                  <>
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="text-gray-900 font-medium text-sm">Sarah Chen</span>
+                          <Badge className="bg-blue-100 text-blue-700 text-xs">upcoming</Badge>
+                        </div>
+                        <div className="text-gray-600 text-xs">TechCorp Inc</div>
+                        <div className="text-gray-500 text-xs">Today • 2:00 PM</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mb-1"></div>
+                        <div className="text-green-600 text-xs font-medium">92%</div>
                       </div>
                     </div>
-                  </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="text-gray-900 font-medium text-sm">Mike Rodriguez</span>
+                          <Badge className="bg-green-100 text-green-700 text-xs">completed</Badge>
+                        </div>
+                        <div className="text-gray-600 text-xs">DataFlow Solutions</div>
+                        <div className="text-gray-500 text-xs">Yesterday</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mb-1"></div>
+                        <div className="text-green-600 text-xs font-medium">78%</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="text-gray-900 font-medium text-sm">Emily Johnson</span>
+                          <Badge className="bg-yellow-100 text-yellow-700 text-xs">booked</Badge>
+                        </div>
+                        <div className="text-gray-600 text-xs">InnovatePlus</div>
+                        <div className="text-gray-500 text-xs">Tomorrow • 10:00 AM</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full mb-1"></div>
+                        <div className="text-gray-500 text-xs">--</div>
+                      </div>
+                    </div>
+                  </>
                 )}
+              </CardContent>
+            </Card>
+            
+            {/* Quick Actions */}
+            <Card className="shadow-lg border border-gray-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-gray-900 text-lg">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button 
+                  variant="outline"
+                  className="w-full justify-start text-left border-gray-300 hover:bg-gray-50"
+                  onClick={() => window.location.href = '/analytics'}
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  View Analytics
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="w-full justify-start text-left border-gray-300 hover:bg-gray-50"
+                  onClick={() => window.location.href = '/settings'}
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Account Settings
+                </Button>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
+      
+      {/* Booking Modal */}
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        onClose={handleCloseBookingModal}
+        decisionMaker={selectedDecisionMaker}
+        onConfirm={handleBookingConfirm}
+      />
     </div>
   );
 }

@@ -249,7 +249,7 @@ export default function DecisionDashboard() {
   const recentCalls = calls.filter(call => call.status === 'completed');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Dashboard Header */}
         <div className="mb-8">
@@ -259,20 +259,20 @@ export default function DecisionDashboard() {
               <p className="text-gray-600 mt-1">Welcome back, {user?.firstName}!</p>
             </div>
             <div className="flex items-center space-x-4">
-              <Badge className="bg-green-100 text-green-800">
+              <Badge className="bg-green-100 text-green-800 border border-green-200">
                 {metrics?.standing === 'good' ? 'Excellent Standing' : 'Standing: ' + metrics?.standing}
               </Badge>
               <FlagsBadge />
               <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="outline" size="sm" className="border-gray-300 hover:bg-gray-50">
                     <Settings className="mr-2" size={16} />
                     Settings
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white">
                   <DialogHeader>
-                    <DialogTitle className="flex items-center">
+                    <DialogTitle className="flex items-center text-gray-900">
                       <Settings className="mr-2" size={20} />
                       Account Settings
                     </DialogTitle>
@@ -286,50 +286,58 @@ export default function DecisionDashboard() {
 
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+          <Card className="border border-gray-200 shadow-lg bg-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100 text-sm font-medium">Calls Completed</p>
-                  <p className="text-3xl font-bold">{metrics?.completedCalls || 0}</p>
+                  <p className="text-gray-600 text-sm font-medium">Calls Completed</p>
+                  <p className="text-3xl font-bold text-gray-900">{metrics?.completedCalls || 0}</p>
                 </div>
-                <CheckCircle className="text-purple-200" size={32} />
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="text-blue-600" size={24} />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-gray-200 shadow-lg bg-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm font-medium">Remaining Calls</p>
+                  <p className="text-gray-600 text-sm font-medium">Remaining Calls</p>
                   <p className="text-3xl font-bold text-gray-900">{metrics?.remainingCalls || 0}</p>
                 </div>
-                <Calendar className="text-gray-400" size={32} />
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Calendar className="text-green-600" size={24} />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-gray-200 shadow-lg bg-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm font-medium">Avg Call Rating</p>
+                  <p className="text-gray-600 text-sm font-medium">Avg Call Rating</p>
                   <p className="text-3xl font-bold text-gray-900">{metrics?.avgRating ? metrics.avgRating.toFixed(1) : '-'}</p>
                 </div>
-                <Star className="text-yellow-400" size={32} />
+                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <Star className="text-yellow-600 fill-current" size={24} />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-gray-200 shadow-lg bg-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm font-medium">Quality Score</p>
+                  <p className="text-gray-600 text-sm font-medium">Quality Score</p>
                   <p className="text-3xl font-bold text-gray-900">{metrics?.qualityScore ? `${metrics.qualityScore}%` : '-'}</p>
                 </div>
-                <TrendingUp className="text-green-500" size={32} />
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="text-purple-600" size={24} />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -341,11 +349,11 @@ export default function DecisionDashboard() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Upcoming Calls with Calendar Integration */}
-            <Card className="shadow-lg">
+            <Card className="shadow-lg border border-gray-200 bg-white">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex items-center justify-between text-gray-900">
                   <div className="flex items-center">
-                    <Calendar className="text-blue-500 mr-3" size={24} />
+                    <Calendar className="text-blue-600 mr-3" size={24} />
                     Upcoming Calls & Meetings
                   </div>
                   <div className="flex items-center gap-2">
@@ -538,7 +546,7 @@ export default function DecisionDashboard() {
             </Card>
 
             {/* Recent Calls */}
-            <Card className="shadow-lg">
+            <Card className="shadow-lg border border-gray-200 bg-white">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Clock className="text-green-500 mr-3" size={24} />

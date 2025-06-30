@@ -148,9 +148,9 @@ export default function EnterpriseAdmin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
@@ -160,7 +160,7 @@ export default function EnterpriseAdmin() {
                 <p className="text-sm text-gray-600">Manage company users and settings</p>
               </div>
             </div>
-            <Badge className="bg-blue-100 text-blue-800">
+            <Badge className="bg-blue-100 text-blue-800 border border-blue-200">
               <Shield className="mr-1 h-3 w-3" />
               Enterprise Access
             </Badge>
@@ -188,40 +188,46 @@ export default function EnterpriseAdmin() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
+              <Card className="border border-gray-200 shadow-lg bg-white">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Company Users</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-gray-900">Total Company Users</CardTitle>
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Users className="h-4 w-4 text-blue-600" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{analytics?.totalUsers || 0}</div>
-                  <p className="text-xs text-muted-foreground">
+                  <div className="text-2xl font-bold text-gray-900">{analytics?.totalUsers || 0}</div>
+                  <p className="text-xs text-gray-600">
                     +{analytics?.newUsersThisMonth || 0} from last month
                   </p>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border border-gray-200 shadow-lg bg-white">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Sales Reps</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-gray-900">Active Sales Reps</CardTitle>
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="h-4 w-4 text-green-600" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{analytics?.activeSalesReps || 0}</div>
-                  <p className="text-xs text-muted-foreground">
+                  <div className="text-2xl font-bold text-gray-900">{analytics?.activeSalesReps || 0}</div>
+                  <p className="text-xs text-gray-600">
                     {analytics?.salesRepGrowth || 0}% growth rate
                   </p>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border border-gray-200 shadow-lg bg-white">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Monthly Meetings</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-gray-900">Monthly Meetings</CardTitle>
+                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Calendar className="h-4 w-4 text-purple-600" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{analytics?.monthlyMeetings || 0}</div>
-                  <p className="text-xs text-muted-foreground">
+                  <div className="text-2xl font-bold text-gray-900">{analytics?.monthlyMeetings || 0}</div>
+                  <p className="text-xs text-gray-600">
                     {analytics?.meetingTrend || 0}% vs last month
                   </p>
                 </CardContent>
