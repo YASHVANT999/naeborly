@@ -37,12 +37,14 @@ import NotFound from "@/pages/not-found";
 import DMSuspensionAlerts from "@/pages/dm-suspension-alerts";
 import Analytics from "@/pages/analytics";
 import Profile from "@/pages/profile";
+import DMInviteLanding from "@/pages/dm-invite-landing";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
       <Route path="/login" component={Login} />
+      <Route path="/invite/:token" component={DMInviteLanding} />
       <Route path="/sales-dashboard">
         <ProtectedRoute requiredRole="sales_rep">
           <SalesDashboard />

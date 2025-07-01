@@ -82,9 +82,14 @@ function IntegratedMeetingCard({ meeting }) {
           <Video className="text-green-600" size={24} />
         </div>
         <div>
-          <h3 className="font-bold text-gray-900">
-            {meeting.summary || 'Meeting with Sales Rep'}
-          </h3>
+          <div className="flex items-center gap-3 mb-2">
+            <h3 className="font-bold text-gray-900">
+              {meeting.summary || 'Meeting with Sales Rep'}
+            </h3>
+            <Badge className="bg-green-100 text-green-700 border border-green-200 px-3 py-1 text-sm font-semibold">
+              CALENDAR
+            </Badge>
+          </div>
           <p className="font-medium text-green-600">
             {meeting.organizer?.email || 'Sales Rep'}
           </p>
@@ -116,15 +121,7 @@ function IntegratedMeetingCard({ meeting }) {
               </a>
             </Button>
           )}
-          <Button 
-            variant="outline"
-            size="sm"
-            className="border-red-200 text-red-600"
-            onClick={() => window.location.href = '/post-call-evaluation'}
-          >
-            <Star className="mr-1" size={12} />
-            Rate Meeting
-          </Button>
+          
         </div>
       </div>
     </div>
@@ -249,14 +246,19 @@ export default function DecisionDashboard() {
   const recentCalls = calls.filter(call => call.status === 'completed');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-50 pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Dashboard Header */}
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Decision Maker Dashboard</h1>
-              <p className="text-gray-600 mt-1">Welcome back, {user?.firstName}!</p>
+              <div className="flex items-center gap-3 mt-1">
+                <p className="text-gray-600">Welcome back, {user?.firstName}!</p>
+                <Badge className="bg-blue-100 text-blue-700 border border-blue-200 px-3 py-1 text-sm font-semibold">
+                  DECISION MAKER
+                </Badge>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <Badge className="bg-green-100 text-green-800 border border-green-200">
@@ -291,7 +293,9 @@ export default function DecisionDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm font-medium">Calls Completed</p>
-                  <p className="text-3xl font-bold text-gray-900">{metrics?.completedCalls || 0}</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {metrics?.completedCalls || 0}/{metrics?.totalCallLimit || 3}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <CheckCircle className="text-blue-600" size={24} />
@@ -300,19 +304,7 @@ export default function DecisionDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border border-gray-200 shadow-lg bg-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm font-medium">Remaining Calls</p>
-                  <p className="text-3xl font-bold text-gray-900">{metrics?.remainingCalls || 0}</p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Calendar className="text-green-600" size={24} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          
 
           <Card className="border border-gray-200 shadow-lg bg-white">
             <CardContent className="p-6">
@@ -438,7 +430,12 @@ export default function DecisionDashboard() {
                                 <User className="text-blue-600" size={24} />
                               </div>
                               <div>
-                                <h3 className="font-bold text-gray-900">{call.salesRepName || 'Sales Rep'}</h3>
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="font-bold text-gray-900">{call.salesRepName || 'Sales Rep'}</h3>
+                                  <Badge className="bg-purple-100 text-purple-700 border border-purple-200 px-3 py-1 text-sm font-semibold">
+                                    VERIFIED
+                                  </Badge>
+                                </div>
                                 <p className="font-medium text-blue-600">
                                   {call.company || 'Company'}
                                 </p>
@@ -465,15 +462,7 @@ export default function DecisionDashboard() {
                                   <Phone className="mr-1" size={12} />
                                   Join Call
                                 </Button>
-                                <Button 
-                                  variant="outline"
-                                  size="sm"
-                                  className="border-red-200 text-red-600"
-                                  onClick={() => window.location.href = '/post-call-evaluation'}
-                                >
-                                  <Star className="mr-1" size={12} />
-                                  Rate Call
-                                </Button>
+                                
                               </div>
                             </div>
                           </div>
@@ -593,38 +582,7 @@ export default function DecisionDashboard() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Commitment Status */}
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <User className="text-purple-500 mr-3" size={20} />
-                  Commitment Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-600">Calls Completed</span>
-                    <span className="text-sm font-bold text-gray-900">
-                      {metrics?.completedCalls || 0}/{metrics?.totalCallLimit || 3}
-                    </span>
-                  </div>
-                  <Progress value={metrics?.completionPercentage || 0} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-600">Remaining</span>
-                    <span className="text-sm font-bold text-gray-900">
-                      {metrics?.remainingCalls || 0}/{metrics?.totalCallLimit || 3}
-                    </span>
-                  </div>
-                  <Progress 
-                    value={metrics?.remainingCalls ? (metrics.remainingCalls / (metrics.totalCallLimit || 3)) * 100 : 0} 
-                    className="h-2 bg-blue-200" 
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            
 
             {/* Calendar Integration */}
             <Card className="shadow-lg">
@@ -955,9 +913,14 @@ function FeedbackHistory({ onClose }) {
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">
-                        Call with {item.salesRepName || 'Sales Representative'}
-                      </h4>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-medium text-gray-900">
+                          Call with {item.salesRepName || 'Sales Representative'}
+                        </h4>
+                        <Badge className="bg-orange-100 text-orange-700 border border-orange-200 px-2 py-1 text-xs font-semibold">
+                          RATED
+                        </Badge>
+                      </div>
                       <p className="text-sm text-gray-500">
                         {item.company} • {new Date(item.callDate).toLocaleDateString()}
                       </p>
@@ -1501,9 +1464,12 @@ function MeetingCard({ meeting, compact = false }) {
     return (
       <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">
-            {meeting.summary || 'Meeting with Sales Rep'}
-          </p>
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {meeting.summary || 'Meeting with Sales Rep'}
+            </p>
+            <Badge className="bg-blue-100 text-blue-700 text-xs px-2 py-0">EXT</Badge>
+          </div>
           <p className="text-xs text-gray-500">
             {formatDate(meeting.start?.dateTime || meeting.start?.date)}
           </p>
@@ -1529,6 +1495,9 @@ function MeetingCard({ meeting, compact = false }) {
               <h4 className="font-medium text-gray-900 truncate">
                 {meeting.summary || 'Meeting with Sales Rep'}
               </h4>
+              <Badge className="bg-blue-100 text-blue-700 border border-blue-200 px-2 py-1 text-xs font-semibold">
+                EXTERNAL
+              </Badge>
             </div>
             
             <div className="space-y-1 text-sm text-gray-600">

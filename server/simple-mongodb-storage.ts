@@ -68,6 +68,16 @@ export class SimpleMongoDBStorage implements IStorage {
     }
   }
 
+  async getInvitationById(id: string): Promise<any | undefined> {
+    try {
+      const invitation = await Invitation.findById(id);
+      return invitation ? this.toPlainObject(invitation) : undefined;
+    } catch (error) {
+      console.error('Error getting invitation by ID:', error);
+      return undefined;
+    }
+  }
+
   async createInvitation(invitationData: any): Promise<any> {
     try {
       const invitation = new Invitation(invitationData);

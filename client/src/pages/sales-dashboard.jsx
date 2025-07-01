@@ -273,7 +273,7 @@ export default function SalesDashboard() {
   const databaseUnlocked = metrics?.databaseUnlocked || false;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-16">
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Dashboard Header */}
         <div className="mb-6">
@@ -299,14 +299,6 @@ export default function SalesDashboard() {
                   <TrendingUp className="w-4 h-4 mr-2" />
                   Analytics
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => window.location.href = '/profile'}
-                >
-                  <Users className="w-4 h-4 mr-2" />
-                  Profile
-                </Button>
               </div>
               <div className="sm:hidden">
                 <Button variant="ghost" size="sm">
@@ -318,11 +310,11 @@ export default function SalesDashboard() {
         </div>
 
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white h-32">
+            <CardContent className="p-5 h-full">
+              <div className="flex items-center justify-between h-full">
+                <div className="flex flex-col justify-between h-full">
                   <p className="text-blue-100 text-sm font-medium">Call Credits</p>
                   <p className="text-2xl font-bold">{metrics?.callCredits || 0}</p>
                   <p className="text-blue-100 text-xs">this month</p>
@@ -332,10 +324,10 @@ export default function SalesDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white h-32">
+            <CardContent className="p-5 h-full">
+              <div className="flex items-center justify-between h-full">
+                <div className="flex flex-col justify-between h-full">
                   <p className="text-green-100 text-sm font-medium">DM Invitations</p>
                   <p className="text-2xl font-bold">{metrics?.dmInvitations || 0}/{metrics?.maxDmInvitations || 1}</p>
                 </div>
@@ -344,10 +336,10 @@ export default function SalesDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
+          <Card className="h-32">
+            <CardContent className="p-5 h-full">
+              <div className="flex items-center justify-between h-full">
+                <div className="flex flex-col justify-between h-full">
                   <p className="text-gray-500 text-sm font-medium">Upcoming Calls</p>
                   <p className="text-2xl font-bold text-gray-900">{metrics?.upcomingCalls || 0}</p>
                 </div>
@@ -356,26 +348,66 @@ export default function SalesDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">Accepted Invitations</p>
-                  <p className="text-2xl font-bold text-gray-900">{metrics?.acceptedInvitations || 0}</p>
-                </div>
-                <Plus className="text-gray-400 w-6 h-6" />
-              </div>
-            </CardContent>
-          </Card>
+          
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium">Success Rate</p>
-                  <p className="text-2xl font-bold text-gray-900">{metrics?.successRate ? `${metrics.successRate}%` : '-'}</p>
+          <Card className="bg-gradient-to-br from-blue-50 to-purple-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-32">
+            <CardContent className="p-5 h-full">
+              <div className="flex items-center justify-between h-full">
+                <div className="flex flex-col justify-between h-full">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <p className="text-gray-600 text-sm font-semibold">Success Rate</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      {metrics?.successRate ? `${metrics.successRate}%` : '-'}
+                    </div>
+                    <div className="flex items-center bg-green-50 px-2 py-1 rounded-full border border-green-200">
+                      <TrendingUp className="w-3 h-3 mr-1 text-green-600" />
+                      <span className="text-xs font-bold text-green-700">+2.5%</span>
+                    </div>
+                  </div>
                 </div>
-                <TrendingUp className="text-gray-400 w-6 h-6" />
+                
+                {/* Compact Circular Progress */}
+                <div className="relative">
+                  <div className="w-12 h-12 bg-white rounded-full shadow-inner flex items-center justify-center">
+                    <svg className="w-10 h-10 transform -rotate-90" viewBox="0 0 100 100">
+                      {/* Background circle */}
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="transparent"
+                        className="text-gray-200"
+                      />
+                      {/* Progress circle with gradient */}
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        stroke="url(#successGradient)"
+                        strokeWidth="8"
+                        fill="transparent"
+                        strokeDasharray={`${2 * Math.PI * 40}`}
+                        strokeDashoffset={`${2 * Math.PI * 40 * (1 - (metrics?.successRate || 0) / 100)}`}
+                        className="transition-all duration-1000 ease-out"
+                        strokeLinecap="round"
+                      />
+                      <defs>
+                        <linearGradient id="successGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" style={{ stopColor: '#3B82F6', stopOpacity: 1 }} />
+                          <stop offset="100%" style={{ stopColor: '#8B5CF6', stopOpacity: 1 }} />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                  {/* Subtle glow effect */}
+                  <div className="absolute inset-0 w-12 h-12 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-20 blur-md -z-10"></div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -554,7 +586,7 @@ export default function SalesDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                       {filteredDMs && Array.isArray(filteredDMs) && filteredDMs.length > 0 ? 
                        filteredDMs.slice(0, 6).map((dm) => (
-                        <div key={dm.id} className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all duration-200">
+                        <div key={dm.id} className="bg-gray-50 rounded-lg p-3 border border-gray-400 hover:border-purple-500 hover:shadow-sm transition-all duration-200">
                           {/* Status Indicators */}
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -610,7 +642,7 @@ export default function SalesDashboard() {
                               View Contact
                             </button>
                             <button 
-                              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg text-sm transition-colors font-medium"
+                              className="flex-1 hover:bg-blue-700 text-white py-2 px-3 rounded-lg text-sm transition-colors font-medium bg-[#5f7ed4]"
                               onClick={() => handleOpenBookingModal(dm)}
                             >
                               Request Call
@@ -634,16 +666,16 @@ export default function SalesDashboard() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-4 order-1 lg:order-2">
+          <div className="space-y-6 order-1 lg:order-2">
             {/* Package Status Card */}
             <Card>
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-4">
                 <div className="flex items-center gap-2">
                   <Crown className="w-5 h-5 text-purple-600" />
                   <CardTitle className="text-gray-900">Package Status</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-4 px-6 pb-6">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600 text-sm">Current Plan</span>
                   <Badge className="bg-purple-100 text-purple-700">Premium</Badge>
@@ -681,15 +713,15 @@ export default function SalesDashboard() {
             
             {/* Your Active DMs */}
             <Card>
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-4">
                 <div className="flex items-center gap-2">
                   <Users className="w-5 h-5 text-blue-600" />
                   <CardTitle className="text-gray-900">Your Active DMs</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-4 px-6 pb-6">
                 {calls && calls.length > 0 ? calls.slice(0, 3).map((call) => (
-                  <div key={call.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                  <div key={call.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-400 hover:border-purple-500 transition-colors">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-gray-900 font-medium text-sm">
@@ -715,7 +747,7 @@ export default function SalesDashboard() {
                   </div>
                 )) : (
                   <>
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-400">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-gray-900 font-medium text-sm">Sarah Chen</span>
@@ -730,7 +762,7 @@ export default function SalesDashboard() {
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-400">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-gray-900 font-medium text-sm">Mike Rodriguez</span>
@@ -745,7 +777,7 @@ export default function SalesDashboard() {
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-400">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-gray-900 font-medium text-sm">Emily Johnson</span>
@@ -766,10 +798,10 @@ export default function SalesDashboard() {
             
             {/* Quick Actions */}
             <Card>
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-4">
                 <CardTitle className="text-gray-900">Quick Actions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3 px-6 pb-6">
                 <Button 
                   variant="outline"
                   className="w-full justify-start border-gray-300 hover:bg-gray-50"
@@ -799,7 +831,6 @@ export default function SalesDashboard() {
           </div>
         </div>
       </div>
-      
       {/* Booking Modal */}
       <BookingModal
         isOpen={isBookingModalOpen}

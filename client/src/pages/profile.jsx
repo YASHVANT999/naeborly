@@ -173,9 +173,10 @@ export default function Profile() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
+    <div className="min-h-screen bg-gray-50 pt-16">
+      <div className="p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
@@ -618,6 +619,7 @@ export default function Profile() {
             </Card>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

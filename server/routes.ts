@@ -120,6 +120,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Validate invite token and get invitation details
+  app.get("/api/invitations/validate/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      
+      // For this demo, the token is the invitation ID
+      // In production, you'd use a secure token with expiration
+      const invitation = await storage.getInvitationById(token);
+      if (!invitation) {
+        return res.status(404).json({ 
+          valid: false, 
+          message: "Invalid or expired invitation link" 
+        });
+      }
+      
+      if (invitation.status !== 'pending') {
+        return res.status(400).json({ 
+          valid: false, 
+          message: invitation.status === 'accepted' 
+            ? "This invitation has already been accepted" 
+            : "This invitation has been declined" 
+        });
+      }
+      
+      // Get sales rep details
+      const salesRep = await storage.getUserById(invitation.salesRepId);
+      
+      res.json({ 
+        valid: true, 
+        invitation: {
+          id: invitation._id,
+          decisionMakerName: invitation.decisionMakerName,
+          decisionMakerEmail: invitation.decisionMakerEmail,
+          salesRepName: salesRep ? `${salesRep.firstName} ${salesRep.lastName}` : 'Sales Representative',
+          salesRepCompany: salesRep?.company || 'Company',
+          createdAt: invitation.createdAt
+        }
+      });
+    } catch (error) {
+      console.error('Error validating invitation token:', error);
+      res.status(500).json({ 
+        valid: false, 
+        message: "Failed to validate invitation" 
+      });
+    }
+  });
+
   // Update invitation status
   app.patch("/api/invitations/:id/status", async (req, res) => {
     try {

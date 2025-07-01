@@ -34,7 +34,7 @@ export default function Navigation() {
   });
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-100">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2">
@@ -121,6 +121,17 @@ export default function Navigation() {
                       {user?.role?.replace('_', ' ')}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    {user?.role === 'sales_rep' && (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link href="/profile" className="w-full cursor-pointer">
+                            <User className="mr-2 h-4 w-4" />
+                            Profile
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
                     <DropdownMenuItem 
                       onClick={(e) => {
                         e.preventDefault();
@@ -192,19 +203,35 @@ export default function Navigation() {
                       <>
                         {/* Dashboard Links with Icons */}
                         {user?.role === 'sales_rep' && (
-                          <Link href="/sales-dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                            <Button
-                              variant={location === "/sales-dashboard" ? "default" : "ghost"}
-                              className={`w-full justify-start h-12 rounded-xl transition-all duration-200 ${
-                                location === "/sales-dashboard" 
-                                  ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg transform scale-[1.02]" 
-                                  : "text-slate-700 hover:bg-white/60 hover:text-blue-600 hover:shadow-md"
-                              }`}
-                            >
-                              <BarChart3 className="mr-3" size={18} />
-                              <span className="font-medium">Sales Dashboard</span>
-                            </Button>
-                          </Link>
+                          <>
+                            <Link href="/sales-dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                              <Button
+                                variant={location === "/sales-dashboard" ? "default" : "ghost"}
+                                className={`w-full justify-start h-12 rounded-xl transition-all duration-200 ${
+                                  location === "/sales-dashboard" 
+                                    ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg transform scale-[1.02]" 
+                                    : "text-slate-700 hover:bg-white/60 hover:text-blue-600 hover:shadow-md"
+                                }`}
+                              >
+                                <BarChart3 className="mr-3" size={18} />
+                                <span className="font-medium">Sales Dashboard</span>
+                              </Button>
+                            </Link>
+                            
+                            <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                              <Button
+                                variant={location === "/profile" ? "default" : "ghost"}
+                                className={`w-full justify-start h-12 rounded-xl transition-all duration-200 ${
+                                  location === "/profile" 
+                                    ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg transform scale-[1.02]" 
+                                    : "text-slate-700 hover:bg-white/60 hover:text-blue-600 hover:shadow-md"
+                                }`}
+                              >
+                                <User className="mr-3" size={18} />
+                                <span className="font-medium">Profile</span>
+                              </Button>
+                            </Link>
+                          </>
                         )}
                         
                         {user?.role === 'decision_maker' && (

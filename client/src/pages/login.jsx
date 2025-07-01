@@ -1,12 +1,25 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'wouter';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -32,44 +45,44 @@ export default function Login() {
 
   const loginMutation = useMutation({
     mutationFn: async (data) => {
-      return await apiRequest('/api/login', {
-        method: 'POST',
+      return await apiRequest("/api/login", {
+        method: "POST",
         body: JSON.stringify(data),
       });
     },
     onSuccess: (response) => {
-      console.log('Login successful:', response);
-      
+      console.log("Login successful:", response);
+
       // Store JWT token first
       if (response.token) {
-        localStorage.setItem('naeborly_token', response.token);
+        localStorage.setItem("naeborly_token", response.token);
         // Trigger storage event for other components
-        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new Event("storage"));
       }
-      
+
       toast({
         title: "Welcome back!",
         description: "Login successful",
       });
-      
+
       // Navigate based on user role with proper delay
       setTimeout(() => {
         // Clear queries after token is stored
         queryClient.clear();
-        
-        if (response.user.role === 'sales_rep') {
-          setLocation('/sales-dashboard');
-        } else if (response.user.role === 'decision_maker') {
-          setLocation('/decision-dashboard');
-        } else if (response.user.role === 'enterprise_admin') {
-          setLocation('/enterprise-admin');
+
+        if (response.user.role === "sales_rep") {
+          setLocation("/sales-dashboard");
+        } else if (response.user.role === "decision_maker") {
+          setLocation("/decision-dashboard");
+        } else if (response.user.role === "enterprise_admin") {
+          setLocation("/enterprise-admin");
         } else {
-          setLocation('/');
+          setLocation("/");
         }
       }, 200);
     },
     onError: (error) => {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       toast({
         title: "Login Failed",
         description: error.message || "Invalid email or password",
@@ -79,12 +92,12 @@ export default function Login() {
   });
 
   const onSubmit = (data) => {
-    console.log('Login form submission:', data);
+    console.log("Login form submission:", data);
     loginMutation.mutate(data);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4 pt-20">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2 mb-6">
@@ -93,7 +106,9 @@ export default function Login() {
             </div>
             <span className="text-2xl font-bold text-gray-900">Naeborly</span>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome Back
+          </h1>
           <p className="text-gray-600">Sign in to your account to continue</p>
         </div>
 
@@ -106,7 +121,10 @@ export default function Login() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
                 <FormField
                   control={form.control}
                   name="email"
@@ -114,17 +132,17 @@ export default function Login() {
                     <FormItem>
                       <FormLabel>Email Address</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="email" 
-                          placeholder="Enter your email" 
-                          {...field} 
+                        <Input
+                          type="email"
+                          placeholder="Enter your email"
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="password"
@@ -133,10 +151,10 @@ export default function Login() {
                       <FormLabel>Password</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Input 
+                          <Input
                             type={showPassword ? "text" : "password"}
-                            placeholder="Enter your password" 
-                            {...field} 
+                            placeholder="Enter your password"
+                            {...field}
                           />
                           <Button
                             type="button"
@@ -158,8 +176,8 @@ export default function Login() {
                   )}
                 />
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full bg-blue-600 hover:bg-blue-700"
                   disabled={loginMutation.isPending}
                 >
@@ -174,10 +192,12 @@ export default function Login() {
                   <div className="w-full border-t border-gray-300" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Don't have an account?</span>
+                  <span className="px-2 bg-white text-gray-500">
+                    Don't have an account?
+                  </span>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 gap-3">
                 <Link href="/signup/sales-rep/personal-info">
                   <Button variant="outline" className="w-full">
@@ -196,7 +216,10 @@ export default function Login() {
 
         <div className="mt-6 text-center">
           <Link href="/">
-            <Button variant="ghost" className="text-gray-600 hover:text-purple-600">
+            <Button
+              variant="ghost"
+              className="text-gray-600 hover:text-purple-600"
+            >
               <ArrowLeft className="mr-2" size={16} />
               Back to Home
             </Button>

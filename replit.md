@@ -124,6 +124,31 @@ The application uses MongoDB with the following main collections:
 
 ## Changelog
 
+- July 1, 2025. Fixed navigation bar positioning and page spacing across entire platform
+  - Made navigation bar position fixed (stays at top during scroll)
+  - Added proper top padding (pt-16) to all main dashboard pages to account for 64px navbar height
+  - Updated sales dashboard, decision maker dashboard, super admin dashboard, and profile page
+  - Fixed enterprise admin, analytics, post-call evaluation, flags management, and DM suspension alerts pages
+  - Fixed landing page and sign-in page with proper navbar spacing
+  - Ensured page content starts exactly where navbar ends with no overlap across all pages
+  - Maintained all existing functionality and design while improving navigation UX
+- July 1, 2025. Implemented DM Invite Landing Page with token validation and onboarding flow integration
+  - Created comprehensive DM invite landing page accessible via /invite/:token route
+  - Implemented backend API endpoint for invite token validation with secure validation logic
+  - Added getInvitationById method to storage interface for invitation retrieval
+  - Designed responsive landing page with gradient background, benefits sidebar, and clear call-to-action
+  - Integrated acceptance flow that leads directly to DM onboarding (T&C → Calendar → Dashboard)
+  - Added visual benefits display including verified reps, calendar integration, and quality assurance
+  - Implemented decline functionality with graceful user experience
+  - Added comprehensive error handling for invalid, expired, or already processed invitations
+  - Created sample invitation generation script for testing and demonstration
+- June 30, 2025. Enhanced Decision Maker dashboard with comprehensive badge system
+  - Added large "DECISION MAKER" badge to dashboard header welcome message
+  - Implemented multiple badge types: VERIFIED (purple), CALENDAR (green), EXTERNAL/EXT (blue), RATED (orange)
+  - Added badges to all sales rep names throughout platform scheduled calls
+  - Added badges to meeting titles in calendar integration sections
+  - Added badges to feedback history for completed rated calls
+  - Applied consistent badge styling with color coding and clear visual hierarchy
 - June 30, 2025. Completed super admin dashboard with flags and credits tabs
   - Added Flags tab for behavior reports with comprehensive filtering and moderation actions
   - Added Credits tab for access management with enterprise features and credit allocations
