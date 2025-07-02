@@ -587,7 +587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/super-admin/users", requireSuperAdmin, async (req, res) => {
     try {
       const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 20;
+      const limit = parseInt(req.query.limit as string) || 100; // Show more users by default for super admin
       const role = req.query.role as string;
       const search = req.query.search as string;
       
@@ -707,6 +707,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error suspending user:', error);
       res.status(500).json({ message: "Failed to suspend user" });
+    }
+  });
+
+  // Reinstate user endpoint
+  app.post("/api/super-admin/users/:id/reinstate", requireSuperAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      // Update user status to active
+      const updatedUser = await storage.updateUser(id, {
+        standing: 'good',
+        isActive: true,
+        suspensionReason: undefined,
+        suspendedAt: undefined,
+        suspendedBy: undefined,
+        reinstatedAt: new Date(),
+        reinstatedBy: req.user!.userId
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Deactivate any active suspension records
+      try {
+        await storage.liftRepSuspension(id, req.user!.userId, 'Admin reinstatement');
+      } catch (suspensionError) {
+        console.log('No suspension record found to lift, continuing with reinstatement');
+      }
+
+      // Log activity
+      await storage.createActivityLog({
+        userId: req.user!.userId,
+        action: 'REINSTATE_USER',
+        entityType: 'user',
+        entityId: id,
+        details: `Reinstated user account`,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      res.json({ success: true, message: "User reinstated successfully" });
+    } catch (error) {
+      console.error('Error reinstating user:', error);
+      res.status(500).json({ message: "Failed to reinstate user" });
     }
   });
 

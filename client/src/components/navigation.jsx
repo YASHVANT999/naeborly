@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Handshake, LogOut, User, Menu, X, Home, BarChart3, Users, Settings } from "lucide-react";
+import { Handshake, LogOut, User, Menu, X, Home, BarChart3, Users, Settings, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
@@ -121,17 +121,27 @@ export default function Navigation() {
                       {user?.role?.replace('_', ' ')}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/analytics" className="w-full cursor-pointer">
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        View Analytics
+                      </Link>
+                    </DropdownMenuItem>
                     {user?.role === 'sales_rep' && (
-                      <>
-                        <DropdownMenuItem asChild>
-                          <Link href="/profile" className="w-full cursor-pointer">
-                            <User className="mr-2 h-4 w-4" />
-                            Profile
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                      </>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile" className="w-full cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          Account Settings
+                        </Link>
+                      </DropdownMenuItem>
                     )}
+                    <DropdownMenuItem asChild>
+                      <Link href="/help" className="w-full cursor-pointer">
+                        <HelpCircle className="mr-2 h-4 w-4" />
+                        Help & Support
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem 
                       onClick={(e) => {
                         e.preventDefault();
