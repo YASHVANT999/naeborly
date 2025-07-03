@@ -398,7 +398,7 @@ export default function SalesDashboard() {
         </div>
 
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
           <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white h-32">
             <CardContent className="p-5 h-full">
               <div className="flex items-center justify-between h-full">
@@ -472,59 +472,71 @@ export default function SalesDashboard() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                {/* Compact Circular Progress */}
-                <div className="relative">
-                  <div className="w-12 h-12 bg-white rounded-full shadow-inner flex items-center justify-center">
-                    <svg
-                      className="w-10 h-10 transform -rotate-90"
-                      viewBox="0 0 100 100"
+          {/* Calendar Integration Card */}
+          <Card className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white h-32">
+            <CardContent className="p-5 h-full">
+              <div className="flex items-center justify-between h-full">
+                <div className="flex flex-col justify-between h-full">
+                  <p className="text-purple-100 text-sm font-medium">
+                    Calendar Status
+                  </p>
+                  <p className="text-lg font-bold">
+                    {calendarStatusLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : calendarStatus?.connected ? (
+                      "Connected"
+                    ) : (
+                      "Not Connected"
+                    )}
+                  </p>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`text-white p-1 h-auto text-xs transition-all duration-300 ${
+                        calendarStatus?.connected
+                          ? "bg-green-600 hover:bg-green-700"
+                          : "bg-red-600 hover:bg-red-700"
+                      }`}
+                      onClick={() =>
+                        calendarToggleMutation.mutate(
+                          !calendarStatus?.connected,
+                        )
+                      }
+                      disabled={calendarToggleMutation.isPending}
                     >
-                      {/* Background circle */}
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        stroke="currentColor"
-                        strokeWidth="8"
-                        fill="transparent"
-                        className="text-gray-200"
-                      />
-                      {/* Progress circle with gradient */}
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        stroke="url(#successGradient)"
-                        strokeWidth="8"
-                        fill="transparent"
-                        strokeDasharray={`${2 * Math.PI * 40}`}
-                        strokeDashoffset={`${2 * Math.PI * 40 * (1 - (metrics?.successRate || 0) / 100)}`}
-                        className="transition-all duration-1000 ease-out"
-                        strokeLinecap="round"
-                      />
-                      <defs>
-                        <linearGradient
-                          id="successGradient"
-                          x1="0%"
-                          y1="0%"
-                          x2="100%"
-                          y2="100%"
-                        >
-                          <stop
-                            offset="0%"
-                            style={{ stopColor: "#3B82F6", stopOpacity: 1 }}
-                          />
-                          <stop
-                            offset="100%"
-                            style={{ stopColor: "#8B5CF6", stopOpacity: 1 }}
-                          />
-                        </linearGradient>
-                      </defs>
-                    </svg>
+                      {calendarToggleMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          Updating...
+                        </>
+                      ) : calendarStatus?.connected ? (
+                        "Disconnect"
+                      ) : (
+                        "Connect"
+                      )}
+                    </Button>
+                    {calendarStatus?.connected && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-purple-100 hover:text-white hover:bg-white/20 p-1 h-auto text-xs"
+                        onClick={() => setShowCalendarModal(true)}
+                      >
+                        <Eye className="w-3 h-3" />
+                      </Button>
+                    )}
                   </div>
-                  {/* Subtle glow effect */}
-                  <div className="absolute inset-0 w-12 h-12 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-20 blur-md -z-10"></div>
+                </div>
+                <div className="flex flex-col items-center">
+                  <Calendar className="text-purple-200 w-6 h-6" />
+                  {calendarStatus?.connected && (
+                    <div className="w-2 h-2 bg-green-400 rounded-full mt-1"></div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -1156,88 +1168,6 @@ export default function SalesDashboard() {
                       </div>
                     </div>
                   </>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Calendar Integration */}
-            <Card className="border border-gray-200 shadow-lg">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center justify-between text-gray-900">
-                  <div className="flex items-center">
-                    <Calendar className="w-5 h-5 text-blue-600 mr-2" />
-                    Calendar Integration
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => window.location.reload()}
-                    className="p-1"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 px-6 pb-6">
-                {calendarStatusLoading ? (
-                  <div className="flex items-center justify-center py-4">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {/* Calendar Connection Status */}
-                    <div className="space-y-3">
-                      <Button
-                        className={`inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-10 px-4 w-full justify-center py-3 text-white ${
-                          calendarStatus?.connected
-                            ? "bg-green-500 hover:bg-green-600"
-                            : "bg-red-500 hover:bg-red-600"
-                        }`}
-                        onClick={() =>
-                          calendarToggleMutation.mutate(
-                            !calendarStatus?.connected,
-                          )
-                        }
-                        disabled={calendarToggleMutation.isPending}
-                      >
-                        <Calendar className="w-4 h-4 mr-2" />
-                        {calendarToggleMutation.isPending ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Updating...
-                          </>
-                        ) : calendarStatus?.connected ? (
-                          "Google Calendar Connected"
-                        ) : (
-                          "Connect Google Calendar"
-                        )}
-                      </Button>
-
-                      {calendarStatus?.connected ? (
-                        <div className="space-y-4">
-                          <div className="flex items-center text-green-600">
-                            <CheckCircle className="mr-2" size={16} />
-                            <span className="text-sm font-medium">
-                              Integration Active
-                            </span>
-                          </div>
-
-                          <Button
-                            variant="outline"
-                            className="w-full"
-                            onClick={() => setShowCalendarModal(true)}
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            View All
-                          </Button>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-500 text-center">
-                          Connect your calendar to sync meetings
-                        </p>
-                      )}
-                    </div>
-                  </div>
                 )}
               </CardContent>
             </Card>

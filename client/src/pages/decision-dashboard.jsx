@@ -174,6 +174,13 @@ export default function DecisionDashboard() {
     enabled: !!user?.id && !!calendarStatus?.connected,
   });
 
+  // Fetch flags count
+  const { data: flagsData } = useQuery({
+    queryKey: ["/api/user/flags-count"],
+    enabled: !!user?.id,
+  });
+  const flagsCount = flagsData?.flags || 0;
+
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
@@ -319,10 +326,10 @@ export default function DecisionDashboard() {
         </div>
 
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="border border-gray-200 shadow-lg bg-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+          <Card className="border border-gray-200 shadow-lg bg-white h-32">
+            <CardContent className="p-6 h-full">
+              <div className="flex items-center justify-between h-full">
                 <div>
                   <p className="text-gray-600 text-sm font-medium">
                     Calls Completed
@@ -339,9 +346,9 @@ export default function DecisionDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border border-gray-200 shadow-lg bg-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+          <Card className="border border-gray-200 shadow-lg bg-white h-32">
+            <CardContent className="p-6 h-full">
+              <div className="flex items-center justify-between h-full">
                 <div>
                   <p className="text-gray-600 text-sm font-medium">
                     Avg Call Rating
@@ -351,9 +358,9 @@ export default function DecisionDashboard() {
                   </p>
                 </div>
                 <div className="w-16 h-16 flex items-center justify-center">
-                  <img 
-                    src={ratingBadgeImage} 
-                    alt="Rating Badge" 
+                  <img
+                    src={ratingBadgeImage}
+                    alt="Rating Badge"
                     className="w-full h-full object-contain"
                   />
                 </div>
@@ -361,9 +368,9 @@ export default function DecisionDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border border-gray-200 shadow-lg bg-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+          <Card className="border border-gray-200 shadow-lg bg-white h-32">
+            <CardContent className="p-6 h-full">
+              <div className="flex items-center justify-between h-full">
                 <div>
                   <p className="text-gray-600 text-sm font-medium">
                     Quality Score
@@ -375,6 +382,140 @@ export default function DecisionDashboard() {
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                   <TrendingUp className="text-purple-600" size={24} />
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-gray-200 shadow-lg bg-white h-32">
+            <CardContent className="p-6 h-full">
+              <div className="flex items-center justify-between h-full">
+                <div>
+                  <p className="text-gray-600 text-sm font-medium">
+                    Flags Count
+                  </p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {flagsCount || 0}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                  <AlertTriangle className="text-red-600" size={24} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Calendar Integration Card */}
+          <Card className="border border-gray-200 shadow-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white h-32">
+            <CardContent className="p-4 h-full">
+              <div className="flex flex-col justify-between h-full">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Calendar className="text-white mr-2" size={16} />
+                    <span className="text-xs font-medium">
+                      Calendar Integration
+                    </span>
+                  </div>
+                  {calendarStatus?.connected && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => refetchMeetings()}
+                      disabled={meetingsLoading}
+                      className="text-white hover:bg-white/20 h-6 w-6 p-0"
+                    >
+                      <RefreshCw
+                        className={`h-3 w-3 ${meetingsLoading ? "animate-spin" : ""}`}
+                      />
+                    </Button>
+                  )}
+                </div>
+
+                {calendarStatusLoading ? (
+                  <div className="flex items-center justify-center flex-1">
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      onClick={async () => {
+                        try {
+                          await apiRequest("/api/current-user", {
+                            method: "PUT",
+                            body: JSON.stringify({
+                              calendarIntegrationEnabled:
+                                !calendarStatus?.connected,
+                            }),
+                          });
+
+                          queryClient.invalidateQueries({
+                            queryKey: ["/api/calendar/status"],
+                          });
+
+                          if (!calendarStatus?.connected) {
+                            refetchMeetings();
+                          }
+
+                          toast({
+                            title: calendarStatus?.connected
+                              ? "Calendar Disconnected"
+                              : "Calendar Connected",
+                            description: calendarStatus?.connected
+                              ? "Google Calendar has been disconnected"
+                              : "Google Calendar has been connected successfully",
+                          });
+                        } catch (error) {
+                          console.error("Calendar toggle failed:", error);
+                          toast({
+                            title: "Error",
+                            description: "Failed to update calendar connection",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      className={`w-full transition-all duration-300 text-xs h-6 ${
+                        calendarStatus?.connected
+                          ? "bg-green-600 hover:bg-green-700"
+                          : "bg-red-600 hover:bg-red-700"
+                      }`}
+                      style={{
+                        backgroundColor: calendarStatus?.connected
+                          ? "#16a34a"
+                          : "#ff1f1f",
+                      }}
+                      size="sm"
+                    >
+                      <Calendar className="mr-1" size={10} />
+                      {calendarStatus?.connected ? "Connected" : "Disconnected"}
+                    </Button>
+
+                    {calendarStatus?.connected && (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30 text-xs h-6"
+                          >
+                            <CalendarDays className="mr-1" size={10} />
+                            View All
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle className="flex items-center">
+                              <Calendar className="mr-2" size={20} />
+                              All Calendar Meetings
+                            </DialogTitle>
+                          </DialogHeader>
+                          <CalendarMeetingsView
+                            meetings={upcomingMeetings}
+                            loading={meetingsLoading}
+                          />
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -700,153 +841,6 @@ export default function DecisionDashboard() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Calendar Integration */}
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Calendar className="text-blue-500 mr-3" size={20} />
-                    Calendar Integration
-                  </div>
-                  {calendarStatus?.connected && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => refetchMeetings()}
-                      disabled={meetingsLoading}
-                    >
-                      <RefreshCw
-                        className={`h-4 w-4 ${meetingsLoading ? "animate-spin" : ""}`}
-                      />
-                    </Button>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {calendarStatusLoading ? (
-                  <div className="flex items-center justify-center py-4">
-                    <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full" />
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {/* Calendar Status Toggle Button */}
-                    <div className="flex items-center justify-between mb-4">
-                      <Button
-                        onClick={async () => {
-                          try {
-                            // Use the current user profile update endpoint instead
-                            await apiRequest("/api/current-user", {
-                              method: "PUT",
-                              body: JSON.stringify({
-                                calendarIntegrationEnabled:
-                                  !calendarStatus?.connected,
-                              }),
-                            });
-
-                            // Invalidate and refetch calendar status
-                            queryClient.invalidateQueries({
-                              queryKey: ["/api/calendar/status"],
-                            });
-
-                            if (!calendarStatus?.connected) {
-                              refetchMeetings();
-                            }
-
-                            // Show toast notification
-                            toast({
-                              title: calendarStatus?.connected
-                                ? "Calendar Disconnected"
-                                : "Calendar Connected",
-                              description: calendarStatus?.connected
-                                ? "Google Calendar has been disconnected"
-                                : "Google Calendar has been connected successfully",
-                            });
-                          } catch (error) {
-                            console.error("Calendar toggle failed:", error);
-                            toast({
-                              title: "Error",
-                              description:
-                                "Failed to update calendar connection",
-                              variant: "destructive",
-                            });
-                          }
-                        }}
-                        className={`transition-all duration-300 transform hover:scale-105 ${
-                          calendarStatus?.connected
-                            ? "bg-green-600 hover:bg-green-700 text-white"
-                            : "bg-red-600 hover:bg-red-700 text-white"
-                        }`}
-                        size="sm"
-                      >
-                        <Calendar className="mr-2" size={16} />
-                        {calendarStatus?.connected
-                          ? "Google Calendar Connected"
-                          : "Google Calendar Disconnected"}
-                      </Button>
-                    </div>
-
-                    {calendarStatus?.connected ? (
-                      <div className="space-y-4">
-                        <div className="flex items-center text-green-600">
-                          <CheckCircle className="mr-2" size={16} />
-                          <span className="text-sm font-medium">
-                            Integration Active
-                          </span>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex items-center justify-between gap-3">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300"
-                                onClick={() => {
-                                  console.log(
-                                    "View All calendar meetings clicked",
-                                  );
-                                  // Placeholder action for now
-                                }}
-                              >
-                                <CalendarDays className="mr-2" size={14} />
-                                View All
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle className="flex items-center">
-                                  <Calendar className="mr-2" size={20} />
-                                  All Calendar Meetings
-                                </DialogTitle>
-                              </DialogHeader>
-                              <CalendarMeetingsView
-                                meetings={upcomingMeetings}
-                                loading={meetingsLoading}
-                              />
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="flex items-center text-orange-600">
-                          <AlertTriangle className="mr-2" size={16} />
-                          <span className="text-sm font-medium">
-                            Integration Inactive
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-500 text-center">
-                          Click the button above to connect your Google Calendar
-                          and see upcoming meetings
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
             {/* Quick Actions */}
             <Card className="shadow-lg">
               <CardHeader>
