@@ -3,7 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Phone,
   Users,
@@ -78,15 +83,16 @@ export default function SalesDashboard() {
 
   // Calendar integration queries
   const { data: calendarStatus, isLoading: calendarStatusLoading } = useQuery({
-    queryKey: ['/api/calendar/status'],
+    queryKey: ["/api/calendar/status"],
     retry: false,
   });
 
-  const { data: upcomingMeetings, isLoading: upcomingMeetingsLoading } = useQuery({
-    queryKey: ['/api/calendar/upcoming-meetings'],
-    enabled: calendarStatus?.connected,
-    retry: false,
-  });
+  const { data: upcomingMeetings, isLoading: upcomingMeetingsLoading } =
+    useQuery({
+      queryKey: ["/api/calendar/upcoming-meetings"],
+      enabled: calendarStatus?.connected,
+      retry: false,
+    });
 
   // New queries for credit system
   const { data: creditsData, isLoading: creditsLoading } = useQuery({
@@ -128,28 +134,28 @@ export default function SalesDashboard() {
   // Calendar toggle mutation
   const calendarToggleMutation = useMutation({
     mutationFn: async (enabled) => {
-      return apiRequest('/api/current-user', {
-        method: 'PUT',
-        body: JSON.stringify({ calendarIntegrationEnabled: enabled })
+      return apiRequest("/api/current-user", {
+        method: "PUT",
+        body: JSON.stringify({ calendarIntegrationEnabled: enabled }),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/current-user']);
-      queryClient.invalidateQueries(['/api/calendar/status']);
-      queryClient.invalidateQueries(['/api/calendar/upcoming-meetings']);
+      queryClient.invalidateQueries(["/api/current-user"]);
+      queryClient.invalidateQueries(["/api/calendar/status"]);
+      queryClient.invalidateQueries(["/api/calendar/upcoming-meetings"]);
       toast({
         title: "Success",
         description: "Calendar integration updated successfully",
       });
     },
     onError: (error) => {
-      console.error('Calendar toggle error:', error);
+      console.error("Calendar toggle error:", error);
       toast({
         title: "Error",
         description: "Failed to update calendar integration",
         variant: "destructive",
       });
-    }
+    },
   });
 
   // Calculate total credits from API data
@@ -725,109 +731,109 @@ export default function SalesDashboard() {
                   </div>
 
                   {gatedDMsLoading ? (
-                    <div className="text-center py-6">
+                    <div className="text-center py-6 ">
                       <Loader2 className="animate-spin h-6 w-6 mx-auto mb-3 text-blue-500" />
                       <p className="text-gray-600">
                         Loading decision makers...
                       </p>
                     </div>
                   ) : (
-                    <div className="max-h-96 overflow-y-auto">
+                    <div className="h-[800px] overflow-y-auto">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         {filteredDMs &&
                         Array.isArray(filteredDMs) &&
                         filteredDMs.length > 0 ? (
                           filteredDMs.slice(0, 12).map((dm) => (
-                          <div
-                            key={dm.id}
-                            className="bg-gray-50 rounded-lg p-3 border border-gray-400 hover:border-purple-500 hover:shadow-sm transition-all duration-200"
-                          >
-                            {/* Status Indicators */}
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                <span className="text-xs text-gray-500">
-                                  3 calls available
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Title and Company */}
-                            <div className="mb-2">
-                              <h3 className="text-gray-900 font-semibold text-base mb-1">
-                                {dm.jobTitle ||
-                                  dm.name ||
-                                  "Chief Revenue Officer"}
-                              </h3>
-                              <p className="text-blue-600 text-sm font-medium">
-                                {dm.company}
-                              </p>
-                            </div>
-
-                            {/* Location */}
-                            <div className="flex items-center text-gray-600 text-sm mb-2">
-                              <MapPin className="w-3 h-3 mr-1" />
-                              <span>San Francisco, CA</span>
-                            </div>
-
-                            {/* Tags */}
-                            <div className="flex flex-wrap gap-1 mb-3">
-                              <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-medium">
-                                {dm.industry}
-                              </span>
-                              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium">
-                                201-1000
-                              </span>
-                            </div>
-
-                            {/* Rating and Engagement */}
-                            <div className="space-y-2 mb-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                  <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
-                                  <span className="text-gray-900 font-medium">
-                                    4.8
+                            <div
+                              key={dm.id}
+                              className="bg-gray-50 rounded-lg p-3 border border-gray-400 hover:border-purple-500 hover:shadow-sm transition-all duration-200"
+                            >
+                              {/* Status Indicators */}
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                  <span className="text-xs text-gray-500">
+                                    3 calls available
                                   </span>
                                 </div>
-                                <span className="text-green-600 text-sm font-medium">
-                                  {dm.engagementScore}% engagement
+                              </div>
+
+                              {/* Title and Company */}
+                              <div className="mb-2">
+                                <h3 className="text-gray-900 font-semibold text-base mb-1">
+                                  {dm.jobTitle ||
+                                    dm.name ||
+                                    "Chief Revenue Officer"}
+                                </h3>
+                                <p className="text-blue-600 text-sm font-medium">
+                                  {dm.company}
+                                </p>
+                              </div>
+
+                              {/* Location */}
+                              <div className="flex items-center text-gray-600 text-sm mb-2">
+                                <MapPin className="w-3 h-3 mr-1" />
+                                <span>San Francisco, CA</span>
+                              </div>
+
+                              {/* Tags */}
+                              <div className="flex flex-wrap gap-1 mb-3">
+                                <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-medium">
+                                  {dm.industry}
+                                </span>
+                                <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium">
+                                  201-1000
                                 </span>
                               </div>
-                              <div className="w-full bg-gray-200 rounded-full h-1.5">
-                                <div
-                                  className="bg-green-500 h-1.5 rounded-full transition-all duration-300"
-                                  style={{ width: `${dm.engagementScore}%` }}
-                                ></div>
+
+                              {/* Rating and Engagement */}
+                              <div className="space-y-2 mb-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center">
+                                    <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
+                                    <span className="text-gray-900 font-medium">
+                                      4.8
+                                    </span>
+                                  </div>
+                                  <span className="text-green-600 text-sm font-medium">
+                                    {dm.engagementScore}% engagement
+                                  </span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                  <div
+                                    className="bg-green-500 h-1.5 rounded-full transition-all duration-300"
+                                    style={{ width: `${dm.engagementScore}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="flex gap-2">
+                                <button className="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-2 px-3 rounded-lg text-sm transition-colors font-medium">
+                                  View Contact
+                                </button>
+                                <button
+                                  className="flex-1 hover:bg-blue-700 text-white py-2 px-3 rounded-lg text-sm transition-colors font-medium bg-[#5f7ed4]"
+                                  onClick={() => handleOpenBookingModal(dm)}
+                                >
+                                  Request Call
+                                </button>
                               </div>
                             </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex gap-2">
-                              <button className="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-2 px-3 rounded-lg text-sm transition-colors font-medium">
-                                View Contact
-                              </button>
-                              <button
-                                className="flex-1 hover:bg-blue-700 text-white py-2 px-3 rounded-lg text-sm transition-colors font-medium bg-[#5f7ed4]"
-                                onClick={() => handleOpenBookingModal(dm)}
-                              >
-                                Request Call
-                              </button>
+                          ))
+                        ) : (
+                          <div className="col-span-full text-center py-6">
+                            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                              <Users className="w-6 h-6 text-gray-400" />
                             </div>
+                            <h3 className="text-base font-semibold text-gray-900 mb-2">
+                              No Decision Makers Available
+                            </h3>
+                            <p className="text-gray-600 text-sm">
+                              Check back later for new opportunities
+                            </p>
                           </div>
-                        ))
-                      ) : (
-                        <div className="col-span-full text-center py-6">
-                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <Users className="w-6 h-6 text-gray-400" />
-                          </div>
-                          <h3 className="text-base font-semibold text-gray-900 mb-2">
-                            No Decision Makers Available
-                          </h3>
-                          <p className="text-gray-600 text-sm">
-                            Check back later for new opportunities
-                          </p>
-                        </div>
-                      )}
+                        )}
                       </div>
                     </div>
                   )}
@@ -914,7 +920,8 @@ export default function SalesDashboard() {
                           Connect Google Calendar
                         </h4>
                         <p className="text-sm text-red-700">
-                          Please connect your Google Calendar to view upcoming calls
+                          Please connect your Google Calendar to view upcoming
+                          calls
                         </p>
                       </div>
                     </div>
@@ -969,7 +976,10 @@ export default function SalesDashboard() {
                           className="flex-1 bg-green-600 hover:bg-green-700 text-white h-7 text-xs"
                           onClick={() => {
                             // Join call logic - could open Google Meet/Zoom link
-                            window.open('https://meet.google.com/sample-call-link', '_blank');
+                            window.open(
+                              "https://meet.google.com/sample-call-link",
+                              "_blank",
+                            );
                           }}
                         >
                           <Phone className="w-3 h-3 mr-1" />
@@ -981,7 +991,10 @@ export default function SalesDashboard() {
                           className="flex-1 border-purple-300 text-purple-700 hover:bg-purple-50 h-7 text-xs"
                           onClick={() => {
                             // Pitch assistant logic - could open AI assistant modal
-                            console.log('Opening Pitch Assistant for call:', call.id);
+                            console.log(
+                              "Opening Pitch Assistant for call:",
+                              call.id,
+                            );
                           }}
                         >
                           <Lightbulb className="w-3 h-3 mr-1" />
@@ -1022,7 +1035,10 @@ export default function SalesDashboard() {
                           size="sm"
                           className="flex-1 bg-green-600 hover:bg-green-700 text-white h-7 text-xs"
                           onClick={() => {
-                            window.open('https://meet.google.com/sample-call-link', '_blank');
+                            window.open(
+                              "https://meet.google.com/sample-call-link",
+                              "_blank",
+                            );
                           }}
                         >
                           <Phone className="w-3 h-3 mr-1" />
@@ -1033,7 +1049,7 @@ export default function SalesDashboard() {
                           variant="outline"
                           className="flex-1 border-purple-300 text-purple-700 hover:bg-purple-50 h-7 text-xs"
                           onClick={() => {
-                            console.log('Opening Pitch Assistant');
+                            console.log("Opening Pitch Assistant");
                           }}
                         >
                           <Lightbulb className="w-3 h-3 mr-1" />
@@ -1071,7 +1087,7 @@ export default function SalesDashboard() {
                           variant="outline"
                           className="flex-1 border-gray-300 text-gray-600 hover:bg-gray-50 h-7 text-xs"
                           onClick={() => {
-                            console.log('View call summary');
+                            console.log("View call summary");
                           }}
                         >
                           <Star className="w-3 h-3 mr-1" />
@@ -1082,7 +1098,7 @@ export default function SalesDashboard() {
                           variant="outline"
                           className="flex-1 border-purple-300 text-purple-700 hover:bg-purple-50 h-7 text-xs"
                           onClick={() => {
-                            console.log('Opening Follow-up Assistant');
+                            console.log("Opening Follow-up Assistant");
                           }}
                         >
                           <Lightbulb className="w-3 h-3 mr-1" />
@@ -1120,7 +1136,7 @@ export default function SalesDashboard() {
                           variant="outline"
                           className="flex-1 border-gray-300 text-gray-600 hover:bg-gray-50 h-7 text-xs"
                           onClick={() => {
-                            console.log('Reschedule call');
+                            console.log("Reschedule call");
                           }}
                         >
                           <Calendar className="w-3 h-3 mr-1" />
@@ -1131,7 +1147,7 @@ export default function SalesDashboard() {
                           variant="outline"
                           className="flex-1 border-purple-300 text-purple-700 hover:bg-purple-50 h-7 text-xs"
                           onClick={() => {
-                            console.log('Opening Pitch Assistant');
+                            console.log("Opening Pitch Assistant");
                           }}
                         >
                           <Lightbulb className="w-3 h-3 mr-1" />
@@ -1173,11 +1189,15 @@ export default function SalesDashboard() {
                     <div className="space-y-3">
                       <Button
                         className={`inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-10 px-4 w-full justify-center py-3 text-white ${
-                          calendarStatus?.connected 
-                            ? 'bg-green-500 hover:bg-green-600' 
-                            : 'bg-red-500 hover:bg-red-600'
+                          calendarStatus?.connected
+                            ? "bg-green-500 hover:bg-green-600"
+                            : "bg-red-500 hover:bg-red-600"
                         }`}
-                        onClick={() => calendarToggleMutation.mutate(!calendarStatus?.connected)}
+                        onClick={() =>
+                          calendarToggleMutation.mutate(
+                            !calendarStatus?.connected,
+                          )
+                        }
                         disabled={calendarToggleMutation.isPending}
                       >
                         <Calendar className="w-4 h-4 mr-2" />
@@ -1187,9 +1207,9 @@ export default function SalesDashboard() {
                             Updating...
                           </>
                         ) : calendarStatus?.connected ? (
-                          'Google Calendar Connected'
+                          "Google Calendar Connected"
                         ) : (
-                          'Connect Google Calendar'
+                          "Connect Google Calendar"
                         )}
                       </Button>
 
@@ -1274,27 +1294,6 @@ export default function SalesDashboard() {
                     </div>
                   </div>
 
-                  <div className="p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-purple-900 mb-1">
-                          Industry trending topics
-                        </h4>
-                        <p className="text-sm text-purple-700">
-                          AI automation is trending in your target industries
-                        </p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-purple-600 hover:text-purple-700 p-0 h-auto mt-1"
-                        >
-                          Get talking points →
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="p-3 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg border border-orange-200">
                     <div className="flex items-start gap-3">
                       <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
@@ -1352,17 +1351,19 @@ export default function SalesDashboard() {
               </div>
             ) : upcomingMeetings && upcomingMeetings.length > 0 ? (
               upcomingMeetings.map((meeting, index) => (
-                <div key={index} className="p-4 border rounded-lg hover:bg-gray-50">
+                <div
+                  key={index}
+                  className="p-4 border rounded-lg hover:bg-gray-50"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-900 mb-1">
-                        {meeting.summary || 'Meeting'}
+                        {meeting.summary || "Meeting"}
                       </h3>
                       <p className="text-sm text-gray-600 mb-2">
-                        {meeting.start?.dateTime 
+                        {meeting.start?.dateTime
                           ? new Date(meeting.start.dateTime).toLocaleString()
-                          : 'Time not specified'
-                        }
+                          : "Time not specified"}
                       </p>
                       {meeting.description && (
                         <p className="text-sm text-gray-500 mb-2">
@@ -1373,7 +1374,8 @@ export default function SalesDashboard() {
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4 text-gray-400" />
                           <span className="text-xs text-gray-500">
-                            {meeting.attendees.length} attendee{meeting.attendees.length !== 1 ? 's' : ''}
+                            {meeting.attendees.length} attendee
+                            {meeting.attendees.length !== 1 ? "s" : ""}
                           </span>
                         </div>
                       )}
@@ -1382,7 +1384,7 @@ export default function SalesDashboard() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => window.open(meeting.htmlLink, '_blank')}
+                        onClick={() => window.open(meeting.htmlLink, "_blank")}
                       >
                         Join
                       </Button>

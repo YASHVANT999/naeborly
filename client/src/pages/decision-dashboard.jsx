@@ -677,7 +677,7 @@ export default function DecisionDashboard() {
                               className="text-xs bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-300"
                               onClick={() => {
                                 // Navigate to evaluation with specific call ID
-                                window.location.href = `/post-call-evaluation?callId=${call._id}`;
+                                window.location.href = `/evaluation/rep?callId=${call._id}`;
                               }}
                             >
                               <Star className="mr-1" size={12} />
