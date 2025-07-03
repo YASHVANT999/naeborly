@@ -43,6 +43,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import FlagsBadge from "@/components/FlagsBadge";
+import ratingBadgeImage from "@assets/shared_image__1_-removebg-preview_1751516866961.png";
 
 // Integrated Meeting Card Component for Calendar Integration
 function IntegratedMeetingCard({ meeting }) {
@@ -349,8 +350,12 @@ export default function DecisionDashboard() {
                     {metrics?.avgRating ? metrics.avgRating.toFixed(1) : "-"}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Star className="text-yellow-600 fill-current" size={24} />
+                <div className="w-16 h-16 flex items-center justify-center">
+                  <img 
+                    src={ratingBadgeImage} 
+                    alt="Rating Badge" 
+                    className="w-full h-full object-contain"
+                  />
                 </div>
               </div>
             </CardContent>

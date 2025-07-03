@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Phone,
   Users,
@@ -23,6 +24,9 @@ import {
   Settings,
   HelpCircle,
   Lightbulb,
+  CheckCircle,
+  RefreshCw,
+  Eye,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
@@ -72,6 +76,18 @@ export default function SalesDashboard() {
     retry: false,
   });
 
+  // Calendar integration queries
+  const { data: calendarStatus, isLoading: calendarStatusLoading } = useQuery({
+    queryKey: ['/api/calendar/status'],
+    retry: false,
+  });
+
+  const { data: upcomingMeetings, isLoading: upcomingMeetingsLoading } = useQuery({
+    queryKey: ['/api/calendar/upcoming-meetings'],
+    enabled: calendarStatus?.connected,
+    retry: false,
+  });
+
   // New queries for credit system
   const { data: creditsData, isLoading: creditsLoading } = useQuery({
     queryKey: ["/api/sales-rep/credits"],
@@ -105,6 +121,36 @@ export default function SalesDashboard() {
 
   // Force show DM list for debugging
   const shouldShowDMList = true;
+
+  // Calendar integration toggle state
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+
+  // Calendar toggle mutation
+  const calendarToggleMutation = useMutation({
+    mutationFn: async (enabled) => {
+      return apiRequest('/api/current-user', {
+        method: 'PUT',
+        body: JSON.stringify({ calendarIntegrationEnabled: enabled })
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['/api/current-user']);
+      queryClient.invalidateQueries(['/api/calendar/status']);
+      queryClient.invalidateQueries(['/api/calendar/upcoming-meetings']);
+      toast({
+        title: "Success",
+        description: "Calendar integration updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Calendar toggle error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update calendar integration",
+        variant: "destructive",
+      });
+    }
+  });
 
   // Calculate total credits from API data
   const totalCredits =
@@ -686,11 +732,12 @@ export default function SalesDashboard() {
                       </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {filteredDMs &&
-                      Array.isArray(filteredDMs) &&
-                      filteredDMs.length > 0 ? (
-                        filteredDMs.slice(0, 12).map((dm) => (
+                    <div className="max-h-96 overflow-y-auto">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {filteredDMs &&
+                        Array.isArray(filteredDMs) &&
+                        filteredDMs.length > 0 ? (
+                          filteredDMs.slice(0, 12).map((dm) => (
                           <div
                             key={dm.id}
                             className="bg-gray-50 rounded-lg p-3 border border-gray-400 hover:border-purple-500 hover:shadow-sm transition-all duration-200"
@@ -781,6 +828,7 @@ export default function SalesDashboard() {
                           </p>
                         </div>
                       )}
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -846,7 +894,7 @@ export default function SalesDashboard() {
               </CardContent>
             </Card>
 
-            {/* Your Active DMs */}
+            {/* Your Upcoming Calls */}
             <Card>
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-2">
@@ -857,7 +905,21 @@ export default function SalesDashboard() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 px-6 pb-6">
-                {calls && calls.length > 0 ? (
+                {!calendarStatus?.connected ? (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-5 h-5 text-red-500" />
+                      <div>
+                        <h4 className="font-medium text-red-900 mb-1">
+                          Connect Google Calendar
+                        </h4>
+                        <p className="text-sm text-red-700">
+                          Please connect your Google Calendar to view upcoming calls
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : calls && calls.length > 0 ? (
                   calls.slice(0, 3).map((call) => (
                     <div
                       key={call.id}
@@ -1082,6 +1144,84 @@ export default function SalesDashboard() {
               </CardContent>
             </Card>
 
+            {/* Calendar Integration */}
+            <Card className="border border-gray-200 shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center justify-between text-gray-900">
+                  <div className="flex items-center">
+                    <Calendar className="w-5 h-5 text-blue-600 mr-2" />
+                    Calendar Integration
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.location.reload()}
+                    className="p-1"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 px-6 pb-6">
+                {calendarStatusLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Calendar Connection Status */}
+                    <div className="space-y-3">
+                      <Button
+                        className={`inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-10 px-4 w-full justify-center py-3 text-white ${
+                          calendarStatus?.connected 
+                            ? 'bg-green-500 hover:bg-green-600' 
+                            : 'bg-red-500 hover:bg-red-600'
+                        }`}
+                        onClick={() => calendarToggleMutation.mutate(!calendarStatus?.connected)}
+                        disabled={calendarToggleMutation.isPending}
+                      >
+                        <Calendar className="w-4 h-4 mr-2" />
+                        {calendarToggleMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Updating...
+                          </>
+                        ) : calendarStatus?.connected ? (
+                          'Google Calendar Connected'
+                        ) : (
+                          'Connect Google Calendar'
+                        )}
+                      </Button>
+
+                      {calendarStatus?.connected ? (
+                        <div className="space-y-4">
+                          <div className="flex items-center text-green-600">
+                            <CheckCircle className="mr-2" size={16} />
+                            <span className="text-sm font-medium">
+                              Integration Active
+                            </span>
+                          </div>
+
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => setShowCalendarModal(true)}
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View All
+                          </Button>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 text-center">
+                          Connect your calendar to sync meetings
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Smart Suggestions */}
             <Card className="border border-gray-200 shadow-lg">
               <CardHeader className="pb-4">
@@ -1198,6 +1338,67 @@ export default function SalesDashboard() {
         decisionMaker={selectedDecisionMaker}
         onConfirm={handleBookingConfirm}
       />
+      {/* Calendar Modal */}
+      <Dialog open={showCalendarModal} onOpenChange={setShowCalendarModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Upcoming Calendar Events</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {upcomingMeetingsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin" />
+                <span className="ml-2">Loading meetings...</span>
+              </div>
+            ) : upcomingMeetings && upcomingMeetings.length > 0 ? (
+              upcomingMeetings.map((meeting, index) => (
+                <div key={index} className="p-4 border rounded-lg hover:bg-gray-50">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900 mb-1">
+                        {meeting.summary || 'Meeting'}
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-2">
+                        {meeting.start?.dateTime 
+                          ? new Date(meeting.start.dateTime).toLocaleString()
+                          : 'Time not specified'
+                        }
+                      </p>
+                      {meeting.description && (
+                        <p className="text-sm text-gray-500 mb-2">
+                          {meeting.description}
+                        </p>
+                      )}
+                      {meeting.attendees && meeting.attendees.length > 0 && (
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-gray-400" />
+                          <span className="text-xs text-gray-500">
+                            {meeting.attendees.length} attendee{meeting.attendees.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {meeting.htmlLink && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(meeting.htmlLink, '_blank')}
+                      >
+                        Join
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No upcoming meetings found</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
